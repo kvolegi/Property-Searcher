@@ -1,0 +1,47 @@
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# Package Files
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven build outputs
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE specific
+.idea/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+.vscode/
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Documentation source documents
+*.docx
+
+# Bundled OS runtimes exceeding 100MB (distributed via GitHub Releases)
+*.app/
+last_chat_id.txt
+currency_cache.json
