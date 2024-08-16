@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: property-seacher-backend
+
+  datasource:
+    url: jdbc:h2:file:./data/property_db;DB_CLOSE_ON_EXIT=FALSE;AUTO_RECONNECT=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+telegram:
+  bot:
+    username: ${TELEGRAM_BOT_USERNAME:Property_Searcher_bot}
+    token: ${TELEGRAM_BOT_TOKEN:7588722375:AAF_lWIFPVBk-5fDzD2DO8zBsMieVvYX9Mg}
+
+app:
+  tracker:
+    delay-ms: 120000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
