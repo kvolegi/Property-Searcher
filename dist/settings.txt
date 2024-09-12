@@ -1,0 +1,5 @@
+Property_Searcher_bot
+YOUR_TELEGRAM_BOT_TOKEN_HERE
+
+Квартири Вся Україна (OLX)
+https://www.olx.ua/uk/nedvizhimost/kvartiry/?currency=UAH&search[order]=created_at:desc&view=list

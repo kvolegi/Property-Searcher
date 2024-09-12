@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=3.0
+Type=Application
+Name=Property Searcher 3
+GenericName=Real Estate Scraper & Monitor
+Comment=Real Estate Monitoring & Telegram Bot for OLX and DOM.RIA
+Exec=java -jar PropertySeacher-Universal.jar
+Icon=assets/PropertySeacher.png
+Terminal=false
+Categories=Utility;Network;
+StartupNotify=true
