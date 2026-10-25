@@ -1,12 +1,22 @@
-# Property Searcher 3
+<p align="center">
+  <img src="dist/assets/logo_256.png" alt="Property Searcher 3 Logo" width="130" height="130" />
+</p>
 
-[![Java Version](https://img.shields.io/badge/Java-21%20LTS-007396?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.4-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-[![Architecture](https://img.shields.io/badge/Architecture-Event--Driven%20Ingestion-64CFCB)](ARCHITECTURE.md)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Latest Release](https://img.shields.io/badge/Release-v3.0.0-blue.svg)](https://github.com/kvolegi/Property-Searcher/releases)
+<h1 align="center">Property Searcher 3</h1>
+
+<p align="center">
+  <b>High-throughput real-time telemetry ingestion & event-driven property valuation platform</b>
+</p>
+
+<p align="center">
+  <a href="https://openjdk.org/projects/jdk/21/"><img src="https://img.shields.io/badge/Java-21%20LTS-007396?logo=openjdk&logoColor=white" alt="Java 21" /></a>
+  <a href="https://spring.io/projects/spring-boot"><img src="https://img.shields.io/badge/Spring%20Boot-3.3.4-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot 3" /></a>
+  <a href="https://www.postgresql.org/"><img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 16" /></a>
+  <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker&logoColor=white" alt="Docker" /></a>
+  <a href="ARCHITECTURE.md"><img src="https://img.shields.io/badge/Architecture-Event--Driven%20Ingestion-64CFCB" alt="Architecture" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT" /></a>
+  <a href="https://github.com/kvolegi/Property-Searcher/releases"><img src="https://img.shields.io/badge/Release-v3.0.0-blue.svg" alt="Latest Release" /></a>
+</p>
 
 A high-throughput, low-latency telemetry ingestion and event-driven dispatch platform designed for secondary real estate market intelligence. The system monitors distributed listing providers, detects newly propagated edge listings with sub-2-second latency, normalizes multi-currency valuation metrics, and streams structured media groups via Telegram Bot API with zero local memory overhead.
 
