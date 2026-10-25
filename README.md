@@ -14,7 +14,7 @@
   <a href="https://www.postgresql.org/"><img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 16" /></a>
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker&logoColor=white" alt="Docker" /></a>
   <a href="ARCHITECTURE.md"><img src="https://img.shields.io/badge/Architecture-Event--Driven%20Ingestion-64CFCB" alt="Architecture" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Proprietary%20%2F%20View--Only-red.svg" alt="License: Proprietary / View-Only" /></a>
   <a href="https://github.com/kvolegi/Property-Searcher/releases"><img src="https://img.shields.io/badge/Release-v3.0.0-blue.svg" alt="Latest Release" /></a>
 </p>
 
@@ -163,7 +163,12 @@ For complete production server configuration, systemd daemon setups, Nginx rever
 
 ---
 
-## License
+## License & Usage Terms
 
-This project is licensed under the terms of the [MIT License](LICENSE).  
-Copyright (c) 2021–2026 kvolegi.
+This project is licensed under a strict **Proprietary Source-Available & Evaluation License**.
+
+* **Permitted**: Viewing, inspecting, and auditing the source code and documentation solely for prospective employment evaluation, technical review, and portfolio assessment.
+* **Strictly Prohibited**: Running, deploying, redistributing, modifying, sublicensing, or commercially exploiting any part of this software without prior explicit written authorization from the Author.
+
+Copyright (c) 2021–2026 **kvolegi** (`milenapetrushenko0@gmail.com`). All Rights Reserved.  
+For complete legal terms and conditions, refer to [LICENSE](LICENSE).
