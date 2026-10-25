@@ -1,125 +1,159 @@
-# Property Searcher 3 🏢⚡
+# Property Searcher 3
 
-<p align="center">
-  <img src="social_preview.png" alt="Property Searcher 3 Banner" width="100%" />
-</p>
+[![Java Version](https://img.shields.io/badge/Java-21%20LTS-007396?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.4-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Architecture](https://img.shields.io/badge/Architecture-Event--Driven%20Ingestion-64CFCB)](ARCHITECTURE.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Latest Release](https://img.shields.io/badge/Release-v3.0.0-blue.svg)](https://github.com/kvolegi/Property-Searcher/releases)
 
-<p align="center">
-  <a href="https://openjdk.org/projects/jdk/21/"><img src="https://img.shields.io/badge/Java-21%20LTS-orange.svg" alt="Java 21" /></a>
-  <a href="https://spring.io/projects/spring-boot"><img src="https://img.shields.io/badge/Spring%20Boot-3.3.4-brightgreen.svg" alt="Spring Boot 3" /></a>
-  <a href="https://core.telegram.org/bots"><img src="https://img.shields.io/badge/Telegram%20Bot-MediaGroup%20Albums-blue.svg" alt="Telegram Bot" /></a>
-  <img src="https://img.shields.io/badge/Architecture-Event--Driven%20Ingestion-64CFCB.svg" alt="Event-Driven Engine" />
-  <img src="https://img.shields.io/badge/i18n-Ukrainian%20%7C%20English-teal.svg" alt="i18n" />
-  <img src="https://img.shields.io/badge/Version-3.0%20Final-success.svg" alt="Version 3.0" />
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License" /></a>
-</p>
+A high-throughput, low-latency telemetry ingestion and event-driven dispatch platform designed for secondary real estate market intelligence. The system monitors distributed listing providers, detects newly propagated edge listings with sub-2-second latency, normalizes multi-currency valuation metrics, and streams structured media groups via Telegram Bot API with zero local memory overhead.
 
 ---
 
-## 📌 Executive Overview (Огляд платформи)
+## Architecture Overview
 
-**Property Searcher 3** — це високопродуктивна відмовостійка платформа реального часу для безперервного моніторингу вторинного ринку нерухомості з суб-2-секундною детекцією нових лістингів та автоматичною доставкою структурованих медіа-альбомів у Telegram.
+Property Searcher 3 is designed as a hybrid dual-tier architecture:
 
-Платформа поєднує два архітектурні компоненти:
-1. **Desktop Client Engine (Core 3):** легкий нативний клієнт (macOS `.app`, Windows `.bat`, Linux `.desktop`) із нульовою залежністю від зовнішніх серверів, підтримкою локалізації (Українська / English), адаптивним балансером безпеки та пам'яттю $O(1)$.
-2. **Enterprise Cloud Backend:** розподілений мікросервіс на базі **Spring Boot 3 (Java 21 LTS)** з реляційним збереженням історії котирувань, ціновою аналітикою та інтерактивним OpenAPI/Swagger інтерфейсом.
-
----
-
-## 🌟 Ключові можливості (Core Architecture Highlights)
-
-* **📸 Нативні медіа-альбоми Telegram (SendMediaGroup):**  
-  Автоматичне вилучення повної галереї об'єкта (до 10 фотографій у високій роздільній здатності) та відправка єдиним пакетом із лаконічною стандартизованою шапкою.
-* **🌐 Повна двомовність (i18n: Українська / English):**  
-  При первинному запуску система пропонує вибір мови інтерфейсу. Перемикання доступне будь-коли в меню налаштувань десктопу та через команду `/language` у Telegram.
-* **⚡ Адаптивний балансер швидкості (Adaptive Token-Bucket Rate Controller):**  
-  Динамічний розрахунок затримки для кожного пошукового потоку під безпечний поріг $\le 2.20\text{ req/s}$, що виключає блокування IP за правилами CloudFront / DataDome.
-* **💱 Трьохрівневий валютний шлюз (Resilient 3-Tier Currency Engine):**  
-  Автоматична конвертація за офіційним курсом НБУ (`bank.gov.ua`) у подвійному форматі `DUAL` (наприклад, `$65 000 (≈ 2 704 000 грн)`). Локальний файл-кеш (TTL 24h) гарантує стабільний запуск за 0 мс навіть при нерегулярній роботі машини.
-* **🛡️ 50-Slot Circular Buffer & Silent Baseline:**  
-  Безшумна 30-елементна індексація стартової сторінки виключає спам старими оголошеннями при запуску. Кільцевий буфер на 50 слотів запобігає дублікатам при перестановках оголошень на порталі.
-* **🌙 Нічний тихий режим (Night Silent Mode):**  
-  Автоматичне вимкнення звукового сигналу (`disable_notification = true`) у період з 23:00 до 07:00 за київським часом.
-* **🎨 Преміальна айдентика:**  
-  Фірмова палітра `#B6EAE9` / `#64CFCB`, тривимірний скляний логотип та нативні іконки macOS (`.icns`), Windows (`.ico`) та Linux (`.png`).
+1. **Standalone Core Client (`core-desktop`)**: A zero-cloud-dependency desktop daemon built on Java 21 with a modernized Swing UI, bilingual localization (`i18n`), adaptive token-bucket throttling, $O(1)$ circular memory buffering, and autonomous currency synchronization.
+2. **Enterprise Cloud Backend (`enterprise-backend`)**: A microservice built with **Spring Boot 3.3.4** and **Java 21 LTS**, utilizing Spring Data JPA, PostgreSQL 16 persistence, Flyway schema migrations, OpenAPI 3.0/Swagger interactive documentation, and Spring Boot Actuator telemetry.
 
 ---
 
-## 📁 Структура папки репозиторію
+## Key Technical Innovations & Engineering Highlights
+
+### 1. Sub-2-Second CDN Edge Detection & Propagation Physics
+* **Moderation Pipeline & CDN Propagation**: Major real estate aggregators utilize multi-tier architectures (SSR backends behind Akamai / Cloudflare edge caches). When a seller publishes a listing, it undergoes internal moderation, spam evaluation, and cache revalidation for approximately 30 to 90 seconds before appearing on public edge nodes.
+* **Near-Instant Sniping**: Property Searcher polls CDN endpoints using lightweight organic queries, intercepting listings within **1.8 seconds** of public edge availability—the theoretical lower bound for external detection without proprietary internal queue access.
+
+### 2. Adaptive Token-Bucket Rate Controller with Phase Jitter
+* **Traffic Protection Formula**: To prevent IP bans and WAF challenges (`HTTP 429 Too Many Requests`), each worker thread dynamically computes its polling interval based on the total number of active targets $N$:
+  $$\tau = \max\left(1800\text{ ms},\; \left\lceil \frac{N \times 1000}{R_{\max}} \right\rceil\right) \quad \text{where } R_{\max} = 2.20\text{ req/s}$$
+* **Phase Staggering**: Thread executions are offset by $\Delta t = \frac{\tau}{N}$, eliminating concurrent burst collisions.
+* **Anti-Fingerprint Jitter**: A pseudo-random temporal jitter ($\pm 150\text{ ms}$) is injected into each cycle to break deterministic timing signatures monitored by WAF systems.
+
+### 3. Resilient 3-Tier Currency Valuation Gateway
+Engineered for host environments with intermittent uptime:
+* **Tier 1 (Official NBU REST Gateway)**: Direct non-authenticated HTTPS polling of the National Bank of Ukraine open API (`bank.gov.ua`) with strict 3000ms timeouts.
+* **Tier 2 (Autonomous Offline JSON Cache)**: Persisted exchange rates in `currency_cache.json` with a 24-hour TTL. Cold starts execute in **0 ms** using cached values while asynchronous workers refresh rates in the background.
+* **Tier 3 (Safety Constants Fallback)**: Resilient fallback to embedded baseline exchange rates (USD/UAH, EUR/UAH) during catastrophic upstream outages, ensuring 100% service continuity.
+* **DUAL Valuation Mode**: Dynamically parses listing currencies and renders formatted dual-denomination strings:  
+  `$65 000 (≈ 2 704 000 UAH)` / `2 500 000 UAH (≈ $60 096)`.
+
+### 4. 50-Slot Circular Memory Buffer & Silent Baseline Initialization
+* **Silent Cold-Start Baseline**: Upon initializing a new target, the system silently indexes the first 30 organic listings without triggering user notifications, completely eliminating stale-data spam upon startup.
+* **$O(1)$ Circular Ring Buffer**: A fixed-capacity 50-slot ring buffer tracks recently observed listing IDs per target. Lookup and eviction operate in constant time $O(1)$ with deterministic memory bounds.
+* **Organic Candidate Filtering**: Promoted and sponsored blocks are identified via DOM attribute inspection and filtered prior to deduplication.
+* **Adaptive Burst Interception**: Upon detecting a new listing, a targeted follow-up probe executes after 500ms to catch multi-listing batches posted by single accounts.
+
+### 5. Asynchronous Zero-Download MediaGroup Dispatcher
+* **Non-Blocking Worker Pool**: Media group compilation and Telegram API transmissions are offloaded to an asynchronous cached executor pool (`notificationExecutor`), isolating network transmission latency from monitoring threads.
+* **Direct CDN Passthrough**: Images are streamed using remote CDN URI references (`InputMediaPhoto(cdnUrl)`). The host client performs zero disk writes and incurs negligible network I/O.
+* **HTML Sanitization**: All incoming listing metadata is escaped (`&`, `<`, `>`) preventing Telegram `400 Bad Request` parsing exceptions.
+
+### 6. Night Silent Mode
+* Scheduled time evaluation (`Europe/Kyiv` timezone): between **23:00 and 07:00**, all Telegram dispatch payloads automatically attach `disable_notification = true` to deliver silent pushes.
+
+### 7. Bilingual Internationalization (i18n)
+* Complete localization dictionary supporting **Ukrainian 🇺🇦** and **English 🇬🇧**.
+* First-launch auto-detection and interactive modal language selection.
+* Dynamic runtime language switching via desktop preferences and Telegram `/language` inline menus.
+
+---
+
+## Repository Structure
 
 ```text
-Property Searcher 3/
-├── social_preview.png              # Соціальне прев'ю платформи
-├── README.md                       # Головна презентація для GitHub
-├── DEPLOYMENT.md                   # Керівництво з розгортання на Linux / Docker / Systemd
-├── TECHNICAL_SPECIFICATION.md      # Повна інженерна технічна специфікація
-├── ARCHITECTURE.md                 # C4 діаграми, пайплайни та шаблони
-├── LICENSE                         # Ліцензія MIT (Автор: kvolegi)
-├── CONTRIBUTING.md                 # Стандарти та гайдлайни розробки
-├── core-desktop/                   # Вихідний код нативного клієнта (Java 21, i18n, GUI)
-│   ├── pom.xml
-│   └── src/
-├── enterprise-backend/             # Вихідний код Spring Boot 3 бекенду (Java 21 LTS)
-│   ├── pom.xml
-│   ├── Dockerfile
-│   ├── docker-compose.yml
-│   └── src/
-└── dist/                           # Готові скомпільовані релізи
-    ├── PropertySeacher.app         # Нативний macOS додаток
-    ├── PropertySeacher-Universal.jar # Універсальний JAR-архів (Java 17+)
-    ├── Run_Windows.bat             # Лаунчер для Windows
-    ├── Run_Linux.sh                # Лаунчер для Linux
-    ├── settings.txt                # Файл налаштувань
-    └── assets/                     # Іконсет-пакети (.icns, .ico, .png)
+.
+├── ARCHITECTURE.md                 # C4 model, event sequence flows, and design patterns
+├── TECHNICAL_SPECIFICATION.md      # Engineering requirements and ISO/IEC/IEEE 29148 spec
+├── DEPLOYMENT.md                   # Production server deployment guide (Docker & systemd)
+├── CONTRIBUTING.md                 # Contribution guidelines and code style
+├── LICENSE                         # MIT License
+│
+├── core-desktop/                   # Autonomous desktop client (Java 21, Swing, FlatLaf)
+│   ├── pom.xml                     # Maven build configuration
+│   └── src/main/java/PropertySeacher/
+│       ├── BotGUI.java             # Main application window & bilingual interface
+│       ├── BotTG.java              # Telegram engine, rate controller, and event dispatcher
+│       ├── ParserOLX.java          # HTML/DOM ingestion engine with organic filters
+│       ├── CurrencyService.java    # 3-tier NBU FX gateway and offline caching
+│       ├── SettingsManager.java    # Configuration persistence and synchronization
+│       ├── I18n.java               # Bilingual dictionary and string provider
+│       ├── CategoryCatalog.java    # Hierarchical geographic & property taxonomy
+│       └── SmartCategoryBuilderDialog.java # Visual filter constructor
+│
+├── enterprise-backend/             # Cloud-native microservice (Spring Boot 3.3.4, Java 21)
+│   ├── pom.xml                     # Spring Data JPA, Actuator, Swagger OpenAPI
+│   ├── Dockerfile                  # Multi-stage production container build
+│   ├── docker-compose.yml          # Container orchestration (App + PostgreSQL 16)
+│   └── src/main/java/com/propertyseacher/
+│       ├── api/PropertyController.java     # REST API endpoints with OpenAPI 3.0 annotations
+│       ├── domain/entity/          # Relational JPA entities
+│       ├── scraper/strategy/       # Ingestion Strategy pattern implementation
+│       └── telegram/               # Spring-managed bot dispatch service
+│
+└── dist/                           # Production distribution binaries and scripts
+    ├── PropertySeacher-Universal.jar # Cross-platform executable JAR
+    ├── PropertySeacher.desktop     # Linux desktop entry descriptor
+    ├── Run_Windows.bat             # Windows launcher script
+    ├── Run_Linux.sh                # Linux / macOS shell launcher
+    └── assets/                     # High-resolution application iconsets
 ```
 
 ---
 
-## 🚀 Швидкий запуск (Quick Start)
+## Quick Start
 
-### 1. Запуск десктопного додатку
-* **macOS:** Відкрийте [`dist/PropertySeacher.app`](dist/PropertySeacher.app) або виконайте в терміналі:
-  ```bash
-  open "dist/PropertySeacher.app"
-  ```
-* **Windows:** Запустіть [`dist/Run_Windows.bat`](dist/Run_Windows.bat).
-* **Linux:** Зробіть скрипт виконуваним та запустіть:
-  ```bash
-  chmod +x dist/Run_Linux.sh && ./dist/Run_Linux.sh
-  ```
-* **Універсальний запуск JAR:**
-  ```bash
-  java -jar dist/PropertySeacher-Universal.jar
-  ```
+### Prerequisites
+* **Java Runtime**: OpenJDK 17 or OpenJDK 21 LTS (`java -version`)
+* **Build System**: Apache Maven 3.8+ (`mvn -version`)
+* **Optional**: Docker 24+ and Docker Compose
 
-### 2. Запуск корпоративного сервера (Spring Boot 3)
+### Running the Desktop Client
 ```bash
+# Direct launch via prebuilt universal JAR
+java -jar dist/PropertySeacher-Universal.jar
+
+# Or build and execute from source
+cd core-desktop
+mvn clean package -DskipTests
+java -jar target/PS-3.0.jar
+```
+
+### Running the Enterprise Backend
+```bash
+# Local development run
 cd enterprise-backend
 mvn spring-boot:run
-```
-* **Swagger / OpenAPI Documentation:** `http://localhost:8080/swagger-ui.html`
-* **Health & Actuator:** `http://localhost:8080/actuator/health`
 
-Або через Docker Compose:
-```bash
-docker compose up -d
+# Or containerized deployment via Docker Compose
+docker compose up -d --build
 ```
 
-> [!TIP]
-> Детальну інструкцію з налаштування Linux VPS, Docker, systemd, Nginx SSL, ротації логів та бекапів БД дивіться у файлі [DEPLOYMENT.md](DEPLOYMENT.md).
+* **Swagger UI API Documentation**: `http://localhost:8080/swagger-ui.html`
+* **Health & Readiness Probes**: `http://localhost:8080/actuator/health`
+
+For complete production server configuration, systemd daemon setups, Nginx reverse proxy with Let's Encrypt SSL, and automated database backups, refer to [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ---
 
-## ⏱️ Фізика швидкості та специфіка CDN-інфраструктури
+## Engineering Design Patterns
 
-> [!NOTE]
-> Сучасні портали використовують глобальні CDN-мережі (Akamai/Cloudflare). Створене автором оголошення спочатку спрямовується у чергу модерації та антиспам-валідації сайту, потрапляючи у публічний доступ через **30–90 секунд**.  
-> **Property Searcher перехоплює об'єкт у перші ж 1–2 секунди** після його фактичної появи у публічному інтернет-просторі та миттєво відправляє фотоальбом у Telegram. Швидше перехопити публікацію технічно неможливо, оскільки до проходження CDN-модерації об'єкта ще фізично немає у веб-мережі.
+| Pattern | Component | Architectural Purpose |
+| :--- | :--- | :--- |
+| **Strategy Pattern** | `ScraperStrategy`, `OlxScraperStrategy` | Extensible abstraction for multi-source ingestion algorithms |
+| **Token-Bucket Rate Limiter** | `BotTG.calculateAdaptiveDelay()` | Adaptive request throttling preventing CDN IP mitigation |
+| **Circuit Breaker / Fallback**| `CurrencyService` | Resilient 3-tier FX gateway (Remote API $\to$ Local Cache $\to$ Static Fallback) |
+| **Ring Buffer (FIFO)** | Circular memory buffer in `BotTG` | Deterministic $O(1)$ memory deduplication |
+| **Worker Pool** | `Executors.newCachedThreadPool()` | Asynchronous media dispatch decoupled from polling routines |
+| **Observer Pattern** | Telegram update listener | Reactive handling of user commands and inline keyboard callbacks |
+| **Singleton Pattern** | `SettingsManager` | Unified, thread-safe configuration management |
 
 ---
 
-## 👨‍💻 Одноосібний автор
-* **kvolegi** — архітектура, розробка десктопного клієнта, снайпінг-ядра та Spring Boot 3 бекенду.
+## License
 
-## ⚖️ Ліцензія
-Проєкт ліцензовано на умовах **MIT License** (Copyright (c) 2021–2024 **kvolegi**). Подробиці див. у [LICENSE](LICENSE).
+This project is licensed under the terms of the [MIT License](LICENSE).  
+Copyright (c) 2021–2026 kvolegi.
