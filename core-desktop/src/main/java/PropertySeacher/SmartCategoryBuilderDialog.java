@@ -22,7 +22,7 @@ public class SmartCategoryBuilderDialog extends JDialog {
     private static final Color COLOR_BTN = new Color(133, 221, 218);
 
     public SmartCategoryBuilderDialog(Dialog owner, Consumer<String> onCategoryCreated) {
-        super(owner, "Конструктор категорій нерухомості (OLX & DOM.RIA)", true);
+        super(owner, I18n.get("builder.dialog_title"), true);
         setSize(560, 520);
         setLayout(new BorderLayout(10, 10));
         getContentPane().setBackground(COLOR_BG);
@@ -38,68 +38,68 @@ public class SmartCategoryBuilderDialog extends JDialog {
         mainPanel.setBorder(new EmptyBorder(15, 20, 15, 20));
 
         // 1. Platform
-        mainPanel.add(createLabel("Платформа пошуку:", fontLabel));
+        mainPanel.add(createLabel(I18n.get("builder.platform_lbl"), fontLabel));
         platformCombo = new JComboBox<>(new String[]{"DOM.RIA", "OLX"});
         platformCombo.setFont(fontInput);
         platformCombo.setBackground(COLOR_FIELD_BG);
         mainPanel.add(platformCombo);
 
         // 2. City
-        mainPanel.add(createLabel("Місто / Регіон:", fontLabel));
+        mainPanel.add(createLabel(I18n.get("builder.city_lbl"), fontLabel));
         cityCombo = new JComboBox<>(CategoryCatalog.getCities().toArray(new CategoryCatalog.City[0]));
         cityCombo.setFont(fontInput);
         cityCombo.setBackground(COLOR_FIELD_BG);
         mainPanel.add(cityCombo);
 
         // 3. Property Type
-        mainPanel.add(createLabel("Тип нерухомості:", fontLabel));
+        mainPanel.add(createLabel(I18n.get("builder.type_lbl"), fontLabel));
         propertyTypeCombo = new JComboBox<>(CategoryCatalog.getPropertyTypes().toArray(new CategoryCatalog.PropertyType[0]));
         propertyTypeCombo.setFont(fontInput);
         propertyTypeCombo.setBackground(COLOR_FIELD_BG);
         mainPanel.add(propertyTypeCombo);
 
         // 4. Deal Type (Default: Купівля / Продаж)
-        mainPanel.add(createLabel("Тип угоди:", fontLabel));
+        mainPanel.add(createLabel(I18n.get("builder.deal_lbl"), fontLabel));
         dealTypeCombo = new JComboBox<>(CategoryCatalog.getDealTypes().toArray(new CategoryCatalog.DealType[0]));
         dealTypeCombo.setFont(fontInput);
         dealTypeCombo.setBackground(COLOR_FIELD_BG);
         mainPanel.add(dealTypeCombo);
 
         // 5. Price Filter
-        mainPanel.add(createLabel("Ціновий діапазон (грн):", fontLabel));
+        mainPanel.add(createLabel(I18n.get("builder.price_min_lbl"), fontLabel));
         JPanel pricePanel = new JPanel(new GridLayout(1, 2, 5, 0));
         pricePanel.setBackground(COLOR_BG);
         minPriceField = new JTextField();
         minPriceField.setFont(fontInput);
         minPriceField.setBackground(COLOR_FIELD_BG);
-        minPriceField.setBorder(BorderFactory.createTitledBorder("Від"));
+        minPriceField.setBorder(BorderFactory.createTitledBorder("Від / From"));
 
         maxPriceField = new JTextField();
         maxPriceField.setFont(fontInput);
         maxPriceField.setBackground(COLOR_FIELD_BG);
-        maxPriceField.setBorder(BorderFactory.createTitledBorder("До"));
+        maxPriceField.setBorder(BorderFactory.createTitledBorder("До / To"));
 
         pricePanel.add(minPriceField);
         pricePanel.add(maxPriceField);
         mainPanel.add(pricePanel);
 
         // 6. Owner Only Checkbox
-        mainPanel.add(createLabel("Тільки від власника:", fontLabel));
-        ownerCheckBox = new JCheckBox("Без посередників / ріелторів");
+        mainPanel.add(createLabel(I18n.get("builder.owner_chk"), fontLabel));
+        ownerCheckBox = new JCheckBox("100% Direct / Без ріелторів");
         ownerCheckBox.setFont(fontInput);
         ownerCheckBox.setBackground(COLOR_BG);
         ownerCheckBox.setFocusPainted(false);
         mainPanel.add(ownerCheckBox);
 
         // 7. Custom Title
-        mainPanel.add(createLabel("Назва категорії в боті:", fontLabel));
+        mainPanel.add(createLabel(I18n.get("builder.custom_title_lbl"), fontLabel));
         customTitleField = new JTextField();
         customTitleField.setFont(fontInput);
         customTitleField.setBackground(COLOR_FIELD_BG);
         mainPanel.add(customTitleField);
 
         // 8. Auto-generated URL Preview
-        mainPanel.add(createLabel("Згенероване посилання:", fontLabel));
+        mainPanel.add(createLabel(I18n.get("builder.preview_url_lbl"), fontLabel));
         previewUrlField = new JTextField();
         previewUrlField.setFont(new Font("Monospaced", Font.PLAIN, 11));
         previewUrlField.setEditable(false);
@@ -127,13 +127,13 @@ public class SmartCategoryBuilderDialog extends JDialog {
         JPanel bottomBar = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         bottomBar.setBackground(COLOR_BG);
 
-        JButton createBtn = new JButton("Додати категорію");
+        JButton createBtn = new JButton(I18n.get("builder.add_btn"));
         createBtn.setFont(new Font("Comic Sans MS", Font.BOLD, 15));
         createBtn.setBackground(COLOR_BTN);
         createBtn.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
         createBtn.setPreferredSize(new Dimension(200, 42));
 
-        JButton cancelBtn = new JButton("Скасувати");
+        JButton cancelBtn = new JButton(I18n.get("builder.cancel_btn"));
         cancelBtn.setFont(new Font("Comic Sans MS", Font.PLAIN, 14));
         cancelBtn.setBackground(COLOR_BTN);
         cancelBtn.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));

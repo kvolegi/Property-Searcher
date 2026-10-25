@@ -41,18 +41,6 @@ public class SettingsManager {
             }
         } catch (Exception ignored) {}
 
-        // 3. Known project locations
-        String[] candidates = {
-                "план 2/dist/settings.txt",
-                "dist/settings.txt",
-                System.getProperty("user.home") + "/Desktop/Antigravity/план 2/dist/settings.txt",
-                System.getProperty("user.home") + "/Desktop/Antigravity/settings.txt"
-        };
-        for (String c : candidates) {
-            File fc = new File(c);
-            if (fc.exists()) return fc;
-        }
-
         return new File("settings.txt");
     }
 
@@ -187,23 +175,6 @@ public class SettingsManager {
                 writer.write(l + "\n");
             }
         } catch (Exception ignored) {}
-
-        // Sync across other target locations
-        String[] syncTargets = {
-                "settings.txt",
-                "план 2/dist/settings.txt",
-                "план 2/^ Pseacher versions ^/Property Seacher 2.1.2/settings.txt",
-                System.getProperty("user.home") + "/Desktop/Antigravity/план 2/dist/settings.txt",
-                System.getProperty("user.home") + "/Desktop/Antigravity/settings.txt"
-        };
-        for (String st : syncTargets) {
-            File sf = new File(st);
-            if (sf.exists() && !sf.getAbsolutePath().equals(file.getAbsolutePath())) {
-                try {
-                    Files.copy(file.toPath(), sf.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                } catch (Exception ignored) {}
-            }
-        }
     }
 
     public static boolean isLanguageConfigured() {
@@ -267,45 +238,11 @@ public class SettingsManager {
                 writer.write(l + "\n");
             }
         } catch (Exception ignored) {}
-
-        String[] syncTargets = {
-                "settings.txt",
-                "план 2/dist/settings.txt",
-                "план 2/^ Pseacher versions ^/Property Seacher 2.1.2/settings.txt",
-                System.getProperty("user.home") + "/Desktop/Antigravity/план 2/dist/settings.txt",
-                System.getProperty("user.home") + "/Desktop/Antigravity/settings.txt"
-        };
-        for (String st : syncTargets) {
-            File sf = new File(st);
-            if (sf.exists() && !sf.getAbsolutePath().equals(file.getAbsolutePath())) {
-                try {
-                    Files.copy(file.toPath(), sf.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                } catch (Exception ignored) {}
-            }
-        }
     }
 
     public static void saveSettings(String botName, String botToken, List<CategoryEntry> categories) {
         File target = getSettingsFile();
         saveToFile(target, botName, botToken, categories);
-
-        // Also sync to other known locations if they exist
-        String[] syncTargets = {
-                "settings.txt",
-                "план 2/dist/settings.txt",
-                "план 2/^ Pseacher versions ^/Property Seacher 2.1.2/settings.txt",
-                System.getProperty("user.home") + "/Desktop/Antigravity/план 2/dist/settings.txt",
-                System.getProperty("user.home") + "/Desktop/Antigravity/settings.txt"
-        };
-
-        for (String st : syncTargets) {
-            File sf = new File(st);
-            if (sf.exists() && !sf.getAbsolutePath().equals(target.getAbsolutePath())) {
-                try {
-                    Files.copy(target.toPath(), sf.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                } catch (Exception ignored) {}
-            }
-        }
     }
 
     private static void saveToFile(File file, String botName, String botToken, List<CategoryEntry> categories) {
@@ -315,7 +252,9 @@ public class SettingsManager {
             }
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, false))) {
                 writer.write((botName != null ? botName : "") + "\n");
-                writer.write((botToken != null ? botToken : "") + "\n\n");
+                writer.write((botToken != null ? botToken : "") + "\n");
+                writer.write("LANGUAGE=" + I18n.getLanguage().name() + "\n");
+                writer.write("CURRENCY=" + getCurrencyPreference().name() + "\n\n");
 
                 for (CategoryEntry c : categories) {
                     if (c.active) {

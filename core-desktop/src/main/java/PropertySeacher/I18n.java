@@ -32,14 +32,72 @@ public class I18n {
 
     static {
         // --- UKRAINIAN (UA) ---
-        UA_MAP.put("app.title", "Property Searcher 3 — Снайпінг нерухомості (OLX & DOM.RIA)");
-        UA_MAP.put("btn.start", "Запустити пошук");
-        UA_MAP.put("btn.stop", "Зупинити");
-        UA_MAP.put("btn.settings", "Налаштування бота");
+        UA_MAP.put("app.title", "Property Searcher 3");
+        UA_MAP.put("btn.start", "Старт");
+        UA_MAP.put("btn.stop", "Стоп");
+        UA_MAP.put("btn.settings", "Налаштування");
         UA_MAP.put("btn.categories", "Категорії пошуку");
         UA_MAP.put("btn.builder", "Конструктор категорій");
         UA_MAP.put("btn.instruction", "Інструкція та BotFather");
         UA_MAP.put("btn.lang", "Мова (Language)");
+
+        UA_MAP.put("gui.token_btn", "Токен та назва");
+        UA_MAP.put("gui.category_btn", "Категорії пошуку");
+        UA_MAP.put("gui.instruction_btn", "Інструкція та BotFather");
+        UA_MAP.put("gui.lang_btn", "🌐 Мова / Language (UA / EN)");
+        UA_MAP.put("gui.back_btn", "Назад");
+        UA_MAP.put("gui.save_btn", "Зберегти");
+        UA_MAP.put("gui.bot_name_lbl", "Назва бота:");
+        UA_MAP.put("gui.token_lbl", "Токен:");
+        UA_MAP.put("gui.token_dialog_title", "Введення токену та назви");
+        UA_MAP.put("gui.settings_dialog_title", "Налаштування / Settings");
+        UA_MAP.put("gui.token_len_err", "Токен повинен містити принаймні 30 символів!");
+        UA_MAP.put("gui.token_required_err", "Перед запуском бота введіть токен і назву!");
+        UA_MAP.put("gui.categories_required_err", "Перед запуском бота додайте хоча б одну категорію!");
+        UA_MAP.put("gui.bot_running_err", "Бот уже запущений!");
+
+        UA_MAP.put("cat.dialog_title", "Керування категоріями пошуку (OLX & DOM.RIA)");
+        UA_MAP.put("cat.header_title", "Категорії моніторингу нерухомості");
+        UA_MAP.put("cat.smart_builder_btn", "Конструктор категорій");
+        UA_MAP.put("cat.manual_add_btn", "Додати URL вручну");
+        UA_MAP.put("cat.toggle_btn", "ВКЛ / ПАУЗА");
+        UA_MAP.put("cat.edit_btn", "Редагувати");
+        UA_MAP.put("cat.remove_btn", "Видалити");
+        UA_MAP.put("cat.close_btn", "Закрити");
+        UA_MAP.put("cat.badge_on", " 🟢 ВКЛ ");
+        UA_MAP.put("cat.badge_pause", " ⏸ ПАУЗА ");
+        UA_MAP.put("cat.badge_owner", " Власник ");
+        UA_MAP.put("cat.total", "Всього");
+        UA_MAP.put("cat.active", "активних");
+        UA_MAP.put("cat.select_warning", "Оберіть категорію зі списку!");
+
+        UA_MAP.put("manual.dialog_title", "Ручне додавання посилання на пошук");
+        UA_MAP.put("manual.name_lbl", "Назва категорії (наприклад: Квартири Одеса купівля):");
+        UA_MAP.put("manual.url_lbl", "Пряме посилання на пошук (OLX або DOM.RIA):");
+        UA_MAP.put("manual.add_btn", "Додати");
+        UA_MAP.put("manual.cancel_btn", "Скасувати");
+
+        UA_MAP.put("builder.dialog_title", "Конструктор категорій нерухомості (OLX & DOM.RIA)");
+        UA_MAP.put("builder.platform_lbl", "Платформа пошуку:");
+        UA_MAP.put("builder.city_lbl", "Місто / Регіон:");
+        UA_MAP.put("builder.type_lbl", "Тип нерухомості:");
+        UA_MAP.put("builder.deal_lbl", "Тип операції:");
+        UA_MAP.put("builder.price_min_lbl", "Ціна від (UAH):");
+        UA_MAP.put("builder.price_max_lbl", "Ціна до (UAH):");
+        UA_MAP.put("builder.owner_chk", "Тільки від власника (без посередників)");
+        UA_MAP.put("builder.custom_title_lbl", "Власна назва (опціонально):");
+        UA_MAP.put("builder.preview_url_lbl", "Згенерований URL пошуку:");
+        UA_MAP.put("builder.add_btn", "Додати категорію");
+        UA_MAP.put("builder.cancel_btn", "Скасувати");
+
+        UA_MAP.put("ins.dialog_title", "Інструкція та підключення BotFather");
+        UA_MAP.put("ins.tab_botfather", "BotFather (Кнопки меню)");
+        UA_MAP.put("ins.tab_quickstart", "Швидкий запуск і бот");
+        UA_MAP.put("ins.tab_filters", "Фільтри та антидублікат");
+        UA_MAP.put("ins.copy_btn", "📋 Скопіювати команди для BotFather");
+        UA_MAP.put("ins.copied_notice", "Команди успішно скопійовано в буфер обміну!\n\nТепер просто надішліть їх у чат @BotFather після команди /setcommands.");
+        UA_MAP.put("ins.copied_title", "Успішно скопійовано");
+        UA_MAP.put("ins.close_btn", "Закрити");
 
         UA_MAP.put("status.active", "🟢 АКТИВНИЙ");
         UA_MAP.put("status.paused", "⏸ ЗУПИНЕНО");
@@ -69,14 +127,72 @@ public class I18n {
         UA_MAP.put("card.open", "Відкрити на");
 
         // --- ENGLISH (EN) ---
-        EN_MAP.put("app.title", "Property Searcher 3 — Real Estate Sniping Engine (OLX & DOM.RIA)");
-        EN_MAP.put("btn.start", "Start Monitoring");
+        EN_MAP.put("app.title", "Property Searcher 3");
+        EN_MAP.put("btn.start", "Start");
         EN_MAP.put("btn.stop", "Stop");
-        EN_MAP.put("btn.settings", "Bot Settings");
+        EN_MAP.put("btn.settings", "Settings");
         EN_MAP.put("btn.categories", "Search Targets");
         EN_MAP.put("btn.builder", "Category Builder");
         EN_MAP.put("btn.instruction", "Manual & BotFather");
         EN_MAP.put("btn.lang", "Language (Мова)");
+
+        EN_MAP.put("gui.token_btn", "Bot Token & Name");
+        EN_MAP.put("gui.category_btn", "Search Categories");
+        EN_MAP.put("gui.instruction_btn", "Manual & BotFather");
+        EN_MAP.put("gui.lang_btn", "🌐 Language / Мова (EN / UA)");
+        EN_MAP.put("gui.back_btn", "Back");
+        EN_MAP.put("gui.save_btn", "Save");
+        EN_MAP.put("gui.bot_name_lbl", "Bot Username:");
+        EN_MAP.put("gui.token_lbl", "Bot Token:");
+        EN_MAP.put("gui.token_dialog_title", "Enter Bot Token & Name");
+        EN_MAP.put("gui.settings_dialog_title", "Settings & Configuration");
+        EN_MAP.put("gui.token_len_err", "Token must contain at least 30 characters!");
+        EN_MAP.put("gui.token_required_err", "Please configure bot token and name before starting!");
+        EN_MAP.put("gui.categories_required_err", "Please add at least one search category before starting!");
+        EN_MAP.put("gui.bot_running_err", "Bot is already running!");
+
+        EN_MAP.put("cat.dialog_title", "Manage Search Categories (OLX & DOM.RIA)");
+        EN_MAP.put("cat.header_title", "Real Estate Monitoring Categories");
+        EN_MAP.put("cat.smart_builder_btn", "Category Builder");
+        EN_MAP.put("cat.manual_add_btn", "Add URL Manually");
+        EN_MAP.put("cat.toggle_btn", "ON / PAUSE");
+        EN_MAP.put("cat.edit_btn", "Edit");
+        EN_MAP.put("cat.remove_btn", "Delete");
+        EN_MAP.put("cat.close_btn", "Close");
+        EN_MAP.put("cat.badge_on", " 🟢 ON ");
+        EN_MAP.put("cat.badge_pause", " ⏸ PAUSE ");
+        EN_MAP.put("cat.badge_owner", " Owner ");
+        EN_MAP.put("cat.total", "Total");
+        EN_MAP.put("cat.active", "active");
+        EN_MAP.put("cat.select_warning", "Please select a category from the list!");
+
+        EN_MAP.put("manual.dialog_title", "Manual Search URL Addition");
+        EN_MAP.put("manual.name_lbl", "Category Name (e.g. Apartments Odesa Buy):");
+        EN_MAP.put("manual.url_lbl", "Direct Search URL (OLX or DOM.RIA):");
+        EN_MAP.put("manual.add_btn", "Add");
+        EN_MAP.put("manual.cancel_btn", "Cancel");
+
+        EN_MAP.put("builder.dialog_title", "Real Estate Category Builder (OLX & DOM.RIA)");
+        EN_MAP.put("builder.platform_lbl", "Platform:");
+        EN_MAP.put("builder.city_lbl", "City / Region:");
+        EN_MAP.put("builder.type_lbl", "Property Type:");
+        EN_MAP.put("builder.deal_lbl", "Deal Type:");
+        EN_MAP.put("builder.price_min_lbl", "Price From (UAH):");
+        EN_MAP.put("builder.price_max_lbl", "Price To (UAH):");
+        EN_MAP.put("builder.owner_chk", "Owner only (without agency / direct)");
+        EN_MAP.put("builder.custom_title_lbl", "Custom Name (optional):");
+        EN_MAP.put("builder.preview_url_lbl", "Generated Target URL:");
+        EN_MAP.put("builder.add_btn", "Add Category");
+        EN_MAP.put("builder.cancel_btn", "Cancel");
+
+        EN_MAP.put("ins.dialog_title", "Manual & BotFather Setup");
+        EN_MAP.put("ins.tab_botfather", "BotFather (Menu Commands)");
+        EN_MAP.put("ins.tab_quickstart", "Quick Start & Bot");
+        EN_MAP.put("ins.tab_filters", "Filters & Architecture");
+        EN_MAP.put("ins.copy_btn", "📋 Copy Commands for BotFather");
+        EN_MAP.put("ins.copied_notice", "Commands copied to clipboard successfully!\n\nNow send them to @BotFather after the /setcommands command.");
+        EN_MAP.put("ins.copied_title", "Copied Successfully");
+        EN_MAP.put("ins.close_btn", "Close");
 
         EN_MAP.put("status.active", "🟢 ACTIVE");
         EN_MAP.put("status.paused", "⏸ PAUSED");
@@ -120,9 +236,12 @@ public class I18n {
         Map<String, String> map = (currentLang == Language.EN) ? EN_MAP : UA_MAP;
         String val = map.get(key);
         if (val != null) return val;
-        // Fallback to UA if missing in EN
         String fallback = UA_MAP.get(key);
         return (fallback != null) ? fallback : key;
+    }
+
+    public static String t(String key) {
+        return get(key);
     }
 
     public static String get(String key, Language lang) {

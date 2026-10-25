@@ -1,0 +1,10 @@
+YourBotUsername
+YOUR_TELEGRAM_BOT_TOKEN_HERE
+LANGUAGE=UA
+CURRENCY=DUAL
+
+Квартири Київ (OLX)
+https://www.olx.ua/uk/nedvizhimost/kvartiry/kiev/?currency=UAH&search[order]=created_at:desc&view=list
+
+Квартири Одеса (DOM.RIA)
+https://dom.ria.com/uk/arenda-kvartir/odessa/

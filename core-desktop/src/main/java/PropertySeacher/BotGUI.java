@@ -22,6 +22,10 @@ public class BotGUI extends JFrame {
     private String botToken = "";
     private List<SettingsManager.CategoryEntry> categories = new ArrayList<>();
 
+    private JButton startButton;
+    private JButton stopButton;
+    private JButton settingButton;
+
     // Palette
     private static final Color COLOR_BG = new Color(182, 234, 233);
     private static final Color COLOR_BTN = new Color(133, 221, 218);
@@ -33,17 +37,25 @@ public class BotGUI extends JFrame {
         checkInitialLanguage();
         loadSettings();
         initComponents();
+        updateLocalizedTexts();
+    }
+
+    public void updateLocalizedTexts() {
+        setTitle(I18n.get("app.title"));
+        if (startButton != null) startButton.setText(I18n.get("btn.start"));
+        if (stopButton != null) stopButton.setText(I18n.get("btn.stop"));
+        if (settingButton != null) settingButton.setText(I18n.get("btn.settings"));
     }
 
     private void checkInitialLanguage() {
         if (!SettingsManager.isLanguageConfigured()) {
-            showLanguageSelectionDialog(true);
+            showLanguageSelectionDialog(true, null);
         } else {
             I18n.setLanguage(SettingsManager.getLanguage());
         }
     }
 
-    private void showLanguageSelectionDialog(boolean isFirstLaunch) {
+    private void showLanguageSelectionDialog(boolean isFirstLaunch, JDialog parentSettingsDialog) {
         JDialog dlg = new JDialog(this, isFirstLaunch ? "Select Language / Оберіть мову" : "Language / Мова", true);
         dlg.setSize(420, 250);
         dlg.setLayout(null);
@@ -60,12 +72,22 @@ public class BotGUI extends JFrame {
 
         uaBtn.addActionListener(e -> {
             SettingsManager.setLanguage(I18n.Language.UA);
+            updateLocalizedTexts();
             dlg.dispose();
+            if (parentSettingsDialog != null) {
+                parentSettingsDialog.dispose();
+                openSettingsDialog();
+            }
         });
 
         enBtn.addActionListener(e -> {
             SettingsManager.setLanguage(I18n.Language.EN);
+            updateLocalizedTexts();
             dlg.dispose();
+            if (parentSettingsDialog != null) {
+                parentSettingsDialog.dispose();
+                openSettingsDialog();
+            }
         });
 
         dlg.add(prompt);
@@ -115,7 +137,7 @@ public class BotGUI extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setPreferredSize(new Dimension(530, 311));
         setResizable(false);
-        setTitle("Property Searcher 3");
+        setTitle(I18n.get("app.title"));
 
         Image logoImg = loadLogoImage();
         if (logoImg != null) {
@@ -134,9 +156,9 @@ public class BotGUI extends JFrame {
             contentPane.add(logoLabel);
         }
 
-        JButton startButton = createButton("Start", 154, 98, 240, 69);
-        JButton stopButton = createButton("Stop", 158, 190, 240, 69);
-        JButton settingButton = createButton("Setting", 8, 240, 85, 35);
+        startButton = createButton(I18n.get("btn.start"), 154, 98, 240, 69);
+        stopButton = createButton(I18n.get("btn.stop"), 158, 190, 240, 69);
+        settingButton = createButton(I18n.get("btn.settings"), 8, 240, 135, 35);
 
         JLabel titleLabel = new JLabel("Property Searcher");
         titleLabel.setFont(new Font("Comic Sans MS", Font.PLAIN, 28));
@@ -210,12 +232,12 @@ public class BotGUI extends JFrame {
         System.out.println("Нажата кнопка старт");
 
         if (botToken == null || botToken.trim().isEmpty() || botName == null || botName.trim().isEmpty()) {
-            ErrorWindow.showErrorWindow(this, "Перед запуском бота введіть токен і назву!");
+            ErrorWindow.showErrorWindow(this, I18n.get("gui.token_required_err"));
             return;
         }
 
         if (categories == null || categories.isEmpty()) {
-            ErrorWindow.showErrorWindow(this, "Перед запуском бота додайте хоча б одну категорію!");
+            ErrorWindow.showErrorWindow(this, I18n.get("gui.categories_required_err"));
             return;
         }
 
@@ -226,10 +248,10 @@ public class BotGUI extends JFrame {
                 System.out.println("Бот успішно запущено");
                 isBotRunning = true;
             } catch (TelegramApiException e) {
-                ErrorWindow.showErrorWindow(this, "Не вдалося запустити бота: " + e.getMessage());
+                ErrorWindow.showErrorWindow(this, (I18n.getLanguage() == I18n.Language.EN ? "Failed to launch bot: " : "Не вдалося запустити бота: ") + e.getMessage());
             }
         } else {
-            ErrorWindow.showErrorWindow(this, "Бот уже запущений!");
+            ErrorWindow.showErrorWindow(this, I18n.get("gui.bot_running_err"));
         }
     }
 
@@ -242,22 +264,22 @@ public class BotGUI extends JFrame {
     }
 
     private void openSettingsDialog() {
-        JDialog settingsDialog = new JDialog(this, "Налаштування / Settings", true);
+        JDialog settingsDialog = new JDialog(this, I18n.get("gui.settings_dialog_title"), true);
         settingsDialog.setSize(400, 375);
         settingsDialog.setLayout(null);
         settingsDialog.getContentPane().setBackground(COLOR_BG);
         settingsDialog.setResizable(false);
 
-        JButton tokenButton = createButton("Токен та назва", 50, 20, 300, 48);
-        JButton categoryButton = createButton("Категорії пошуку", 50, 78, 300, 48);
-        JButton instructionButton = createButton("Інструкція та BotFather", 50, 136, 300, 48);
-        JButton langButton = createButton("🌐 Мова / Language (UA / EN)", 50, 194, 300, 48);
-        JButton backButton = createButton("Назад", 50, 260, 300, 45);
+        JButton tokenButton = createButton(I18n.get("gui.token_btn"), 50, 20, 300, 48);
+        JButton categoryButton = createButton(I18n.get("gui.category_btn"), 50, 78, 300, 48);
+        JButton instructionButton = createButton(I18n.get("gui.instruction_btn"), 50, 136, 300, 48);
+        JButton langButton = createButton(I18n.get("gui.lang_btn"), 50, 194, 300, 48);
+        JButton backButton = createButton(I18n.get("gui.back_btn"), 50, 260, 300, 45);
 
         tokenButton.addActionListener(e -> openTokenNameDialog(settingsDialog));
         categoryButton.addActionListener(e -> openCategoryDialog(settingsDialog));
         instructionButton.addActionListener(e -> openInstructionDialog(settingsDialog));
-        langButton.addActionListener(e -> showLanguageSelectionDialog(false));
+        langButton.addActionListener(e -> showLanguageSelectionDialog(false, settingsDialog));
         backButton.addActionListener(e -> settingsDialog.dispose());
 
         settingsDialog.add(tokenButton);
@@ -271,34 +293,34 @@ public class BotGUI extends JFrame {
     }
 
     private void openTokenNameDialog(JDialog parent) {
-        JDialog tokenDialog = new JDialog(parent, "Введення токену та назви", true);
+        JDialog tokenDialog = new JDialog(parent, I18n.get("gui.token_dialog_title"), true);
         tokenDialog.setSize(420, 280);
         tokenDialog.setLayout(null);
         tokenDialog.getContentPane().setBackground(COLOR_BG);
 
         Font font = new Font("Comic Sans MS", Font.PLAIN, 15);
 
-        JLabel nameLabel = new JLabel("Назва бота:");
+        JLabel nameLabel = new JLabel(I18n.get("gui.bot_name_lbl"));
         nameLabel.setFont(font);
-        nameLabel.setBounds(30, 25, 120, 30);
+        nameLabel.setBounds(30, 25, 140, 30);
         JTextField nameField = new JTextField(botName);
         nameField.setFont(font);
         nameField.setBackground(COLOR_FIELD_BG);
-        nameField.setBounds(150, 25, 230, 32);
+        nameField.setBounds(180, 25, 200, 32);
 
-        JLabel tokenLabel = new JLabel("Токен:");
+        JLabel tokenLabel = new JLabel(I18n.get("gui.token_lbl"));
         tokenLabel.setFont(font);
-        tokenLabel.setBounds(30, 75, 120, 30);
+        tokenLabel.setBounds(30, 75, 140, 30);
         JTextField tokenField = new JTextField(botToken);
         tokenField.setFont(font);
         tokenField.setBackground(COLOR_FIELD_BG);
-        tokenField.setBounds(150, 75, 230, 32);
+        tokenField.setBounds(180, 75, 200, 32);
 
-        JButton saveButton = createButton("Зберегти", 140, 150, 140, 42);
+        JButton saveButton = createButton(I18n.get("gui.save_btn"), 140, 150, 140, 42);
         saveButton.addActionListener(e -> {
             String token = tokenField.getText().trim();
             if (token.length() < 30) {
-                ErrorWindow.showErrorWindow(this, "Токен повинен містити принаймні 30 символів!");
+                ErrorWindow.showErrorWindow(this, I18n.get("gui.token_len_err"));
             } else {
                 botName = nameField.getText().trim();
                 botToken = token;
@@ -366,11 +388,11 @@ public class BotGUI extends JFrame {
             // Active vs Paused Status Badge
             badgeStatus.setOpaque(true);
             if (value.active) {
-                badgeStatus.setText(" 🟢 ВКЛ ");
+                badgeStatus.setText(I18n.get("cat.badge_on"));
                 badgeStatus.setBackground(new Color(187, 247, 208));
                 badgeStatus.setForeground(new Color(22, 101, 52));
             } else {
-                badgeStatus.setText(" ⏸ ПАУЗА ");
+                badgeStatus.setText(I18n.get("cat.badge_pause"));
                 badgeStatus.setBackground(new Color(229, 231, 235));
                 badgeStatus.setForeground(new Color(75, 85, 99));
             }
@@ -389,7 +411,7 @@ public class BotGUI extends JFrame {
 
             // Owner
             if (value.url.contains("without_agent") || value.url.contains("private")) {
-                badgeOwner.setText(" Власник ");
+                badgeOwner.setText(I18n.get("cat.badge_owner"));
                 badgeOwner.setOpaque(true);
                 badgeOwner.setBackground(new Color(254, 240, 138));
                 badgeOwner.setForeground(new Color(133, 77, 14));
@@ -420,7 +442,7 @@ public class BotGUI extends JFrame {
     }
 
     private void openCategoryDialog(JDialog parent) {
-        JDialog categoryDialog = new JDialog(parent, "Керування категоріями пошуку (OLX & DOM.RIA)", true);
+        JDialog categoryDialog = new JDialog(parent, I18n.get("cat.dialog_title"), true);
         categoryDialog.setSize(620, 530);
         categoryDialog.setLayout(new BorderLayout(10, 10));
         categoryDialog.getContentPane().setBackground(COLOR_BG);
@@ -431,7 +453,7 @@ public class BotGUI extends JFrame {
         headerPanel.setBackground(COLOR_BG);
         headerPanel.setBorder(new EmptyBorder(12, 16, 6, 16));
 
-        JLabel headerTitle = new JLabel("Категорії моніторингу нерухомості");
+        JLabel headerTitle = new JLabel(I18n.get("cat.header_title"));
         headerTitle.setFont(new Font("Comic Sans MS", Font.BOLD, 16));
         headerTitle.setForeground(new Color(27, 101, 99));
 
@@ -462,10 +484,10 @@ public class BotGUI extends JFrame {
         JPanel topActionBar = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 6));
         topActionBar.setBackground(COLOR_BG);
 
-        JButton smartAddBtn = createButton("Конструктор категорій", 0, 0, 230, 40);
+        JButton smartAddBtn = createButton(I18n.get("cat.smart_builder_btn"), 0, 0, 230, 40);
         smartAddBtn.setFont(new Font("Comic Sans MS", Font.BOLD, 13));
 
-        JButton manualAddBtn = createButton("Додати URL вручну", 0, 0, 210, 40);
+        JButton manualAddBtn = createButton(I18n.get("cat.manual_add_btn"), 0, 0, 210, 40);
         manualAddBtn.setFont(new Font("Comic Sans MS", Font.BOLD, 13));
 
         topActionBar.add(smartAddBtn);
@@ -481,10 +503,10 @@ public class BotGUI extends JFrame {
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 12));
         bottomPanel.setBackground(COLOR_BG);
 
-        JButton toggleActiveBtn = createButton("ВКЛ / ПАУЗА", 0, 0, 130, 38);
-        JButton editButton = createButton("Редагувати", 0, 0, 120, 38);
-        JButton removeButton = createButton("Видалити", 0, 0, 110, 38);
-        JButton backButton = createButton("Закрити", 0, 0, 100, 38);
+        JButton toggleActiveBtn = createButton(I18n.get("cat.toggle_btn"), 0, 0, 130, 38);
+        JButton editButton = createButton(I18n.get("cat.edit_btn"), 0, 0, 120, 38);
+        JButton removeButton = createButton(I18n.get("cat.remove_btn"), 0, 0, 110, 38);
+        JButton backButton = createButton(I18n.get("cat.close_btn"), 0, 0, 100, 38);
 
         bottomPanel.add(toggleActiveBtn);
         bottomPanel.add(editButton);
@@ -568,7 +590,7 @@ public class BotGUI extends JFrame {
         for (SettingsManager.CategoryEntry c : categories) {
             if (c.active) active++;
         }
-        return "Всього: " + categories.size() + " (активних: " + active + ")";
+        return I18n.get("cat.total") + ": " + categories.size() + " (" + I18n.get("cat.active") + ": " + active + ")";
     }
 
     private void showManualAddDialog(
@@ -576,7 +598,7 @@ public class BotGUI extends JFrame {
             DefaultListModel<SettingsManager.CategoryEntry> model,
             JLabel countBadge
     ) {
-        JDialog dlg = new JDialog(parent, "Ручне додавання посилання на пошук", true);
+        JDialog dlg = new JDialog(parent, I18n.get("manual.dialog_title"), true);
         dlg.setSize(560, 480);
         dlg.setLayout(new BorderLayout(10, 10));
         dlg.getContentPane().setBackground(COLOR_BG);
@@ -590,14 +612,14 @@ public class BotGUI extends JFrame {
         Font fontHead = new Font("Comic Sans MS", Font.BOLD, 14);
         Font fontInput = new Font("Comic Sans MS", Font.PLAIN, 13);
 
-        JLabel titleLbl = new JLabel("Назва категорії (наприклад: Квартири Одеса купівля):");
+        JLabel titleLbl = new JLabel(I18n.get("manual.name_lbl"));
         titleLbl.setFont(fontHead);
         JTextField titleField = new JTextField();
         titleField.setFont(fontInput);
         titleField.setBackground(COLOR_CARD_BG);
         titleField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
 
-        JLabel urlLbl = new JLabel("Пряме посилання на пошук (OLX або DOM.RIA):");
+        JLabel urlLbl = new JLabel(I18n.get("manual.url_lbl"));
         urlLbl.setFont(fontHead);
         JTextField urlField = new JTextField();
         urlField.setFont(new Font("Monospaced", Font.PLAIN, 11));
@@ -636,8 +658,8 @@ public class BotGUI extends JFrame {
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         btnPanel.setBackground(COLOR_BG);
 
-        JButton addBtn = createButton("Додати", 0, 0, 130, 38);
-        JButton cancelBtn = createButton("Скасувати", 0, 0, 110, 38);
+        JButton addBtn = createButton(I18n.get("manual.add_btn"), 0, 0, 130, 38);
+        JButton cancelBtn = createButton(I18n.get("manual.cancel_btn"), 0, 0, 110, 38);
 
         addBtn.addActionListener(ev -> {
             String t = titleField.getText().trim();
@@ -665,7 +687,7 @@ public class BotGUI extends JFrame {
     }
 
     private void openInstructionDialog(JDialog parent) {
-        JDialog instructionDialog = new JDialog(parent, "Довідковий центр та BotFather", true);
+        JDialog instructionDialog = new JDialog(parent, I18n.get("ins.dialog_title"), true);
         instructionDialog.setLayout(new BorderLayout(10, 10));
         instructionDialog.getContentPane().setBackground(COLOR_BG);
         instructionDialog.setResizable(true);
@@ -680,7 +702,7 @@ public class BotGUI extends JFrame {
             headerPanel.add(new JLabel(new ImageIcon(scaled)));
         }
 
-        JLabel titleLabel = new JLabel("Property Searcher — Інструкція та BotFather");
+        JLabel titleLabel = new JLabel("Property Searcher — " + I18n.get("ins.dialog_title"));
         titleLabel.setFont(new Font("Comic Sans MS", Font.BOLD, 18));
         titleLabel.setForeground(new Color(27, 101, 99));
         headerPanel.add(titleLabel);
@@ -732,7 +754,7 @@ public class BotGUI extends JFrame {
         JScrollPane codeScroll = new JScrollPane(codeArea);
         codeScroll.setBorder(null);
 
-        JButton copyCommandsButton = createButton("Скопіювати команди для BotFather (в 1 клік)", 0, 0, 380, 42);
+        JButton copyCommandsButton = createButton(I18n.get("ins.copy_btn"), 0, 0, 380, 42);
         copyCommandsButton.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
         copyCommandsButton.addActionListener(e -> {
             String botFatherCommands = "start - Головне меню та запуск\n" +
@@ -746,14 +768,13 @@ public class BotGUI extends JFrame {
             clipboard.setContents(selection, selection);
 
             copyCommandsButton.setText("Скопійовано в буфер!");
-            Timer t = new Timer(2500, evt -> copyCommandsButton.setText("Скопіювати команди для BotFather (в 1 клік)"));
+            Timer t = new Timer(2500, evt -> copyCommandsButton.setText(I18n.get("ins.copy_btn")));
             t.setRepeats(false);
             t.start();
 
             JOptionPane.showMessageDialog(instructionDialog,
-                    "Команди успішно скопійовано в буфер обміну!\n\n" +
-                    "Тепер просто надішліть їх у чат @BotFather після команди /setcommands.",
-                    "Успішно скопійовано", JOptionPane.INFORMATION_MESSAGE);
+                    I18n.get("ins.copied_notice"),
+                    I18n.get("ins.copied_title"), JOptionPane.INFORMATION_MESSAGE);
         });
 
         JPanel copyBtnWrap = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -778,15 +799,15 @@ public class BotGUI extends JFrame {
         filtersPane.setCaret(null);
         JScrollPane tab3Scroll = new JScrollPane(filtersPane);
 
-        tabbedPane.addTab("BotFather (Кнопки меню)", botFatherTab);
-        tabbedPane.addTab("Швидкий запуск і бот", tab2Scroll);
-        tabbedPane.addTab("Фільтри та антидублікат", tab3Scroll);
+        tabbedPane.addTab(I18n.get("ins.tab_botfather"), botFatherTab);
+        tabbedPane.addTab(I18n.get("ins.tab_quickstart"), tab2Scroll);
+        tabbedPane.addTab(I18n.get("ins.tab_filters"), tab3Scroll);
 
         // Bottom OK
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
         bottomPanel.setBackground(COLOR_BG);
 
-        JButton okButton = createButton("OK", 0, 0, 110, 38);
+        JButton okButton = createButton(I18n.get("ins.close_btn"), 0, 0, 110, 38);
         okButton.addActionListener(e -> instructionDialog.dispose());
         bottomPanel.add(okButton);
 

@@ -45,3 +45,9 @@ Thumbs.db
 *.app/
 last_chat_id.txt
 currency_cache.json
+
+# Private user configuration and secrets
+settings.txt
+*/settings.txt
+**/settings.txt
+
