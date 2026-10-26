@@ -213,10 +213,45 @@ public class SettingsManager {
         return I18n.getLanguage();
     }
 
+    public static List<File> getAllPossibleSettingsFiles() {
+        List<File> list = new ArrayList<>();
+        list.add(new File("settings.txt"));
+
+        try {
+            File jarDir = new File(SettingsManager.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParentFile();
+            if (jarDir != null) {
+                File f2 = new File(jarDir, "settings.txt");
+                if (!list.contains(f2)) list.add(f2);
+                File parent = jarDir.getParentFile();
+                if (parent != null) {
+                    File f3 = new File(parent, "settings.txt");
+                    if (!list.contains(f3)) list.add(f3);
+                    File p2 = parent.getParentFile();
+                    if (p2 != null) {
+                        File f4 = new File(p2, "settings.txt");
+                        if (!list.contains(f4)) list.add(f4);
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+        return list;
+    }
+
     public static void setLanguage(I18n.Language lang) {
         if (lang == null) lang = I18n.Language.UA;
         I18n.setLanguage(lang);
-        File file = getSettingsFile();
+
+        for (File f : getAllPossibleSettingsFiles()) {
+            if (f != null && f.exists()) {
+                updateLanguageInFile(f, lang);
+            }
+        }
+        File primary = getSettingsFile();
+        updateLanguageInFile(primary, lang);
+    }
+
+    private static void updateLanguageInFile(File file, I18n.Language lang) {
+        if (file == null) return;
         List<String> lines = new ArrayList<>();
         boolean replaced = false;
 

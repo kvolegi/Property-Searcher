@@ -15,6 +15,7 @@ public class CreateBot {
     private String botName;
     private String botToken;
     private List<SettingsManager.CategoryEntry> categories;
+    private BotTG botTG;
 
     public CreateBot(String botName, String botToken, List<SettingsManager.CategoryEntry> categories) {
         this.botName = botName;
@@ -30,12 +31,18 @@ public class CreateBot {
         TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
         try {
             log.info("Реєстрація бота...");
-            BotTG botTG = new BotTG(botName, botToken, categories);
+            botTG = new BotTG(botName, botToken, categories);
             telegramBotsApi.registerBot(botTG);
             botTG.triggerStartFromGui();
         } catch (TelegramApiRequestException e) {
             log.error("Помилка реєстрації бота.", e);
         }
         log.info("Телеграм-бот готовий до роботи!");
+    }
+
+    public void updateLanguage(I18n.Language lang) {
+        if (botTG != null) {
+            botTG.onLanguageChanged(lang);
+        }
     }
 }

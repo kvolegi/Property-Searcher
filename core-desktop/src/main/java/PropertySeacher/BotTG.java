@@ -122,7 +122,7 @@ public class BotTG extends TelegramLongPollingBot {
                        lower.contains("мова") || lower.contains("language")) {
                 showLanguageMenu(chatId);
             } else if (text.equalsIgnoreCase("/stop") || lower.contains("зупин") || lower.contains("stop")) {
-                stopSearch();
+                stopSearch(chatId);
             } else if (text.equalsIgnoreCase("/help") || lower.contains("інструкц") ||
                        lower.contains("допомог") || lower.contains("help") || lower.contains("manual") || lower.contains("guide")) {
                 showHelpHub(chatId, null, "help_tab_start");
@@ -170,7 +170,11 @@ public class BotTG extends TelegramLongPollingBot {
             String code = data.substring(9).toUpperCase();
             I18n.Language lang = I18n.Language.fromString(code);
             SettingsManager.setLanguage(lang);
+            I18n.setLanguage(lang);
             sendLanguageChangedMessage(chatId, lang);
+            if (BotGUI.getInstance() != null) {
+                javax.swing.SwingUtilities.invokeLater(() -> BotGUI.getInstance().updateLocalizedTexts());
+            }
         } else if (data != null && data.startsWith("set_curr_")) {
             String modeStr = data.substring(9).toUpperCase();
             try {
@@ -218,6 +222,19 @@ public class BotTG extends TelegramLongPollingBot {
         sm.setParseMode("HTML");
         sm.setReplyMarkup(createPersistentMenu());
         try { execute(sm); } catch (Exception ignored) {}
+    }
+
+    public void onLanguageChanged(I18n.Language lang) {
+        String target = (IDC != null && !IDC.isEmpty()) ? IDC : SettingsManager.getLastChatId();
+        if (target != null) {
+            String msg = (lang == I18n.Language.EN)
+                ? "🌐 <b>Interface language changed to English 🇬🇧</b>"
+                : "🌐 <b>Мову інтерфейсу перемкнено на Українську 🇺🇦</b>";
+            SendMessage sm = new SendMessage(target, msg);
+            sm.setParseMode("HTML");
+            sm.setReplyMarkup(createPersistentMenu());
+            try { execute(sm); } catch (Exception ignored) {}
+        }
     }
 
     private void showCurrencyMenu(String chatId) {
@@ -855,7 +872,7 @@ public class BotTG extends TelegramLongPollingBot {
         String city = "";
         for (CategoryCatalog.City c : CategoryCatalog.getCities()) {
             if (lower.contains("/" + c.domRiaSlug + "/") || lower.contains("/" + c.olxCode + "/") || lower.contains(c.name.toLowerCase())) {
-                city = " " + c.name;
+                city = " " + c.getName(isEn ? I18n.Language.EN : I18n.Language.UA);
                 break;
             }
         }
@@ -1053,13 +1070,19 @@ public class BotTG extends TelegramLongPollingBot {
     }
 
     private void stopSearch() {
+        stopSearch(null);
+    }
+
+    private void stopSearch(String targetChatId) {
         stopSearchThreads();
-        if (IDC != null) {
+        String target = (targetChatId != null && !targetChatId.isEmpty()) ? targetChatId : IDC;
+        if (target == null) target = SettingsManager.getLastChatId();
+        if (target != null) {
             I18n.Language lang = SettingsManager.getLanguage();
             String stopTxt = (lang == I18n.Language.EN)
                 ? "⏸ <b>Listing monitoring stopped.</b>"
                 : "⏸ <b>Моніторинг оголошень зупинено.</b>";
-            SendMessage sm3 = new SendMessage(IDC, stopTxt);
+            SendMessage sm3 = new SendMessage(target, stopTxt);
             sm3.setParseMode("HTML");
             sm3.setReplyMarkup(createPersistentMenu());
             try {
@@ -1280,17 +1303,17 @@ public class BotTG extends TelegramLongPollingBot {
                     } catch (Exception ignored) {}
                 }
 
+                I18n.Language lang = SettingsManager.getLanguage();
                 CurrencyService.CurrencyMode currMode = SettingsManager.getCurrencyPreference();
-                String formattedPrice = CurrencyService.formatPrice(res.price, currMode);
+                String formattedPrice = CurrencyService.formatPrice(res.price, currMode, lang);
                 boolean isNight = isNightTime();
 
                 String cleanTitle = escapeHtml(res.title);
-                String cleanCategory = escapeHtml(categoryName);
+                String cleanCategory = escapeHtml(CategoryCatalog.localizeCategoryName(categoryName, lang));
                 String cleanPrice = escapeHtml(formattedPrice);
                 String cleanPlatform = escapeHtml(res.platform);
                 String cleanTime = escapeHtml(res.timePublished);
 
-                I18n.Language lang = SettingsManager.getLanguage();
                 String lblPrice = I18n.get("card.price", lang);
                 String lblTime = I18n.get("card.time", lang);
                 String lblSource = I18n.get("card.source", lang);

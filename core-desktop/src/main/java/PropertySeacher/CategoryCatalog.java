@@ -135,6 +135,56 @@ public class CategoryCatalog implements Serializable {
     }
 
     /**
+     * Translates standard Ukrainian category titles into clean English when lang == EN.
+     */
+    public static String localizeCategoryName(String rawName, I18n.Language lang) {
+        if (rawName == null) return "";
+        if (lang == I18n.Language.UA) return rawName;
+
+        String s = rawName;
+        s = s.replace("Квартири", "Apartments")
+             .replace("квартир", "apartments")
+             .replace("Будинки / Дачі", "Houses / Cottages")
+             .replace("Будинки", "Houses")
+             .replace("Земельні ділянки", "Land Plots")
+             .replace("Комерційна нерухомість", "Commercial Real Estate")
+             .replace("Кімнати", "Rooms")
+             .replace("Гаражі / Паркомісця", "Garages / Parking")
+             .replace("Довгострокова оренда", "Long-term Rent")
+             .replace("Подобова оренда", "Daily Rent")
+             .replace("Оренда", "Rent")
+             .replace("оренда", "rent")
+             .replace("Продаж", "Buy")
+             .replace("продаж", "buy")
+             .replace("Купівля", "Buy")
+             .replace("купівля", "buy")
+             .replace("Вся Україна", "All Ukraine")
+             .replace("Київ", "Kyiv")
+             .replace("Одеса", "Odesa")
+             .replace("Львів", "Lviv")
+             .replace("Дніпро", "Dnipro")
+             .replace("Харків", "Kharkiv")
+             .replace("Житомир", "Zhytomyr")
+             .replace("Івано-Франківськ", "Ivano-Frankivsk")
+             .replace("Вінниця", "Vinnytsia")
+             .replace("Миколаїв", "Mykolaiv")
+             .replace("Запоріжжя", "Zaporizhzhia")
+             .replace("Полтава", "Poltava")
+             .replace("Черкаси", "Cherkasy")
+             .replace("Чернігів", "Chernihiv")
+             .replace("Рівне", "Rivne")
+             .replace("Луцьк", "Lutsk")
+             .replace("Ужгород", "Uzhhorod")
+             .replace("Чернівці", "Chernivtsi")
+             .replace("Тернопіль", "Ternopil")
+             .replace("Хмельницький", "Khmelnytskyi")
+             .replace("Кропивницький", "Kropyvnytskyi")
+             .replace("Власник", "Owner")
+             .replace("без ріелторів", "direct owner");
+        return s;
+    }
+
+    /**
      * Smart URL Builder for OLX and DOM.RIA
      * Generates proper list layout (view=list) and newest sorting (search[order]=created_at:desc)
      */

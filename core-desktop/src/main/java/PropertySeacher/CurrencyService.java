@@ -156,12 +156,22 @@ public class CurrencyService {
     }
 
     /**
-     * Formats price string according to chosen CurrencyMode.
+     * Formats price string according to chosen CurrencyMode and active language.
      * Original examples: "2 500 000 грн", "$65 000", "45 000 €", "350 $"
      */
     public static String formatPrice(String rawPrice, CurrencyMode mode) {
+        return formatPrice(rawPrice, mode, I18n.getLanguage());
+    }
+
+    public static String formatPrice(String rawPrice, CurrencyMode mode, I18n.Language lang) {
+        boolean isEn = (lang == I18n.Language.EN);
+        String currencyUah = isEn ? "UAH" : "грн";
+        String notSpecified = isEn ? "Price not specified" : "Ціна не вказана";
+        String originalLbl = isEn ? "original: " : "оригінал: ";
+        String negotiableLbl = isEn ? " (Negotiable)" : " (Договірна)";
+
         if (rawPrice == null || rawPrice.isBlank()) {
-            return "Ціна не вказана";
+            return notSpecified;
         }
         if (mode == CurrencyMode.ORIGINAL) {
             return rawPrice.trim();
@@ -188,52 +198,52 @@ public class CurrencyService {
 
         // Anti-spam sanity check (skip formatting anomalous < 50 UAH values)
         if (numericVal < 50 && isUah) {
-            return rawPrice.trim() + " (Символічна/Договірна)";
+            return rawPrice.trim() + negotiableLbl;
         }
 
         if (mode == CurrencyMode.DUAL) {
             if (isUsd) {
                 long equivUah = Math.round(numericVal * usdRate);
-                return "$" + NUM_FMT.format(numericVal) + " (≈ " + NUM_FMT.format(equivUah) + " грн)";
+                return "$" + NUM_FMT.format(numericVal) + " (≈ " + NUM_FMT.format(equivUah) + " " + currencyUah + ")";
             } else if (isEur) {
                 long equivUah = Math.round(numericVal * eurRate);
                 long equivUsd = Math.round((numericVal * eurRate) / usdRate);
-                return "€" + NUM_FMT.format(numericVal) + " (≈ " + NUM_FMT.format(equivUah) + " грн / $" + NUM_FMT.format(equivUsd) + ")";
+                return "€" + NUM_FMT.format(numericVal) + " (≈ " + NUM_FMT.format(equivUah) + " " + currencyUah + " / $" + NUM_FMT.format(equivUsd) + ")";
             } else { // default to UAH
                 long equivUsd = Math.round(numericVal / usdRate);
-                return NUM_FMT.format(numericVal) + " грн (≈ $" + NUM_FMT.format(equivUsd) + ")";
+                return NUM_FMT.format(numericVal) + " " + currencyUah + " (≈ $" + NUM_FMT.format(equivUsd) + ")";
             }
         } else if (mode == CurrencyMode.USD) {
             if (isUsd) {
                 return "$" + NUM_FMT.format(numericVal);
             } else if (isEur) {
                 long equivUsd = Math.round((numericVal * eurRate) / usdRate);
-                return "$" + NUM_FMT.format(equivUsd) + " (оригінал: €" + NUM_FMT.format(numericVal) + ")";
+                return "$" + NUM_FMT.format(equivUsd) + " (" + originalLbl + "€" + NUM_FMT.format(numericVal) + ")";
             } else {
                 long equivUsd = Math.round(numericVal / usdRate);
-                return "$" + NUM_FMT.format(equivUsd) + " (оригінал: " + NUM_FMT.format(numericVal) + " грн)";
+                return "$" + NUM_FMT.format(equivUsd) + " (" + originalLbl + NUM_FMT.format(numericVal) + " " + currencyUah + ")";
             }
         } else if (mode == CurrencyMode.UAH) {
             if (isUah) {
-                return NUM_FMT.format(numericVal) + " грн";
+                return NUM_FMT.format(numericVal) + " " + currencyUah;
             } else if (isUsd) {
                 long equivUah = Math.round(numericVal * usdRate);
-                return NUM_FMT.format(equivUah) + " грн (оригінал: $" + NUM_FMT.format(numericVal) + ")";
+                return NUM_FMT.format(equivUah) + " " + currencyUah + " (" + originalLbl + "$" + NUM_FMT.format(numericVal) + ")";
             } else if (isEur) {
                 long equivUah = Math.round(numericVal * eurRate);
-                return NUM_FMT.format(equivUah) + " грн (оригінал: €" + NUM_FMT.format(numericVal) + ")";
+                return NUM_FMT.format(equivUah) + " " + currencyUah + " (" + originalLbl + "€" + NUM_FMT.format(numericVal) + ")";
             } else {
-                return NUM_FMT.format(numericVal) + " грн";
+                return NUM_FMT.format(numericVal) + " " + currencyUah;
             }
         } else if (mode == CurrencyMode.EUR) {
             if (isEur) {
                 return "€" + NUM_FMT.format(numericVal);
             } else if (isUsd) {
                 long equivEur = Math.round((numericVal * usdRate) / eurRate);
-                return "€" + NUM_FMT.format(equivEur) + " (оригінал: $" + NUM_FMT.format(numericVal) + ")";
+                return "€" + NUM_FMT.format(equivEur) + " (" + originalLbl + "$" + NUM_FMT.format(numericVal) + ")";
             } else {
                 long equivEur = Math.round(numericVal / eurRate);
-                return "€" + NUM_FMT.format(equivEur) + " (оригінал: " + NUM_FMT.format(numericVal) + " грн)";
+                return "€" + NUM_FMT.format(equivEur) + " (" + originalLbl + NUM_FMT.format(numericVal) + " " + currencyUah + ")";
             }
         }
 

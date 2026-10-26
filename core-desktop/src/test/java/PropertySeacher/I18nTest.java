@@ -96,4 +96,37 @@ class I18nTest {
         I18n.Language lang = I18n.Language.fromString(inputCode);
         assertEquals(I18n.Language.valueOf(expectedEnum), lang);
     }
+
+    @Test
+    @DisplayName("Category titles must dynamically translate without mixed language fragments")
+    void testCategoryLocalization() {
+        String uaTitle = "Оренда квартир Київ (OLX)";
+        String enTitle = CategoryCatalog.localizeCategoryName(uaTitle, I18n.Language.EN);
+        assertEquals("Rent apartments Kyiv (OLX)", enTitle);
+
+        String uaTitle2 = "Продаж квартир Одеса (DOM.RIA)";
+        String enTitle2 = CategoryCatalog.localizeCategoryName(uaTitle2, I18n.Language.EN);
+        assertEquals("Buy apartments Odesa (DOM.RIA)", enTitle2);
+
+        String uaDirect = CategoryCatalog.localizeCategoryName(uaTitle, I18n.Language.UA);
+        assertEquals(uaTitle, uaDirect);
+    }
+
+    @Test
+    @DisplayName("Price formatting must strictly honor active language (UAH vs грн, English labels)")
+    void testPriceFormattingBilingual() {
+        String priceUa = CurrencyService.formatPrice("25000 грн", CurrencyService.CurrencyMode.UAH, I18n.Language.UA);
+        assertTrue(priceUa.contains("грн"));
+        assertFalse(priceUa.contains("UAH"));
+
+        String priceEn = CurrencyService.formatPrice("25000 грн", CurrencyService.CurrencyMode.UAH, I18n.Language.EN);
+        assertTrue(priceEn.contains("UAH"));
+        assertFalse(priceEn.contains("грн"));
+
+        String emptyEn = CurrencyService.formatPrice("", CurrencyService.CurrencyMode.DUAL, I18n.Language.EN);
+        assertEquals("Price not specified", emptyEn);
+
+        String emptyUa = CurrencyService.formatPrice("", CurrencyService.CurrencyMode.DUAL, I18n.Language.UA);
+        assertEquals("Ціна не вказана", emptyUa);
+    }
 }
