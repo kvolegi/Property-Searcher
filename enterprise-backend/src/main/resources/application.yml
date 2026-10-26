@@ -23,7 +23,7 @@ spring:
 telegram:
   bot:
     username: ${TELEGRAM_BOT_USERNAME:Property_Searcher_bot}
-    token: ${TELEGRAM_BOT_TOKEN:7588722375:AAF_lWIFPVBk-5fDzD2DO8zBsMieVvYX9Mg}
+    token: ${TELEGRAM_BOT_TOKEN:YOUR_TELEGRAM_BOT_TOKEN}
 
 app:
   tracker:

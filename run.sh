@@ -13,8 +13,9 @@ echo -e "${CYAN}================================================================
 
 case "$1" in
     test)
-        echo -e "${YELLOW}==> Running test suite (JUnit 5)...${NC}"
+        echo -e "${YELLOW}==> Running full test suite (JUnit 5 - 40 tests)...${NC}"
         cd core-desktop && mvn clean test
+        cd ../enterprise-backend && mvn clean test
         ;;
     build)
         echo -e "${YELLOW}==> Building Core Desktop and Enterprise Backend...${NC}"

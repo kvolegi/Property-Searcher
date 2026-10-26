@@ -14,7 +14,7 @@
   <a href="https://www.postgresql.org/"><img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 16" /></a>
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker&logoColor=white" alt="Docker" /></a>
   <a href="https://github.com/kvolegi/Property-Searcher/actions/workflows/ci.yml"><img src="https://github.com/kvolegi/Property-Searcher/actions/workflows/ci.yml/badge.svg" alt="CI / Build & Test" /></a>
-  <a href="#testing--quality-assurance"><img src="https://img.shields.io/badge/Tests-38%20Passed-brightgreen?logo=junit5&logoColor=white" alt="Tests: 38 Passed" /></a>
+  <a href="#testing--quality-assurance"><img src="https://img.shields.io/badge/Tests-40%20Passed-brightgreen?logo=junit5&logoColor=white" alt="Tests: 40 Passed" /></a>
   <a href="ARCHITECTURE.md"><img src="https://img.shields.io/badge/Architecture-Event--Driven%20Ingestion-64CFCB" alt="Architecture" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Proprietary%20%2F%20View--Only-red.svg" alt="License: Proprietary / View-Only" /></a>
   <a href="https://github.com/kvolegi/Property-Searcher/releases"><img src="https://img.shields.io/badge/Release-v3.0.0-blue.svg" alt="Latest Release" /></a>
@@ -88,8 +88,11 @@ Engineered for host environments with intermittent uptime:
 │   ├── workflows/ci.yml            # Automated CI/CD pipeline (JUnit 5 + Maven Build)
 │   ├── ISSUE_TEMPLATE/             # Standardized bug & feature templates
 │   └── PULL_REQUEST_TEMPLATE.md    # Engineering QA PR checklist
+├── .editorconfig                   # Uniform multi-IDE code style configuration
 ├── Makefile                        # Developer CLI orchestration (test, build, docker)
 ├── run.sh                          # Cross-platform runner script
+├── CHANGELOG.md                    # Keep a Changelog historical version record (v1.0 -> v3.0)
+├── SECURITY.md                     # Responsible disclosure and security policies
 ├── ARCHITECTURE.md                 # C4 model, event sequence flows, and design patterns
 ├── TECHNICAL_SPECIFICATION.md      # Engineering requirements and ISO/IEC/IEEE 29148 spec
 ├── DEPLOYMENT.md                   # Production server deployment guide (Docker & systemd)
@@ -204,17 +207,46 @@ For complete production server configuration, systemd daemon setups, Nginx rever
 
 ---
 
-## Testing & Quality Assurance
+## Interactive Interface & Dispatch Telemetry Showcase
 
-The codebase includes an enterprise-grade automated test suite implemented with **JUnit 5 Jupiter**, delivering rigorous verification of mission-critical business logic, anti-bot safety invariants, data parsing, and fault tolerance:
-
-```bash
-# Execute full automated test suite
-cd core-desktop
-mvn clean test
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│  📲 TELEGRAM SNIPER ALERT (Sample Dispatch)                           │
+├────────────────────────────────────────────────────────────────────────┤
+│  🏢 [DOM.RIA] 1-к квартира, вул. Дерибасівська, Одеса                  │
+│                                                                        │
+│  💰 Ціна: $65 000 (≈ 2 704 000 UAH)                                    │
+│  📍 Локація: Приморський район, Центр                                  │
+│  ⚡️ Швидкість виявлення: 1.8s з моменту публікації на CDN Edge        │
+│  🔗 Посилання: https://dom.ria.com/uk/realty-12345678.html             │
+│  🖼 Фотоальбом: 8 якісних фото (SendMediaGroup CDN passthrough)        │
+├────────────────────────────────────────────────────────────────────────┤
+│  🗂 ІНТЕРАКТИВНЕ КЕРУВАННЯ ТАРГЕТАМИ (/categories)                    │
+│                                                                        │
+│  [🟢 1. Одеса 1-к до $70k]      [⏸ Призупинити]    [🗑 Видалити]       │
+│  [⏸ 2. Київ Печерськ оренда]   [▶️ Відновити]      [🗑 Видалити]       │
+│  [➕ Додати новий таргет через 5-кроковий Wizard (/add)]               │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Test Suite Architecture (38 Test Cases, 100% Pass Rate)
+---
+
+## Testing & Quality Assurance
+
+The codebase includes an enterprise-grade automated test suite implemented with **JUnit 5 Jupiter** and **Mockito**, delivering rigorous verification of mission-critical business logic, anti-bot safety invariants, data parsing, and fault tolerance:
+
+```bash
+# Execute desktop test suite (38 tests)
+cd core-desktop && mvn clean test
+
+# Execute enterprise backend test suite (2 tests)
+cd enterprise-backend && mvn clean test
+
+# Or execute all via Makefile
+make test
+```
+
+### Test Suite Architecture (40 Test Cases, 100% Pass Rate)
 
 | Test Module | Coverage Scope | Verified Engineering Invariants |
 | :--- | :--- | :--- |
@@ -223,6 +255,7 @@ mvn clean test
 | **`DeduplicationAndSnipingTest`** (6 tests) | Rate limiting & deduplication | Enforces that `BotTG.calculateAdaptiveDelay()` strictly guarantees global request rates under $2.3\text{ req/s}$ across any category volume $N \in [1, 50]$, eliminating CDN ban vectors; verifies $O(1)$ 50-slot FIFO circular buffer eviction and duplicate rejection. |
 | **`I18nTest`** (11 tests) | Bilingual parity & localization | Validates 100% key parity between Ukrainian (`uk`) and English (`en`) dictionaries (zero missing translations), thread-safe runtime switching, fallback handling, and case-insensitive language code resolution. |
 | **`SettingsManagerTest`** (3 tests) | Configuration persistence | Employs `@TempDir` sandboxed testing to verify round-trip file serialization, deserialization of active/paused (`#OFF#`) targets, custom directives, and backward-compatible settings recovery. |
+| **`TrackingServiceTest`** (2 tests) | Event dispatch & analytics | Tests Spring Boot 3 service layer with Mockito mocks: verifies `LIVE_SNIPE` broadcast dispatch without re-alerting memory buffer duplicates, and `DATABASE_ANALYTICS` price-drop detection and history tracking. |
 
 ---
 
@@ -233,5 +266,5 @@ This project is licensed under a strict **Proprietary Source-Available & Evaluat
 * **Permitted**: Viewing, inspecting, and auditing the source code and documentation solely for prospective employment evaluation, technical review, and portfolio assessment.
 * **Strictly Prohibited**: Running, deploying, redistributing, modifying, sublicensing, or commercially exploiting any part of this software without prior explicit written authorization from the Author.
 
-Copyright (c) 2021–2026 **kvolegi** (`milenapetrushenko0@gmail.com`). All Rights Reserved.  
+Copyright (c) 2021–2026 **kvolegi**. All Rights Reserved.  
 For complete legal terms and conditions, refer to [LICENSE](LICENSE).

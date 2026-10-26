@@ -48,6 +48,10 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: Run Enterprise Backend Automated Test Suite
+        working-directory: enterprise-backend
+        run: mvn clean test --batch-mode
+
       - name: Build Enterprise Backend
         working-directory: enterprise-backend
-        run: mvn clean compile --batch-mode
+        run: mvn package -DskipTests --batch-mode

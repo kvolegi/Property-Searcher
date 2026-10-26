@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: property-seacher-backend
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/property_searcher}
+    driver-class-name: org.postgresql.Driver
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+
+telegram:
+  bot:
+    username: ${TELEGRAM_BOT_USERNAME:Property_Searcher_bot}
+    token: ${TELEGRAM_BOT_TOKEN:YOUR_TELEGRAM_BOT_TOKEN}
+
+app:
+  tracker:
+    delay-ms: ${TRACKER_DELAY_MS:120000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
