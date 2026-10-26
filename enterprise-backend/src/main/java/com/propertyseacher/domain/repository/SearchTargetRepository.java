@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface SearchTargetRepository extends JpaRepository<SearchTarget, Long> {
     List<SearchTarget> findAllByActiveTrue();
+    long countByActiveTrue();
 }

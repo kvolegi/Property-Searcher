@@ -85,11 +85,11 @@ public class TrackingService {
     }
 
     /**
-     * Ultra-fast Live Snipe Mode (zero DB latency, in-memory 10-item buffer check)
-     * Mirrors the original Algoritm class from Property Searcher 2.1.2 with concurrency safety.
+     * Ultra-fast Live Snipe Mode (zero DB latency, in-memory 50-slot ring buffer check)
+     * Matches the core desktop client circular memory buffer specification.
      */
     private void processLiveSnipe(SearchTarget target, List<PropertyDto> scraped) {
-        RingBuffer buffer = liveMemoryBuffers.computeIfAbsent(target.getUrl(), k -> new RingBuffer(10));
+        RingBuffer buffer = liveMemoryBuffers.computeIfAbsent(target.getUrl(), k -> new RingBuffer(50));
 
         for (PropertyDto dto : scraped) {
             if (dto.url() == null || dto.url().isBlank()) continue;
