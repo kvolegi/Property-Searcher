@@ -40,12 +40,18 @@ Property Searcher 3/
 │
 ├── enterprise-backend/             # Хмарний бекенд мікросервісної архітектури
 │   ├── src/main/java/com/propertyseacher/
-│   │   ├── api/PropertyController.java     # REST API контролер з OpenAPI 3.0 анотаціями
-│   │   ├── domain/entity/          # JPA-сутності (User, SearchTarget, DiscoveredProperty, PriceHistory)
-│   │   ├── domain/repository/      # Spring Data JPA репозиторії
-│   │   ├── scraper/strategy/       # Патерн Strategy (OlxScraperStrategy, DomRiaScraperStrategy)
-│   │   ├── analytics/PriceAnalyticsService.java # Статистична аналітика волатильності цін
+│   │   ├── api/PropertyController.java     # REST API контролер з повними OpenAPI 3.0 анотаціями
+│   │   ├── api/GlobalExceptionHandler.java # RFC 7807 централізована обробка винятків (@RestControllerAdvice)
+│   │   ├── api/dto/                        # Валідовані рекорди запитів (CreateTargetRequest, AnalyticsSummaryDto)
+│   │   ├── cache/                          # Плугабельна стратегія кешування (DeduplicationCacheStrategy, RingBuffer)
+│   │   ├── domain/entity/                  # JPA-сутності (User, SearchTarget, DiscoveredProperty, PriceHistory)
+│   │   ├── domain/repository/              # Spring Data JPA репозиторії
+│   │   ├── event/                          # Domain Events: PropertyDiscoveredEvent, PriceChangedEvent
+│   │   ├── event/listener/                 # Асинхронні обробники подій (@Async @EventListener)
+│   │   ├── scraper/strategy/               # Патерн Strategy (OlxScraperStrategy, DomRiaScraperStrategy)
+│   │   ├── analytics/PriceAnalyticsService.java # Статистична аналітика волатильності цін & Hot Deal Engine
 │   │   └── telegram/PropertyTelegramBot.java   # Spring-керований клієнт сповіщень
+│   ├── src/main/resources/db/migration/    # Промислові Flyway міграції (V1__init_schema.sql)
 │   ├── Dockerfile & docker-compose.yml
 │   └── pom.xml
 │
@@ -118,6 +124,11 @@ Property Searcher 3/
 ### 3.5. Night Silent Mode (Нічний режим)
 * Часовий пояс: `Europe/Kyiv` (EET/EEST).
 * У проміжку `23:00 <= currentHour || currentHour < 07:00` метод `SendMediaGroup` отримує прапорець `setDisableNotification(true)`. Повідомлення з'являються в чаті без звуку та вібрації.
+
+### 3.6. Event-Driven Architecture (EDA) & Bargain Anomaly Detection
+* **Шина подій (Spring Event Bus):** При перехопленні оголошення ядро публікує `PropertyDiscoveredEvent`, а при зміні вартості — `PriceChangedEvent`. Обробник `PropertyEventListener` працює асинхронно (`@Async`), виключаючи блокування циклу моніторингу через затримки Telegram Bot API.
+* **Bargain Detection Engine (Оцінка вигідності):** Метод `PriceAnalyticsService.evaluateBargain(...)` обчислює відносне відхилення ціни від бенчмарку категорії. Лістинги з дисконтом $\ge 20\%$ автоматично маркуються інвесторським бейджем `🔥 HOT DEAL (-XX.X%)`.
+* **Плугабельний Cache Strategy:** Інтерфейс `DeduplicationCacheStrategy` з реалізацією `InMemoryRingBufferCacheStrategy` (50 слотів, $O(1)$) дозволяє без змін у бізнес-коді підключати розподілений Redis у хмарних кластерах.
 
 ---
 
