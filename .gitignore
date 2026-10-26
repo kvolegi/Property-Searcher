@@ -43,6 +43,8 @@ Thumbs.db
 
 # Bundled OS runtimes exceeding 100MB (distributed via GitHub Releases)
 *.app/
+*.zip
+dist/PropertySeacher-Enterprise-Server.jar
 last_chat_id.txt
 currency_cache.json
 
