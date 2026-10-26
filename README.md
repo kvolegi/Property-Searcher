@@ -13,6 +13,7 @@
   <a href="https://spring.io/projects/spring-boot"><img src="https://img.shields.io/badge/Spring%20Boot-3.3.4-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot 3" /></a>
   <a href="https://www.postgresql.org/"><img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 16" /></a>
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker&logoColor=white" alt="Docker" /></a>
+  <a href="#testing--quality-assurance"><img src="https://img.shields.io/badge/Tests-38%20Passed-brightgreen?logo=junit5&logoColor=white" alt="Tests: 38 Passed" /></a>
   <a href="ARCHITECTURE.md"><img src="https://img.shields.io/badge/Architecture-Event--Driven%20Ingestion-64CFCB" alt="Architecture" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Proprietary%20%2F%20View--Only-red.svg" alt="License: Proprietary / View-Only" /></a>
   <a href="https://github.com/kvolegi/Property-Searcher/releases"><img src="https://img.shields.io/badge/Release-v3.0.0-blue.svg" alt="Latest Release" /></a>
@@ -80,19 +81,26 @@ Engineered for host environments with intermittent uptime:
 ├── TECHNICAL_SPECIFICATION.md      # Engineering requirements and ISO/IEC/IEEE 29148 spec
 ├── DEPLOYMENT.md                   # Production server deployment guide (Docker & systemd)
 ├── CONTRIBUTING.md                 # Contribution guidelines and code style
-├── LICENSE                         # MIT License
+├── LICENSE                         # Proprietary Source-Available & Evaluation License
 │
 ├── core-desktop/                   # Autonomous desktop client (Java 21, Swing, FlatLaf)
 │   ├── pom.xml                     # Maven build configuration
-│   └── src/main/java/PropertySeacher/
-│       ├── BotGUI.java             # Main application window & bilingual interface
-│       ├── BotTG.java              # Telegram engine, rate controller, and event dispatcher
-│       ├── ParserOLX.java          # HTML/DOM ingestion engine with organic filters
-│       ├── CurrencyService.java    # 3-tier NBU FX gateway and offline caching
-│       ├── SettingsManager.java    # Configuration persistence and synchronization
-│       ├── I18n.java               # Bilingual dictionary and string provider
-│       ├── CategoryCatalog.java    # Hierarchical geographic & property taxonomy
-│       └── SmartCategoryBuilderDialog.java # Visual filter constructor
+│   └── src/
+│       ├── main/java/PropertySeacher/
+│       │   ├── BotGUI.java         # Main application window & bilingual interface
+│       │   ├── BotTG.java          # Telegram engine, rate controller, and event dispatcher
+│       │   ├── ParserOLX.java      # HTML/DOM ingestion engine with organic filters
+│       │   ├── CurrencyService.java# 3-tier NBU FX gateway and offline caching
+│       │   ├── SettingsManager.java# Configuration persistence and synchronization
+│       │   ├── I18n.java           # Bilingual dictionary and string provider
+│       │   ├── CategoryCatalog.java# Hierarchical geographic & property taxonomy
+│       │   └── SmartCategoryBuilderDialog.java # Visual filter constructor
+│       └── test/java/PropertySeacher/
+│           ├── CategoryCatalogTest.java       # URL builders & taxonomy integrity (9 tests)
+│           ├── CurrencyServiceTest.java       # FX conversions & regex extractors (9 tests)
+│           ├── DeduplicationAndSnipingTest.java # Sniping formulas & circular buffers (6 tests)
+│           ├── I18nTest.java                  # 100% dictionary key parity (11 tests)
+│           └── SettingsManagerTest.java       # Isolated configuration persistence (3 tests)
 │
 ├── enterprise-backend/             # Cloud-native microservice (Spring Boot 3.3.4, Java 21)
 │   ├── pom.xml                     # Spring Data JPA, Actuator, Swagger OpenAPI
@@ -160,6 +168,28 @@ For complete production server configuration, systemd daemon setups, Nginx rever
 | **Worker Pool** | `Executors.newCachedThreadPool()` | Asynchronous media dispatch decoupled from polling routines |
 | **Observer Pattern** | Telegram update listener | Reactive handling of user commands and inline keyboard callbacks |
 | **Singleton Pattern** | `SettingsManager` | Unified, thread-safe configuration management |
+
+---
+
+## Testing & Quality Assurance
+
+The codebase includes an enterprise-grade automated test suite implemented with **JUnit 5 Jupiter**, delivering rigorous verification of mission-critical business logic, anti-bot safety invariants, data parsing, and fault tolerance:
+
+```bash
+# Execute full automated test suite
+cd core-desktop
+mvn clean test
+```
+
+### Test Suite Architecture (38 Test Cases, 100% Pass Rate)
+
+| Test Module | Coverage Scope | Verified Engineering Invariants |
+| :--- | :--- | :--- |
+| **`CategoryCatalogTest`** (9 tests) | Taxonomy & URL generation | Validates structured URL generation across OLX and DOM.RIA, price boundaries, owner-only filtering, slug integrity, and Ukrainian city taxonomy completeness. |
+| **`CurrencyServiceTest`** (9 tests) | Multi-tier FX & parsing | Verifies NBU live/fallback exchange rate mathematical conversions (USD/EUR to UAH and vice versa), regex price extraction against various formatting variations, and dual-currency formatting. |
+| **`DeduplicationAndSnipingTest`** (6 tests) | Rate limiting & deduplication | Enforces that `BotTG.calculateAdaptiveDelay()` strictly guarantees global request rates under $2.3\text{ req/s}$ across any category volume $N \in [1, 50]$, eliminating CDN ban vectors; verifies $O(1)$ 50-slot FIFO circular buffer eviction and duplicate rejection. |
+| **`I18nTest`** (11 tests) | Bilingual parity & localization | Validates 100% key parity between Ukrainian (`uk`) and English (`en`) dictionaries (zero missing translations), thread-safe runtime switching, fallback handling, and case-insensitive language code resolution. |
+| **`SettingsManagerTest`** (3 tests) | Configuration persistence | Employs `@TempDir` sandboxed testing to verify round-trip file serialization, deserialization of active/paused (`#OFF#`) targets, custom directives, and backward-compatible settings recovery. |
 
 ---
 

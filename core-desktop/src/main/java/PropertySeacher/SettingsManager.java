@@ -91,9 +91,12 @@ public class SettingsManager {
     }
 
     public static List<CategoryEntry> loadCategories() {
+        return loadCategoriesFromFile(getSettingsFile());
+    }
+
+    public static List<CategoryEntry> loadCategoriesFromFile(File file) {
         List<CategoryEntry> list = new ArrayList<>();
-        File file = getSettingsFile();
-        if (!file.exists()) return list;
+        if (file == null || !file.exists()) return list;
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             reader.readLine(); // bot name
@@ -245,7 +248,7 @@ public class SettingsManager {
         saveToFile(target, botName, botToken, categories);
     }
 
-    private static void saveToFile(File file, String botName, String botToken, List<CategoryEntry> categories) {
+    public static void saveToFile(File file, String botName, String botToken, List<CategoryEntry> categories) {
         try {
             if (file.getParentFile() != null) {
                 file.getParentFile().mkdirs();

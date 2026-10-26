@@ -144,6 +144,17 @@ public class CurrencyService {
         }
     }
 
+    public static long extractNumericPrice(String rawPrice) {
+        if (rawPrice == null) return 0;
+        String digitsOnly = rawPrice.replaceAll("[^0-9]", "");
+        if (digitsOnly.isEmpty()) return 0;
+        try {
+            return Long.parseLong(digitsOnly);
+        } catch (Exception ex) {
+            return 0;
+        }
+    }
+
     /**
      * Formats price string according to chosen CurrencyMode.
      * Original examples: "2 500 000 грн", "$65 000", "45 000 €", "350 $"
