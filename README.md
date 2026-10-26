@@ -33,7 +33,9 @@ Property Searcher 3 is designed as a hybrid dual-tier architecture:
 
 ---
 
-## 📸 Application Showcase & User Interface
+## 📸 Application Showcase & Ecosystem
+
+### 🖥️ Desktop Application Interface
 
 | Main Dashboard & Control Center | Settings & Configuration Dialog |
 | :---: | :---: |
@@ -50,6 +52,18 @@ Property Searcher 3 is designed as a hybrid dual-tier architecture:
   <img src="docs/screenshots/05_botfather_instructions.png" alt="BotFather Instructions" width="750" /><br/>
   <i>Embedded step-by-step BotFather token provisioning guide with direct one-click copy and instant verification.</i>
 </p>
+
+### 📱 Telegram Bot Operations Hub & Real-Time Alerts
+
+| Desktop Command & Help Hub | In-Chat Category Management |
+| :---: | :---: |
+| <img src="docs/screenshots/06_telegram_desktop_hub.png" alt="Telegram Desktop Hub" width="450" /> | <img src="docs/screenshots/07_telegram_category_management.png" alt="Telegram Category Management" width="300" /> |
+| **Desktop Operations Hub & Interactive Manual**<br/>Widescreen desktop Telegram experience featuring multi-tab documentation (`/help`), live status inspection, and persistent shortcut keyboard. | **Card-Based Target Management (`/categories`)**<br/>Real-time target status indicators (🟢 ACTIVE / ⏸ PAUSED) with instant inline action buttons `[Pause]`, `[Delete]`, `[Turn On]`, and builder triggers. |
+
+| Multi-Currency & Language Preferences | High-Resolution Photo Album Delivery |
+| :---: | :---: |
+| <img src="docs/screenshots/08_telegram_currency_language.png" alt="Currency & Language Settings" width="300" /> | <img src="docs/screenshots/09_telegram_mobile_gallery.png" alt="Photo Gallery Alert" width="300" /> |
+| **Dual-Currency Valuation & i18n Switching**<br/>Live NBU cached exchange rates with customizable display modes (`DUAL`, `USD`, `UAH`, `EUR`, `As Listed`) and one-tap English/Ukrainian toggle. | **Sub-2s Real-Time Edge Sniping Alert**<br/>Zero-download media group album delivery with direct portal deep-links, exact timestamps, and formatted property details. |
 
 ---
 

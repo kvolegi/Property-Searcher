@@ -215,3 +215,15 @@ sequenceDiagram
   <i>Інтегроване керівництво швидкого старту та верифікації токенів Telegram.</i>
 </p>
 
+### Інтерфейс взаємодії у Telegram (Bot Operations Hub)
+
+| Центр керування та довідка (Desktop) | Інтерактивне керування категоріями |
+| :---: | :---: |
+| ![Desktop Hub](docs/screenshots/06_telegram_desktop_hub.png) | ![Categories](docs/screenshots/07_telegram_category_management.png) |
+| *Інтерактивний довідковий центр `/help`.* | *Картковий моніторинг з діями Pause/Delete.* |
+
+| Мультивалютність та локалізація | Миттєва доставка фотоальбомів |
+| :---: | :---: |
+| ![Settings](docs/screenshots/08_telegram_currency_language.png) | ![Alert Card](docs/screenshots/09_telegram_mobile_gallery.png) |
+| *Динамічне налаштування курсів НБУ та мови.* | *Потокова доставка медіагруп без навантаження на диск.* |
+
