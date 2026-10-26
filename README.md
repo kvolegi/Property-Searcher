@@ -14,7 +14,7 @@
   <a href="https://www.postgresql.org/"><img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 16" /></a>
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker&logoColor=white" alt="Docker" /></a>
   <a href="https://github.com/kvolegi/Property-Searcher/actions/workflows/ci.yml"><img src="https://github.com/kvolegi/Property-Searcher/actions/workflows/ci.yml/badge.svg" alt="CI / Build & Test" /></a>
-  <a href="#testing--quality-assurance"><img src="https://img.shields.io/badge/Tests-40%20Passed-brightgreen?logo=junit5&logoColor=white" alt="Tests: 40 Passed" /></a>
+  <a href="#testing--quality-assurance"><img src="https://img.shields.io/badge/Tests-48%20Passed-brightgreen?logo=junit5&logoColor=white" alt="Tests: 48 Passed" /></a>
   <a href="ARCHITECTURE.md"><img src="https://img.shields.io/badge/Architecture-Event--Driven%20Ingestion-64CFCB" alt="Architecture" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Proprietary%20%2F%20View--Only-red.svg" alt="License: Proprietary / View-Only" /></a>
   <a href="https://github.com/kvolegi/Property-Searcher/releases"><img src="https://img.shields.io/badge/Release-v3.0.0-blue.svg" alt="Latest Release" /></a>
@@ -270,26 +270,27 @@ For complete production server configuration, systemd daemon setups, Nginx rever
 The codebase includes an enterprise-grade automated test suite implemented with **JUnit 5 Jupiter** and **Mockito**, delivering rigorous verification of mission-critical business logic, anti-bot safety invariants, data parsing, and fault tolerance:
 
 ```bash
-# Execute desktop test suite (38 tests)
+# Execute desktop test suite (40 tests)
 cd core-desktop && mvn clean test
 
-# Execute enterprise backend test suite (2 tests)
+# Execute enterprise backend test suite (8 tests)
 cd enterprise-backend && mvn clean test
 
 # Or execute all via Makefile
 make test
 ```
 
-### Test Suite Architecture (40 Test Cases, 100% Pass Rate)
+### Test Suite Architecture (48 Test Cases, 100% Pass Rate)
 
 | Test Module | Coverage Scope | Verified Engineering Invariants |
 | :--- | :--- | :--- |
 | **`CategoryCatalogTest`** (9 tests) | Taxonomy & URL generation | Validates structured URL generation across OLX and DOM.RIA, price boundaries, owner-only filtering, slug integrity, and Ukrainian city taxonomy completeness. |
 | **`CurrencyServiceTest`** (9 tests) | Multi-tier FX & parsing | Verifies NBU live/fallback exchange rate mathematical conversions (USD/EUR to UAH and vice versa), regex price extraction against various formatting variations, and dual-currency formatting. |
 | **`DeduplicationAndSnipingTest`** (6 tests) | Rate limiting & deduplication | Enforces that `BotTG.calculateAdaptiveDelay()` strictly guarantees global request rates under $2.3\text{ req/s}$ across any category volume $N \in [1, 50]$, eliminating CDN ban vectors; verifies $O(1)$ 50-slot FIFO circular buffer eviction and duplicate rejection. |
-| **`I18nTest`** (11 tests) | Bilingual parity & localization | Validates 100% key parity between Ukrainian (`uk`) and English (`en`) dictionaries (zero missing translations), thread-safe runtime switching, fallback handling, and case-insensitive language code resolution. |
+| **`I18nTest`** (13 tests) | Bilingual parity & localization | Validates 100% key parity between Ukrainian (`uk`) and English (`en`) dictionaries (zero missing translations), thread-safe runtime switching, fallback handling, and case-insensitive language code resolution. |
 | **`SettingsManagerTest`** (3 tests) | Configuration persistence | Employs `@TempDir` sandboxed testing to verify round-trip file serialization, deserialization of active/paused (`#OFF#`) targets, custom directives, and backward-compatible settings recovery. |
-| **`TrackingServiceTest`** (2 tests) | Event dispatch & analytics | Tests Spring Boot 3 service layer with Mockito mocks: verifies `LIVE_SNIPE` broadcast dispatch without re-alerting memory buffer duplicates, and `DATABASE_ANALYTICS` price-drop detection and history tracking. |
+| **`PropertyControllerTest`** (5 tests) | REST API & WebMvc MockMvc | Tests Spring Boot 3 WebMvc slice: verifies `200 OK` paginated listings, `201 Created` target persistence with valid DTOs, `400 Bad Request` RFC 7807 global exception handling on invalid URLs, `202 Accepted` async trigger, and telemetry aggregation. |
+| **`TrackingServiceTest`** (3 tests) | Event dispatch & analytics | Tests Spring Boot 3 service layer with Mockito: verifies `LIVE_SNIPE` event publishing with pluggable cache deduplication, `DATABASE_ANALYTICS` price-drop tracking, and statistical `Hot Deal` valuation math ($z$-score / discount ratios). |
 
 ---
 

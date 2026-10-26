@@ -6,10 +6,10 @@ help: ## Show this help message
 	@echo "=================================================================="
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
-test: ## Execute the full automated test suite across all modules (40 tests)
-	@echo "==> Running automated tests in core-desktop (38 tests)..."
+test: ## Execute the full automated test suite across all modules (48 tests)
+	@echo "==> Running automated tests in core-desktop (40 tests)..."
 	cd core-desktop && mvn clean test
-	@echo "==> Running automated tests in enterprise-backend (2 tests)..."
+	@echo "==> Running automated tests in enterprise-backend (8 tests)..."
 	cd enterprise-backend && mvn clean test
 
 build: ## Compile and package both Core Desktop and Enterprise Backend
