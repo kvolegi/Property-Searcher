@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="dist/assets/logo_256.png" alt="Property Searcher 3 Logo" width="130" height="130" />
+  <img src="docs/screenshots/00_brand_logo_highres.png" alt="Property Searcher 3 Logo" width="130" height="130" />
 </p>
 
 <h1 align="center">Property Searcher 3</h1>
