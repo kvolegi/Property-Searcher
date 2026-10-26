@@ -33,6 +33,26 @@ Property Searcher 3 is designed as a hybrid dual-tier architecture:
 
 ---
 
+## 📸 Application Showcase & User Interface
+
+| Main Dashboard & Control Center | Settings & Configuration Dialog |
+| :---: | :---: |
+| <img src="docs/screenshots/01_main_dashboard.png" alt="Main Dashboard" width="450" /> | <img src="docs/screenshots/02_settings_dialog.png" alt="Settings Dialog" width="450" /> |
+| **Intuitive Desktop Control Center**<br/>One-click daemon lifecycle management, live status telemetry, and bilingual language switching. | **Centralized Preference Management**<br/>Telegram Bot credentials, language selector, category builder entry points, and manual target rules. |
+
+| Smart Category & Filter Builder | Manual URL Rule Addition |
+| :---: | :---: |
+| <img src="docs/screenshots/03_smart_category_builder.png" alt="Smart Category Builder" width="450" /> | <img src="docs/screenshots/04_manual_url_addition.png" alt="Manual URL Addition" width="450" /> |
+| **Visual Query & Filter Wizard**<br/>Multi-platform rule construction (OLX & DOM.RIA), operation types (Rent/Buy), room filters, and budget limits. | **Direct URL Intake & Validation**<br/>Paste complex portal URLs directly; automated parameter stripping and dynamic category naming. |
+
+<p align="center">
+  <b>Telegram BotFather Integration & Quickstart Manual</b><br/>
+  <img src="docs/screenshots/05_botfather_instructions.png" alt="BotFather Instructions" width="750" /><br/>
+  <i>Embedded step-by-step BotFather token provisioning guide with direct one-click copy and instant verification.</i>
+</p>
+
+---
+
 ## Key Technical Innovations & Engineering Highlights
 
 ### 1. Sub-2-Second CDN Edge Detection & Propagation Physics

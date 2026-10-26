@@ -192,3 +192,26 @@ sequenceDiagram
 | **Worker Pool (Producer-Consumer)**| `Executors.newCachedThreadPool()` | Асинхронне надсилання важких альбомів без зупинки парсингу |
 | **Observer** | Telegram API `onUpdateReceived()` | Реактивна обробка команд користувачів (`/language`, `/currency`) |
 | **Singleton** | `SettingsManager` | Гарантія єдиного джерела конфігурації в системі |
+
+---
+
+## 7. Візуальний інтерфейс та інтеграція компонентів (UI Showcase)
+
+Архітектура клієнтської частини базується на ергономічному UI з повною двомовною локалізацією:
+
+| Панель моніторингу (Dashboard) | Центр налаштувань (Settings) |
+| :---: | :---: |
+| ![Dashboard](docs/screenshots/01_main_dashboard.png) | ![Settings](docs/screenshots/02_settings_dialog.png) |
+| *Керування життєвим циклом демона спостереження.* | *Конфігурація токенів, локалізації та правил.* |
+
+| Розумний конструктор фільтрів | Пряме додавання URL цілей |
+| :---: | :---: |
+| ![Smart Builder](docs/screenshots/03_smart_category_builder.png) | ![Direct URL Rules](docs/screenshots/04_manual_url_addition.png) |
+| *Візуальне створення критеріїв пошуку.* | *Валідація та очищення цільових посилань.* |
+
+<p align="center">
+  <b>Інструкція підключення Telegram BotFather</b><br/>
+  <img src="docs/screenshots/05_botfather_instructions.png" alt="BotFather Setup" width="700" /><br/>
+  <i>Інтегроване керівництво швидкого старту та верифікації токенів Telegram.</i>
+</p>
+
