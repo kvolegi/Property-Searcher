@@ -84,15 +84,18 @@ flowchart TD
 
     subgraph Core_Services ["Service & Domain Logic"]
         TS["TrackingService\n(Координатор оновлень)"]
-        PAS["PriceAnalyticsService\n(Аналітика волатильності)"]
+        PAS["PriceAnalyticsService\n(Аналітика волатильності & Hot Deal Engine)"]
         SS["ScraperService\n(Фасад скрапінгу)"]
-        TNS["TelegramNotificationService\n(Асинхронний диспетчер)"]
+        EP["ApplicationEventPublisher\n(Шина подій EDA)"]
+        PEL["PropertyEventListener\n(Асинхронний обробник подій)"]
+        TNS["TelegramNotificationService\n(Диспетчер сповіщень)"]
     end
 
     subgraph Strategy_Layer ["Strategy Pattern Layer"]
         OLX_Strat["OlxScraperStrategy"]
         DOMRIA_Strat["DomRiaScraperStrategy"]
         MOCK_Strat["MockScraperStrategy"]
+        Cache_Strat["DeduplicationCacheStrategy\n(InMemoryRingBufferStrategy / Redis-Ready)"]
     end
 
     subgraph Persistence_Layer ["Data Access Layer (Spring Data JPA)"]
@@ -106,7 +109,10 @@ flowchart TD
     TB --> TS
     TS --> SS
     TS --> PAS
-    TS --> TNS
+    TS --> Cache_Strat
+    TS --> EP
+    EP --> PEL
+    PEL --> TNS
     SS --> OLX_Strat
     SS --> DOMRIA_Strat
     SS --> MOCK_Strat
@@ -186,6 +192,9 @@ sequenceDiagram
 | Шаблон (GoF Pattern) | Клас / Компонент | Роль в системі |
 | :--- | :--- | :--- |
 | **Strategy** | `ScraperStrategy`, `OlxScraperStrategy` | Ізоляція алгоритмів парсингу для різних порталів |
+| **Strategy (Cache)**| `DeduplicationCacheStrategy`, `InMemoryRingBufferCacheStrategy` | Плугабельна стратегія дедуплікації (In-Memory Circular Buffer / Redis-Ready) |
+| **Domain Events (EDA)**| `PropertyDiscoveredEvent`, `PriceChangedEvent`, `PropertyEventListener` | Event-Driven Архітектура для повної ізоляції скрапінгу від диспетчеризації |
+| **Statistical Anomaly**| `PriceAnalyticsService.evaluateBargain()` | Статистичне виявлення гарячих пропозицій (Hot Deals) на базі z-score відхилень |
 | **Token-Bucket Rate Limiter** | `BotTG.calculateAdaptiveDelay()` | Запобігання блокуванням за IP та WAF CloudFront |
 | **Circuit Breaker / Fallback** | `CurrencyService` | 3-рівневий шлюз валют (NBU API $\to$ Local Cache $\to$ Built-in Constants) |
 | **Circular Buffer (FIFO)** | Внутрішній масив 50 слотів у `BotTG` | Робота зі стабільною пам'яттю $O(1)$ без витоків |
