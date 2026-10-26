@@ -442,6 +442,7 @@ public class BotGUI extends JFrame {
     }
 
     private void openCategoryDialog(JDialog parent) {
+        categories = SettingsManager.loadCategories();
         JDialog categoryDialog = new JDialog(parent, I18n.get("cat.dialog_title"), true);
         categoryDialog.setSize(620, 530);
         categoryDialog.setLayout(new BorderLayout(10, 10));

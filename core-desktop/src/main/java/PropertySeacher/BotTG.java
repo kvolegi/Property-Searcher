@@ -6,6 +6,7 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -99,14 +100,17 @@ public class BotTG extends TelegramLongPollingBot {
 
             String text = message.getText().trim();
 
-            if (text.equalsIgnoreCase("/start") || text.equalsIgnoreCase("старт")) {
+            if (text.startsWith("http://") || text.startsWith("https://") ||
+                text.contains("olx.ua") || text.contains("dom.ria.com")) {
+                handleDirectUrlInput(chatId, text);
+            } else if (text.equalsIgnoreCase("/start") || text.equalsIgnoreCase("старт")) {
                 sendWelcomeMessage(chatId);
                 // Immediately start monitoring and send latest listings on /start
                 startSearch(chatId);
             } else if (text.equalsIgnoreCase("/search") || text.contains("Пошук зараз")) {
                 startSearch(chatId);
             } else if (text.equalsIgnoreCase("/targets") || text.contains("Мої категорії") || text.contains("Категорії")) {
-                showCategories(chatId);
+                showCategories(chatId, null);
             } else if (text.contains("Статус") || text.contains("Status")) {
                 showStatus(chatId);
             } else if (text.equalsIgnoreCase("/currency") || text.contains("Валюта") || text.contains("Currency")) {
@@ -116,7 +120,7 @@ public class BotTG extends TelegramLongPollingBot {
             } else if (text.equalsIgnoreCase("/stop") || text.contains("Зупинити") || text.contains("Stop")) {
                 stopSearch();
             } else if (text.equalsIgnoreCase("/help") || text.contains("Інструкція") || text.contains("Допомога") || text.contains("Help")) {
-                sendHelpMessage(chatId);
+                showHelpHub(chatId, null, "help_tab_start");
             } else if (text.equalsIgnoreCase("/botfather") || text.contains("BotFather")) {
                 sendBotFatherHelp(chatId);
             } else {
@@ -130,6 +134,7 @@ public class BotTG extends TelegramLongPollingBot {
     private void handleCallbackQuery(CallbackQuery callbackQuery) {
         String data = callbackQuery.getData();
         String chatId = callbackQuery.getMessage().getChatId().toString();
+        Integer messageId = callbackQuery.getMessage() != null ? callbackQuery.getMessage().getMessageId() : null;
         saveLastChatId(chatId);
 
         if ("cmd_search".equals(data)) {
@@ -137,13 +142,25 @@ public class BotTG extends TelegramLongPollingBot {
         } else if ("cmd_stop".equals(data)) {
             stopSearch();
         } else if ("cmd_targets".equals(data)) {
-            showCategories(chatId);
+            showCategories(chatId, messageId);
         } else if ("cmd_status".equals(data)) {
             showStatus(chatId);
         } else if ("cmd_currency".equals(data)) {
             showCurrencyMenu(chatId);
         } else if ("cmd_language".equals(data)) {
             showLanguageMenu(chatId);
+        } else if ("cmd_help".equals(data)) {
+            showHelpHub(chatId, messageId, "help_tab_start");
+        } else if (data != null && data.startsWith("help_tab_")) {
+            showHelpHub(chatId, messageId, data);
+        } else if ("btn_add_url".equals(data)) {
+            sendAddUrlPrompt(chatId, messageId);
+        } else if ("wiz_start".equals(data) || (data != null && data.startsWith("wiz_"))) {
+            handleWizardStep(chatId, messageId, data);
+        } else if (data != null && data.startsWith("cat_tog_")) {
+            handleCategoryToggle(chatId, messageId, data);
+        } else if (data != null && data.startsWith("cat_del_")) {
+            handleCategoryDelete(chatId, messageId, data);
         } else if (data != null && data.startsWith("set_lang_")) {
             String code = data.substring(9).toUpperCase();
             I18n.Language lang = I18n.Language.fromString(code);
@@ -156,8 +173,6 @@ public class BotTG extends TelegramLongPollingBot {
                 SettingsManager.setCurrencyPreference(mode);
                 sendCurrencyChangedMessage(chatId, mode);
             } catch (Exception ignored) {}
-        } else if ("cmd_help".equals(data)) {
-            sendHelpMessage(chatId);
         }
     }
 
@@ -387,30 +402,582 @@ public class BotTG extends TelegramLongPollingBot {
     }
 
     private void showCategories(String chatId) {
+        showCategories(chatId, null);
+    }
+
+    private void showCategories(String chatId, Integer messageIdToEdit) {
         List<SettingsManager.CategoryEntry> categories = getCurrentCategories();
+        I18n.Language lang = SettingsManager.getLanguage();
+        boolean isEn = (lang == I18n.Language.EN);
+
         if (categories.isEmpty()) {
-            SendMessage sm = new SendMessage(chatId, "⚠️ Наразі немає доданих категорій!");
+            String emptyText = isEn
+                ? "📋 <b>Search Targets:</b>\n\n⚠️ <i>No search categories added yet!</i>\nCreate one via the Builder or send a direct URL to this chat."
+                : "📋 <b>Категорії моніторингу:</b>\n\n⚠️ <i>Наразі немає доданих категорій!</i>\nСтворіть ціль через Конструктор або надішліть посилання прямо в цей чат.";
+
+            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+            List<InlineKeyboardButton> r1 = new ArrayList<>();
+            r1.add(createBtn(isEn ? "➕ Category Builder" : "➕ Конструктор категорій", "wiz_start"));
+            r1.add(createBtn(isEn ? "🔗 Add by Link" : "🔗 Додати посиланням", "btn_add_url"));
+            rows.add(r1);
+            markup.setKeyboard(rows);
+
+            sendOrEditMessage(chatId, messageIdToEdit, emptyText, markup);
+            return;
+        }
+
+        int activeCount = 0;
+        for (SettingsManager.CategoryEntry c : categories) {
+            if (c.active) activeCount++;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(isEn ? "📋 <b>Target Categories Management:</b>\n" : "📋 <b>Керування категоріями моніторингу:</b>\n");
+        sb.append(isEn ? "Total: <b>" : "Всього: <b>").append(categories.size())
+          .append(isEn ? "</b> | Active: <b>" : "</b> | Активних: <b>").append(activeCount).append("</b>\n\n");
+
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        for (int i = 0; i < categories.size(); i++) {
+            SettingsManager.CategoryEntry c = categories.get(i);
+            String plat = c.url.contains("dom.ria") ? "DOM.RIA" : "OLX";
+            String statusIcon = c.active ? (isEn ? "🟢 ACTIVE" : "🟢 ВКЛ") : (isEn ? "⏸ PAUSED" : "⏸ ПАУЗА");
+            boolean isOwner = c.url.contains("without_agent") || c.url.contains("private");
+
+            sb.append("<b>").append(i + 1).append(". ").append(escapeHtml(c.name)).append("</b> [").append(plat).append("]")
+              .append(isOwner ? (isEn ? " <i>(Direct)</i>" : " <i>(Власник)</i>") : "")
+              .append("\n• ").append(isEn ? "Status: " : "Статус: ").append(statusIcon).append("\n\n");
+
+            List<InlineKeyboardButton> actionRow = new ArrayList<>();
+            InlineKeyboardButton togBtn = new InlineKeyboardButton();
+            if (c.active) {
+                togBtn.setText(isEn ? "⏸ Pause #" + (i + 1) : "⏸ Пауза #" + (i + 1));
+            } else {
+                togBtn.setText(isEn ? "🟢 Turn On #" + (i + 1) : "🟢 Увімкнути #" + (i + 1));
+            }
+            togBtn.setCallbackData("cat_tog_" + i);
+
+            InlineKeyboardButton delBtn = new InlineKeyboardButton(isEn ? "🗑 Delete #" + (i + 1) : "🗑 Видалити #" + (i + 1));
+            delBtn.setCallbackData("cat_del_" + i);
+
+            actionRow.add(togBtn);
+            actionRow.add(delBtn);
+            rows.add(actionRow);
+        }
+
+        // Bottom Navigation Bar
+        List<InlineKeyboardButton> nav1 = new ArrayList<>();
+        nav1.add(createBtn(isEn ? "➕ Category Builder" : "➕ Конструктор категорій", "wiz_start"));
+        nav1.add(createBtn(isEn ? "🔗 Add by Link" : "🔗 Додати посиланням", "btn_add_url"));
+        rows.add(nav1);
+
+        List<InlineKeyboardButton> nav2 = new ArrayList<>();
+        nav2.add(createBtn(isEn ? "▶️ Start Monitoring" : "▶️ Запустити моніторинг", "cmd_search"));
+        nav2.add(createBtn(isEn ? "🔄 Refresh" : "🔄 Оновити список", "cmd_targets"));
+        rows.add(nav2);
+
+        markup.setKeyboard(rows);
+        sendOrEditMessage(chatId, messageIdToEdit, sb.toString(), markup);
+    }
+
+    private void handleCategoryToggle(String chatId, Integer messageId, String data) {
+        int idx = Integer.parseInt(data.substring(8));
+        List<SettingsManager.CategoryEntry> list = getCurrentCategories();
+        if (idx >= 0 && idx < list.size()) {
+            SettingsManager.CategoryEntry entry = list.get(idx);
+            entry.active = !entry.active;
+            this.memoryCategories = list;
+            SettingsManager.saveSettings(botName, botToken, list);
+            if (IDC != null && !runningAlgorithms.isEmpty()) {
+                startSearch(IDC);
+            }
+        }
+        showCategories(chatId, messageId);
+    }
+
+    private void handleCategoryDelete(String chatId, Integer messageId, String data) {
+        int idx = Integer.parseInt(data.substring(8));
+        List<SettingsManager.CategoryEntry> list = getCurrentCategories();
+        if (idx >= 0 && idx < list.size()) {
+            list.remove(idx);
+            this.memoryCategories = list;
+            SettingsManager.saveSettings(botName, botToken, list);
+            if (IDC != null && !runningAlgorithms.isEmpty()) {
+                startSearch(IDC);
+            }
+        }
+        showCategories(chatId, messageId);
+    }
+
+    private void handleWizardStep(String chatId, Integer messageIdToEdit, String data) {
+        I18n.Language lang = SettingsManager.getLanguage();
+        boolean isEn = (lang == I18n.Language.EN);
+
+        if ("wiz_start".equals(data)) {
+            String prompt = isEn
+                ? "🛠 <b>Category Builder (Step 1/5)</b>\n\nChoose real estate search platform:"
+                : "🛠 <b>Конструктор категорій (Крок 1 з 5)</b>\n\nОберіть платформу пошуку нерухомості:";
+
+            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+            List<InlineKeyboardButton> r1 = new ArrayList<>();
+            r1.add(createBtn("🔵 OLX.ua", "wiz_p_OLX"));
+            r1.add(createBtn("🟢 DOM.RIA", "wiz_p_DOM.RIA"));
+            rows.add(r1);
+
+            List<InlineKeyboardButton> rCancel = new ArrayList<>();
+            rCancel.add(createBtn(isEn ? "❌ Cancel" : "❌ Скасувати", "cmd_targets"));
+            rows.add(rCancel);
+            markup.setKeyboard(rows);
+
+            sendOrEditMessage(chatId, messageIdToEdit, prompt, markup);
+            return;
+        }
+
+        if (data.startsWith("wiz_p_")) {
+            String platform = data.substring(6);
+            String prompt = isEn
+                ? "🛠 <b>Category Builder (Step 2/5)</b>\nPlatform: <b>" + platform + "</b>\n\nChoose target city or region:"
+                : "🛠 <b>Конструктор категорій (Крок 2 з 5)</b>\nПлатформа: <b>" + platform + "</b>\n\nОберіть місто або регіон:";
+
+            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+            List<CategoryCatalog.City> cities = CategoryCatalog.getCities();
+            int count = Math.min(12, cities.size());
+            for (int i = 0; i < count; i += 3) {
+                List<InlineKeyboardButton> row = new ArrayList<>();
+                for (int j = i; j < i + 3 && j < count; j++) {
+                    row.add(createBtn(cities.get(j).name, "wiz_c_" + platform + "_" + j));
+                }
+                rows.add(row);
+            }
+
+            List<InlineKeyboardButton> rNav = new ArrayList<>();
+            rNav.add(createBtn(isEn ? "⬅️ Back" : "⬅️ Назад", "wiz_start"));
+            rNav.add(createBtn(isEn ? "❌ Cancel" : "❌ Скасувати", "cmd_targets"));
+            rows.add(rNav);
+            markup.setKeyboard(rows);
+
+            sendOrEditMessage(chatId, messageIdToEdit, prompt, markup);
+            return;
+        }
+
+        if (data.startsWith("wiz_c_")) {
+            String[] parts = data.split("_");
+            String platform = parts[2];
+            int cityIdx = Integer.parseInt(parts[3]);
+            CategoryCatalog.City city = CategoryCatalog.getCities().get(cityIdx);
+
+            String prompt = isEn
+                ? "🛠 <b>Category Builder (Step 3/5)</b>\nPlatform: <b>" + platform + "</b> | City: <b>" + city.name + "</b>\n\nChoose property type:"
+                : "🛠 <b>Конструктор категорій (Крок 3 з 5)</b>\nПлатформа: <b>" + platform + "</b> | Місто: <b>" + city.name + "</b>\n\nОберіть тип нерухомості:";
+
+            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+            List<CategoryCatalog.PropertyType> pTypes = CategoryCatalog.getPropertyTypes();
+            String[] icons = {"🏢 ", "🏡 ", "🌳 ", "🏬 ", "🚪 ", "🚗 "};
+            for (int i = 0; i < pTypes.size(); i += 2) {
+                List<InlineKeyboardButton> row = new ArrayList<>();
+                for (int j = i; j < i + 2 && j < pTypes.size(); j++) {
+                    String ic = j < icons.length ? icons[j] : "🏠 ";
+                    row.add(createBtn(ic + pTypes.get(j).name, "wiz_t_" + platform + "_" + cityIdx + "_" + j));
+                }
+                rows.add(row);
+            }
+
+            List<InlineKeyboardButton> rNav = new ArrayList<>();
+            rNav.add(createBtn(isEn ? "⬅️ Back" : "⬅️ Назад", "wiz_p_" + platform));
+            rNav.add(createBtn(isEn ? "❌ Cancel" : "❌ Скасувати", "cmd_targets"));
+            rows.add(rNav);
+            markup.setKeyboard(rows);
+
+            sendOrEditMessage(chatId, messageIdToEdit, prompt, markup);
+            return;
+        }
+
+        if (data.startsWith("wiz_t_")) {
+            String[] parts = data.split("_");
+            String platform = parts[2];
+            int cityIdx = Integer.parseInt(parts[3]);
+            int typeIdx = Integer.parseInt(parts[4]);
+
+            CategoryCatalog.City city = CategoryCatalog.getCities().get(cityIdx);
+            CategoryCatalog.PropertyType pType = CategoryCatalog.getPropertyTypes().get(typeIdx);
+
+            String prompt = isEn
+                ? "🛠 <b>Category Builder (Step 4/5)</b>\nTarget: <b>" + pType.name + "</b> in <b>" + city.name + "</b>\n\nChoose deal type:"
+                : "🛠 <b>Конструктор категорій (Крок 4 з 5)</b>\nОб'єкт: <b>" + pType.name + "</b> у <b>" + city.name + "</b>\n\nОберіть тип угоди:";
+
+            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+            List<CategoryCatalog.DealType> dealTypes = CategoryCatalog.getDealTypes();
+            for (int i = 0; i < dealTypes.size(); i++) {
+                List<InlineKeyboardButton> row = new ArrayList<>();
+                String icon = (i == 0) ? "🏷️ " : (i == 1 ? "🔑 " : "📅 ");
+                row.add(createBtn(icon + dealTypes.get(i).name, "wiz_d_" + platform + "_" + cityIdx + "_" + typeIdx + "_" + i));
+                rows.add(row);
+            }
+
+            List<InlineKeyboardButton> rNav = new ArrayList<>();
+            rNav.add(createBtn(isEn ? "⬅️ Back" : "⬅️ Назад", "wiz_c_" + platform + "_" + cityIdx));
+            rNav.add(createBtn(isEn ? "❌ Cancel" : "❌ Скасувати", "cmd_targets"));
+            rows.add(rNav);
+            markup.setKeyboard(rows);
+
+            sendOrEditMessage(chatId, messageIdToEdit, prompt, markup);
+            return;
+        }
+
+        if (data.startsWith("wiz_d_")) {
+            String[] parts = data.split("_");
+            String platform = parts[2];
+            int cityIdx = Integer.parseInt(parts[3]);
+            int typeIdx = Integer.parseInt(parts[4]);
+            int dealIdx = Integer.parseInt(parts[5]);
+
+            String prompt = isEn
+                ? "🛠 <b>Category Builder (Step 5/5)</b>\n\nIntermediary / Agency filter:"
+                : "🛠 <b>Конструктор категорій (Крок 5 з 5)</b>\n\nФільтр посередників та агенцій:";
+
+            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+            List<InlineKeyboardButton> r1 = new ArrayList<>();
+            r1.add(createBtn(isEn ? "👤 Owner Only (100% Direct)" : "👤 Тільки від власника (без ріелторів)",
+                    "wiz_f_" + platform + "_" + cityIdx + "_" + typeIdx + "_" + dealIdx + "_1"));
+            rows.add(r1);
+
+            List<InlineKeyboardButton> r2 = new ArrayList<>();
+            r2.add(createBtn(isEn ? "👥 All Listings (with agencies)" : "👥 Всі оголошення (з ріелторами)",
+                    "wiz_f_" + platform + "_" + cityIdx + "_" + typeIdx + "_" + dealIdx + "_0"));
+            rows.add(r2);
+
+            List<InlineKeyboardButton> rNav = new ArrayList<>();
+            rNav.add(createBtn(isEn ? "⬅️ Back" : "⬅️ Назад", "wiz_t_" + platform + "_" + cityIdx + "_" + typeIdx));
+            rNav.add(createBtn(isEn ? "❌ Cancel" : "❌ Скасувати", "cmd_targets"));
+            rows.add(rNav);
+            markup.setKeyboard(rows);
+
+            sendOrEditMessage(chatId, messageIdToEdit, prompt, markup);
+            return;
+        }
+
+        if (data.startsWith("wiz_f_")) {
+            String[] parts = data.split("_");
+            String platform = parts[2];
+            int cityIdx = Integer.parseInt(parts[3]);
+            int typeIdx = Integer.parseInt(parts[4]);
+            int dealIdx = Integer.parseInt(parts[5]);
+            boolean ownerOnly = "1".equals(parts[6]);
+
+            CategoryCatalog.City city = CategoryCatalog.getCities().get(cityIdx);
+            CategoryCatalog.PropertyType pType = CategoryCatalog.getPropertyTypes().get(typeIdx);
+            CategoryCatalog.DealType dealType = CategoryCatalog.getDealTypes().get(dealIdx);
+
+            String url = CategoryCatalog.buildUrl(platform, city, pType, dealType, null, null, ownerOnly);
+            String name = pType.name + " " + city.name + " (" + (dealIdx == 0 ? (isEn ? "Buy" : "Купівля") : (isEn ? "Rent" : "Оренда")) + ")" + (ownerOnly ? (isEn ? " [Owner]" : " [Власник]") : "") + " (" + platform + ")";
+
+            SettingsManager.CategoryEntry newEntry = new SettingsManager.CategoryEntry(name, url, true);
+            List<SettingsManager.CategoryEntry> list = getCurrentCategories();
+            list.add(newEntry);
+            this.memoryCategories = list;
+            SettingsManager.saveSettings(botName, botToken, list);
+
+            if (IDC != null && !runningAlgorithms.isEmpty()) {
+                startSearch(IDC);
+            }
+
+            String success = isEn
+                ? "✅ <b>Target category created & activated!</b>\n\n" +
+                  "• <b>Name:</b> " + escapeHtml(name) + "\n" +
+                  "• <b>Platform:</b> " + platform + "\n" +
+                  "• <b>Target:</b> " + pType.name + " • " + city.name + " • " + dealType.name + "\n" +
+                  "• <b>Filter:</b> " + (ownerOnly ? "👤 Direct Owner" : "👥 All") + "\n" +
+                  "• <b>URL:</b> <code>" + escapeHtml(url) + "</code>\n\n" +
+                  "<i>All parameters synchronized with desktop app and monitoring core.</i>"
+                : "✅ <b>Категорію успішно створено та додано до моніторингу!</b>\n\n" +
+                  "• <b>Назва:</b> " + escapeHtml(name) + "\n" +
+                  "• <b>Платформа:</b> " + platform + "\n" +
+                  "• <b>Ціль:</b> " + pType.name + " • " + city.name + " • " + dealType.name + "\n" +
+                  "• <b>Фільтр:</b> " + (ownerOnly ? "👤 Тільки від власника" : "👥 Всі оголошення") + "\n" +
+                  "• <b>URL:</b> <code>" + escapeHtml(url) + "</code>\n\n" +
+                  "<i>Всі налаштування синхронізовано з десктопним додатком та снайпінг-ядром.</i>";
+
+            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+            List<InlineKeyboardButton> r1 = new ArrayList<>();
+            r1.add(createBtn(isEn ? "▶️ Start Monitoring" : "▶️ Запустити пошук", "cmd_search"));
+            r1.add(createBtn(isEn ? "📋 Search Targets" : "📋 Мої категорії", "cmd_targets"));
+            rows.add(r1);
+
+            List<InlineKeyboardButton> r2 = new ArrayList<>();
+            r2.add(createBtn(isEn ? "➕ Add Another Target" : "➕ Створити ще ціль", "wiz_start"));
+            rows.add(r2);
+            markup.setKeyboard(rows);
+
+            sendOrEditMessage(chatId, messageIdToEdit, success, markup);
+        }
+    }
+
+    private void handleDirectUrlInput(String chatId, String rawText) {
+        I18n.Language lang = SettingsManager.getLanguage();
+        boolean isEn = (lang == I18n.Language.EN);
+
+        String url = null;
+        for (String part : rawText.split("\\s+")) {
+            if (part.startsWith("http://") || part.startsWith("https://")) {
+                url = part.trim();
+                break;
+            }
+        }
+        if (url == null && (rawText.contains("olx.ua") || rawText.contains("dom.ria.com"))) {
+            url = "https://" + rawText.trim();
+        }
+        if (url == null) return;
+
+        boolean isOlx = url.contains("olx.ua");
+        boolean isDomRia = url.contains("dom.ria.com");
+
+        if (!isOlx && !isDomRia) {
+            String err = isEn
+                ? "⚠️ <b>Unsupported URL!</b>\nPlease provide a search link from <b>OLX.ua</b> or <b>DOM.RIA.com</b>."
+                : "⚠️ <b>Непідтримуване посилання!</b>\nБудь ласка, надішліть посилання на пошук з <b>OLX.ua</b> або <b>DOM.RIA.com</b>.";
+            SendMessage sm = new SendMessage(chatId, err);
             sm.setParseMode("HTML");
-            sm.setReplyMarkup(createPersistentMenu());
             try { execute(sm); } catch (Exception ignored) {}
             return;
         }
 
-        StringBuilder sb = new StringBuilder("📋 <b>Категорії моніторингу:</b>\n\n");
-        for (SettingsManager.CategoryEntry c : categories) {
-            String plat = c.url.contains("dom.ria") ? "DOM.RIA" : "OLX";
-            String status = c.active ? "🟢 ВКЛ" : "⏸ ПАУЗА";
-            boolean isOwner = c.url.contains("without_agent") || c.url.contains("private");
-
-            sb.append("• <b>").append(escapeHtml(c.name)).append("</b> [").append(plat).append("]")
-              .append(isOwner ? " (Власник)" : "")
-              .append(" — <i>").append(status).append("</i>\n");
+        if (isOlx) {
+            if (!url.contains("search%5Border%5D=created_at%3Adesc") && !url.contains("search[order]=created_at:desc")) {
+                url += (url.contains("?") ? "&" : "?") + "search[order]=created_at:desc";
+            }
+            if (!url.contains("view=list")) {
+                url += "&view=list";
+            }
+            if (!url.contains("currency=")) {
+                url += "&currency=UAH";
+            }
         }
 
-        SendMessage sm = new SendMessage(chatId, sb.toString());
+        String autoTitle = generateSmartTitleFromUrl(url, isOlx, isEn);
+
+        SettingsManager.CategoryEntry newEntry = new SettingsManager.CategoryEntry(autoTitle, url, true);
+        List<SettingsManager.CategoryEntry> list = getCurrentCategories();
+        list.add(newEntry);
+        this.memoryCategories = list;
+        SettingsManager.saveSettings(botName, botToken, list);
+
+        if (IDC != null && !runningAlgorithms.isEmpty()) {
+            startSearch(IDC);
+        }
+
+        String successMsg = isEn
+            ? "✅ <b>Target category added via link!</b>\n\n" +
+              "• <b>Name:</b> " + escapeHtml(autoTitle) + "\n" +
+              "• <b>Platform:</b> " + (isOlx ? "OLX.ua" : "DOM.RIA.com") + "\n" +
+              "• <b>URL:</b> <code>" + escapeHtml(url) + "</code>\n\n" +
+              "<i>Sorting rules ('Newest') & connection safety optimized automatically.</i>"
+            : "✅ <b>Категорію успішно додано за посиланням!</b>\n\n" +
+              "• <b>Назва:</b> " + escapeHtml(autoTitle) + "\n" +
+              "• <b>Платформа:</b> " + (isOlx ? "OLX.ua" : "DOM.RIA.com") + "\n" +
+              "• <b>URL:</b> <code>" + escapeHtml(url) + "</code>\n\n" +
+              "<i>Сортування («Найновіші») та параметри безпеки оптимізовано автоматично.</i>";
+
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        List<InlineKeyboardButton> r1 = new ArrayList<>();
+        r1.add(createBtn(isEn ? "▶️ Start Search" : "▶️ Запустити пошук", "cmd_search"));
+        r1.add(createBtn(isEn ? "📋 Search Targets" : "📋 Мої категорії", "cmd_targets"));
+        rows.add(r1);
+        markup.setKeyboard(rows);
+
+        SendMessage sm = new SendMessage(chatId, successMsg);
         sm.setParseMode("HTML");
-        sm.setReplyMarkup(createPersistentMenu());
+        sm.setReplyMarkup(markup);
         try { execute(sm); } catch (Exception ignored) {}
+    }
+
+    private static String generateSmartTitleFromUrl(String url, boolean isOlx, boolean isEn) {
+        boolean isOwner = url.contains("without_agent") || url.contains("private");
+        String ownerBadge = isOwner ? (isEn ? " [Owner]" : " [Власник]") : "";
+
+        String lower = url.toLowerCase();
+        String type = isEn ? "Property" : "Нерухомість";
+        if (lower.contains("kvartir") || lower.contains("квартир")) type = isEn ? "Apartments" : "Квартири";
+        else if (lower.contains("doma") || lower.contains("будин")) type = isEn ? "Houses" : "Будинки";
+        else if (lower.contains("zeml") || lower.contains("ділянк")) type = isEn ? "Land" : "Земельні ділянки";
+        else if (lower.contains("kommerch") || lower.contains("комерц")) type = isEn ? "Commercial" : "Комерційна";
+
+        String deal = "";
+        if (lower.contains("prodazh") || lower.contains("продаж")) deal = isEn ? " (Buy)" : " (Купівля)";
+        else if (lower.contains("arend") || lower.contains("оренд")) deal = isEn ? " (Rent)" : " (Оренда)";
+
+        String city = "";
+        for (CategoryCatalog.City c : CategoryCatalog.getCities()) {
+            if (lower.contains("/" + c.domRiaSlug + "/") || lower.contains("/" + c.olxCode + "/") || lower.contains(c.name.toLowerCase())) {
+                city = " " + c.name;
+                break;
+            }
+        }
+
+        String plat = isOlx ? " (OLX)" : " (DOM.RIA)";
+        return type + city + deal + ownerBadge + plat;
+    }
+
+    private void sendAddUrlPrompt(String chatId, Integer messageIdToEdit) {
+        I18n.Language lang = SettingsManager.getLanguage();
+        boolean isEn = (lang == I18n.Language.EN);
+        String msg = isEn
+            ? "🔗 <b>How to add a category via direct link:</b>\n\n" +
+              "1. Open <b>OLX.ua</b> or <b>DOM.RIA.com</b> in your browser.\n" +
+              "2. Configure your filters (City, Price, Owner-only).\n" +
+              "3. Copy the URL from the address bar.\n" +
+              "4. <b>Simply send the link as a message in this chat!</b> ⬇️\n\n" +
+              "<i>The bot will automatically recognize the platform, check sorting rules, and add it to your active targets.</i>"
+            : "🔗 <b>Як додати категорію за прямим посиланням:</b>\n\n" +
+              "1. Відкрийте <b>OLX.ua</b> або <b>DOM.RIA.com</b> у браузері.\n" +
+              "2. Налаштуйте потрібні фільтри (Місто, Ціна, Без посередників).\n" +
+              "3. Скопіюйте посилання з адресної стрічки браузера.\n" +
+              "4. <b>Просто надішліть це посилання сюди в чат!</b> ⬇️\n\n" +
+              "<i>Бот автоматично розпізнає платформу, оптимізує сортування та додасть ціль до моніторингу.</i>";
+
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        List<InlineKeyboardButton> r1 = new ArrayList<>();
+        r1.add(createBtn(isEn ? "➕ Category Builder" : "➕ Конструктор категорій", "wiz_start"));
+        r1.add(createBtn(isEn ? "📋 Search Targets" : "📋 Мої категорії", "cmd_targets"));
+        rows.add(r1);
+        markup.setKeyboard(rows);
+
+        sendOrEditMessage(chatId, messageIdToEdit, msg, markup);
+    }
+
+    private void showHelpHub(String chatId, Integer messageIdToEdit, String activeTab) {
+        I18n.Language lang = SettingsManager.getLanguage();
+        boolean isEn = (lang == I18n.Language.EN);
+
+        String content;
+        if ("help_tab_builder".equals(activeTab)) {
+            content = isEn
+                ? "🛠 <b>Category Builder & Direct URLs:</b>\n\n" +
+                  "• <b>Interactive Builder:</b> Press 'Category Builder' to generate 100% verified target links with city, category, deal type, and direct owner filters.\n\n" +
+                  "• <b>Direct Links from Browser:</b>\n" +
+                  "Copy any search link from <b>OLX.ua</b> or <b>DOM.RIA.com</b> and paste it into this chat!\n\n" +
+                  "<b>Essential Link Rules:</b>\n" +
+                  "• <b>OLX:</b> Must use <code>view=list</code> and <code>search[order]=created_at:desc</code>.\n" +
+                  "• <b>DOM.RIA:</b> Turn on 'Without agents' (<code>without_agent=1</code>).\n\n" +
+                  "The bot automatically sanitizes and optimizes any link you send!"
+                : "🛠 <b>Конструктор категорій та посилання:</b>\n\n" +
+                  "• <b>Інтерактивний Конструктор:</b> Натисніть «Конструктор категорій», щоб створити готову ціль пошуку в кілька кліків з вибором міста, типу, операції та фільтра власника.\n\n" +
+                  "• <b>Прямі посилання з браузера:</b>\n" +
+                  "Скопіюйте посилання на налаштований пошук з <b>OLX.ua</b> або <b>DOM.RIA.com</b> у браузері та надішліть сюди в чат!\n\n" +
+                  "<b>Обов'язкові правила для посилань:</b>\n" +
+                  "• <b>OLX:</b> Оберіть відображення рядками (<code>view=list</code>) та сортування «Найновіші» (<code>search[order]=created_at:desc</code>).\n" +
+                  "• <b>DOM.RIA:</b> Увімкніть галочку «Без посередників» (<code>without_agent=1</code>).\n\n" +
+                  "Бот автоматично санітизує та оптимізує кожне надіслане посилання!";
+        } else if ("help_tab_speed".equals(activeTab)) {
+            content = isEn
+                ? "⚡ <b>Detection Speed & Anti-Spam Architecture:</b>\n\n" +
+                  "• <b>Global CDN Caching (Akamai / Cloudflare):</b>\n" +
+                  "After a property owner clicks 'Publish', the listing is indexed by the portal and deployed to public CDN edge servers within <b>30–90 seconds</b>. Property Searcher intercepts it in the <b>first 1–2 seconds</b> after public release!\n\n" +
+                  "• <b>O(1) Circular Memory Buffer:</b>\n" +
+                  "Guarantees zero repeat notifications if listings shuffle positions during high-frequency portal updates.\n\n" +
+                  "• <b>DUAL Currency & Night Mode:</b>\n" +
+                  "Automatic NBU dual-currency conversion. Notifications between 23:00 and 07:00 arrive silently."
+                : "⚡ <b>Швидкість детекції та Архітектура:</b>\n\n" +
+                  "• <b>Глобальне CDN-кешування сайтів (Akamai / Cloudflare):</b>\n" +
+                  "Після публікації оголошення воно потрапляє на модерацію та з'являється на відкритих серверах через <b>30–90 секунд</b>. Property Searcher перехоплює його в <b>перші ж 1–2 секунди</b> після появи в інтернеті!\n\n" +
+                  "• <b>Кільцевий буфер пам'яті $O(1)$:</b>\n" +
+                  "Повний захист від дублікатів та перестановок оголошень на сайті. Старі оголошення повторно ніколи не надсилаються.\n\n" +
+                  "• <b>DUAL-валюта та Нічний режим:</b>\n" +
+                  "Ціни автоматично конвертуються за курсом НБУ. У нічний час (23:00 – 07:00) сповіщення приходять без звуку.";
+        } else if ("help_tab_botfather".equals(activeTab)) {
+            content = isEn
+                ? "🤖 <b>BotFather Menu Configuration:</b>\n\n" +
+                  "1. Open @BotFather in Telegram\n" +
+                  "2. Send <code>/setcommands</code> and select your bot\n" +
+                  "3. Send this commands template:\n\n" +
+                  "<code>start - Main menu & instant start\n" +
+                  "search - Start listing monitoring\n" +
+                  "targets - Manage search categories\n" +
+                  "currency - Price currency (USD/UAH)\n" +
+                  "stop - Pause monitoring\n" +
+                  "help - Documentation & guide</code>"
+                : "🤖 <b>Налаштування меню у @BotFather:</b>\n\n" +
+                  "1. Відкрийте @BotFather у Telegram\n" +
+                  "2. Надішліть команду <code>/setcommands</code> та оберіть вашого бота\n" +
+                  "3. Надішліть цей готовий шаблон команд:\n\n" +
+                  "<code>start - Головне меню та запуск\n" +
+                  "search - Запустити пошук оголошень\n" +
+                  "targets - Керування категоріями\n" +
+                  "currency - Валюта цін (USD/UAH)\n" +
+                  "stop - Зупинити моніторинг\n" +
+                  "help - Довідка та інструкція</code>";
+        } else {
+            content = isEn
+                ? "🚀 <b>Quick Start & Live Operation:</b>\n\n" +
+                  "• <b>Instant First Listing:</b> Whenever you start the bot or click 'Search Now', the bot instantly sends the latest organic ad for every active category with photos, price, and exact time.\n\n" +
+                  "• <b>Interactive Category Control:</b> Turn categories ON or PAUSE anytime via the 'Search Targets' menu.\n\n" +
+                  "• <b>Direct Browser Button:</b> Under each ad card, click 'Open on OLX / DOM.RIA' to view the listing directly in your browser or app."
+                : "🚀 <b>Швидкий запуск та Робота:</b>\n\n" +
+                  "• <b>Миттєва відправка при старті:</b> При запуску бота або кнопці «Пошук зараз» бот одразу надсилає найновіше оголошення у кожній активній категорії разом із фотографіями, ціною та точним часом публікації.\n\n" +
+                  "• <b>Керування на льоту:</b> Вмикайте та ставте на паузу будь-які категорії через меню «Мої категорії».\n\n" +
+                  "• <b>Швидкий перехід:</b> Під кожним оголошенням кнопка «Відкрити на OLX / DOM.RIA» миттєво відкриває об'єкт.";
+        }
+
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        List<InlineKeyboardButton> r1 = new ArrayList<>();
+        r1.add(createBtn((!"help_tab_start".equals(activeTab) ? "🚀 " : "🔘 ") + (isEn ? "Quick Start" : "Швидкий запуск"), "help_tab_start"));
+        r1.add(createBtn((!"help_tab_builder".equals(activeTab) ? "🛠 " : "🔘 ") + (isEn ? "Builder & URL" : "Конструктор та URL"), "help_tab_builder"));
+        rows.add(r1);
+
+        List<InlineKeyboardButton> r2 = new ArrayList<>();
+        r2.add(createBtn((!"help_tab_speed".equals(activeTab) ? "⚡ " : "🔘 ") + (isEn ? "Speed & Buffer" : "Швидкість та Буфер"), "help_tab_speed"));
+        r2.add(createBtn((!"help_tab_botfather".equals(activeTab) ? "🤖 " : "🔘 ") + (isEn ? "BotFather" : "BotFather"), "help_tab_botfather"));
+        rows.add(r2);
+
+        List<InlineKeyboardButton> r3 = new ArrayList<>();
+        r3.add(createBtn(isEn ? "📋 Search Targets" : "📋 Мої категорії", "cmd_targets"));
+        r3.add(createBtn(isEn ? "▶️ Start Search" : "▶️ Запустити пошук", "cmd_search"));
+        rows.add(r3);
+        markup.setKeyboard(rows);
+
+        sendOrEditMessage(chatId, messageIdToEdit, content, markup);
+    }
+
+    private void sendOrEditMessage(String chatId, Integer messageIdToEdit, String text, InlineKeyboardMarkup markup) {
+        if (messageIdToEdit != null) {
+            EditMessageText em = new EditMessageText();
+            em.setChatId(chatId);
+            em.setMessageId(messageIdToEdit);
+            em.setText(text);
+            em.setParseMode("HTML");
+            em.setReplyMarkup(markup);
+            try {
+                execute(em);
+                return;
+            } catch (Exception ignored) {}
+        }
+        SendMessage sm = new SendMessage(chatId, text);
+        sm.setParseMode("HTML");
+        sm.setReplyMarkup(markup);
+        try {
+            execute(sm);
+        } catch (Exception ignored) {}
+    }
+
+    private static InlineKeyboardButton createBtn(String text, String callbackData) {
+        InlineKeyboardButton b = new InlineKeyboardButton(text);
+        b.setCallbackData(callbackData);
+        return b;
     }
 
     private void showStatus(String chatId) {
@@ -456,49 +1023,11 @@ public class BotTG extends TelegramLongPollingBot {
     }
 
     private void sendHelpMessage(String chatId) {
-        String helpMessage = "📋 <b>Список команд:</b>\n\n" +
-                "• /start — Головне меню та швидкий запуск\n" +
-                "• /search — Розпочати пошук найновіших оголошень\n" +
-                "• /targets — Переглянути список категорій\n" +
-                "• /currency — Налаштувати валюту цін (DUAL / USD / UAH / EUR)\n" +
-                "• /stop — Зупинити моніторинг\n" +
-                "• /botfather — Інструкція для @BotFather\n" +
-                "• /help — Довідка\n\n" +
-                "⚡ <b>Як працює швидкість детекції (OLX & DOM.RIA):</b>\n" +
-                "Сучасний OLX використовує кешуючу CDN-мережу (Akamai/Cloudflare). Після публікації оголошення автором воно проходить модерацію сайту і стає доступним на відкритих серверах через <b>30–90 секунд</b>.\n\n" +
-                "Property Searcher виявляє його <b>в перші ж 1–2 секунди</b> після фактичної появи у публічному інтернет-просторі та миттєво доставляє повний фотоальбом у ваш Telegram!";
-
-        SendMessage smHelp = new SendMessage(chatId, helpMessage);
-        smHelp.setParseMode("HTML");
-        smHelp.setReplyMarkup(createPersistentMenu());
-        try {
-            execute(smHelp);
-        } catch (TelegramApiException e) {
-            log.error("Help failed: {}", e.getMessage());
-        }
+        showHelpHub(chatId, null, "help_tab_start");
     }
 
     private void sendBotFatherHelp(String chatId) {
-        String script = "🛠 <b>Команди для налаштування меню у @BotFather:</b>\n\n" +
-                "1. Відкрийте @BotFather у Telegram\n" +
-                "2. Надішліть команду <code>/setcommands</code>\n" +
-                "3. Оберіть вашого бота\n" +
-                "4. Надішліть йому цей список команд:\n\n" +
-                "<code>start - Головне меню та запуск</code>\n" +
-                "<code>search - Запустити пошук оголошень</code>\n" +
-                "<code>targets - Список категорій</code>\n" +
-                "<code>currency - Налаштування валюти цін</code>\n" +
-                "<code>stop - Зупинити моніторинг</code>\n" +
-                "<code>help - Довідка та інструкція</code>";
-
-        SendMessage sm = new SendMessage(chatId, script);
-        sm.setParseMode("HTML");
-        sm.setReplyMarkup(createPersistentMenu());
-        try {
-            execute(sm);
-        } catch (TelegramApiException e) {
-            log.error("Botfather help failed: {}", e.getMessage());
-        }
+        showHelpHub(chatId, null, "help_tab_botfather");
     }
 
     private void sendUnknownCommandMessage(String chatId) {
