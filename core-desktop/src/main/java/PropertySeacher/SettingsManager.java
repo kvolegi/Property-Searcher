@@ -196,18 +196,21 @@ public class SettingsManager {
 
     public static I18n.Language getLanguage() {
         File file = getSettingsFile();
-        if (!file.exists()) return I18n.Language.UA;
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                line = line.trim();
-                if (line.startsWith("LANGUAGE=") || line.startsWith("LANGUAGE:")) {
-                    String val = line.substring(9).trim();
-                    return I18n.Language.fromString(val);
+        if (file.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = line.trim();
+                    if (line.startsWith("LANGUAGE=") || line.startsWith("LANGUAGE:")) {
+                        String val = line.substring(9).trim();
+                        I18n.Language parsed = I18n.Language.fromString(val);
+                        I18n.setLanguage(parsed);
+                        return parsed;
+                    }
                 }
-            }
-        } catch (Exception ignored) {}
-        return I18n.Language.UA;
+            } catch (Exception ignored) {}
+        }
+        return I18n.getLanguage();
     }
 
     public static void setLanguage(I18n.Language lang) {
@@ -236,9 +239,14 @@ public class SettingsManager {
             lines.add(insertIdx, "LANGUAGE=" + lang.name());
         }
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, false))) {
-            for (String l : lines) {
-                writer.write(l + "\n");
+        try {
+            if (file.getParentFile() != null) {
+                file.getParentFile().mkdirs();
+            }
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, false))) {
+                for (String l : lines) {
+                    writer.write(l + "\n");
+                }
             }
         } catch (Exception ignored) {}
     }

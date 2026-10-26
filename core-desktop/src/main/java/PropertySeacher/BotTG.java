@@ -100,28 +100,33 @@ public class BotTG extends TelegramLongPollingBot {
 
             String text = message.getText().trim();
 
+            String lower = text.toLowerCase();
+
             if (text.startsWith("http://") || text.startsWith("https://") ||
                 text.contains("olx.ua") || text.contains("dom.ria.com")) {
                 handleDirectUrlInput(chatId, text);
-            } else if (text.equalsIgnoreCase("/start") || text.equalsIgnoreCase("старт")) {
+            } else if (text.equalsIgnoreCase("/start") || lower.contains("старт") || lower.contains("start")) {
                 sendWelcomeMessage(chatId);
                 // Immediately start monitoring and send latest listings on /start
                 startSearch(chatId);
-            } else if (text.equalsIgnoreCase("/search") || text.contains("Пошук зараз")) {
+            } else if (text.equalsIgnoreCase("/search") || lower.contains("пошук") || lower.contains("search")) {
                 startSearch(chatId);
-            } else if (text.equalsIgnoreCase("/targets") || text.contains("Мої категорії") || text.contains("Категорії")) {
+            } else if (text.equalsIgnoreCase("/targets") || text.equalsIgnoreCase("/categories") ||
+                       lower.contains("категор") || lower.contains("categor") || lower.contains("target")) {
                 showCategories(chatId, null);
-            } else if (text.contains("Статус") || text.contains("Status")) {
+            } else if (lower.contains("статус") || lower.contains("status")) {
                 showStatus(chatId);
-            } else if (text.equalsIgnoreCase("/currency") || text.contains("Валюта") || text.contains("Currency")) {
+            } else if (text.equalsIgnoreCase("/currency") || lower.contains("валют") || lower.contains("currency")) {
                 showCurrencyMenu(chatId);
-            } else if (text.equalsIgnoreCase("/language") || text.equalsIgnoreCase("/lang") || text.contains("Мова") || text.contains("Language")) {
+            } else if (text.equalsIgnoreCase("/language") || text.equalsIgnoreCase("/lang") ||
+                       lower.contains("мова") || lower.contains("language")) {
                 showLanguageMenu(chatId);
-            } else if (text.equalsIgnoreCase("/stop") || text.contains("Зупинити") || text.contains("Stop")) {
+            } else if (text.equalsIgnoreCase("/stop") || lower.contains("зупин") || lower.contains("stop")) {
                 stopSearch();
-            } else if (text.equalsIgnoreCase("/help") || text.contains("Інструкція") || text.contains("Допомога") || text.contains("Help")) {
+            } else if (text.equalsIgnoreCase("/help") || lower.contains("інструкц") ||
+                       lower.contains("допомог") || lower.contains("help") || lower.contains("manual") || lower.contains("guide")) {
                 showHelpHub(chatId, null, "help_tab_start");
-            } else if (text.equalsIgnoreCase("/botfather") || text.contains("BotFather")) {
+            } else if (text.equalsIgnoreCase("/botfather") || lower.contains("botfather")) {
                 sendBotFatherHelp(chatId);
             } else {
                 sendUnknownCommandMessage(chatId);
@@ -219,37 +224,44 @@ public class BotTG extends TelegramLongPollingBot {
         CurrencyService.CurrencyMode current = SettingsManager.getCurrencyPreference();
         double usd = CurrencyService.getUsdRate();
         double eur = CurrencyService.getEurRate();
+        I18n.Language lang = SettingsManager.getLanguage();
+        boolean isEn = (lang == I18n.Language.EN);
 
-        String text = "💵 <b>Налаштування відображення валюти цін:</b>\n\n" +
-                "• <b>Поточний режим:</b> <code>" + current.name() + "</code>\n" +
-                "• <b>Курс НБУ (кеш):</b> 1 USD = " + usd + " грн | 1 EUR = " + eur + " грн\n\n" +
-                "Оберіть бажаний формат відображення цін в оголошеннях:";
+        String text = isEn
+            ? "💵 <b>Price Currency Display Settings:</b>\n\n" +
+              "• <b>Current mode:</b> <code>" + current.name() + "</code>\n" +
+              "• <b>NBU Rate (cached):</b> 1 USD = " + usd + " UAH | 1 EUR = " + eur + " UAH\n\n" +
+              "Choose preferred price display format for alert cards:"
+            : "💵 <b>Налаштування відображення валюти цін:</b>\n\n" +
+              "• <b>Поточний режим:</b> <code>" + current.name() + "</code>\n" +
+              "• <b>Курс НБУ (кеш):</b> 1 USD = " + usd + " грн | 1 EUR = " + eur + " грн\n\n" +
+              "Оберіть бажаний формат відображення цін в оголошеннях:";
 
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
         List<InlineKeyboardButton> r1 = new ArrayList<>();
         InlineKeyboardButton btnDual = new InlineKeyboardButton();
-        btnDual.setText((current == CurrencyService.CurrencyMode.DUAL ? "✅ " : "") + "🔄 Подвійна (USD + UAH)");
+        btnDual.setText((current == CurrencyService.CurrencyMode.DUAL ? "✅ " : "") + (isEn ? "🔄 Dual (USD + UAH)" : "🔄 Подвійна (USD + UAH)"));
         btnDual.setCallbackData("set_curr_dual");
         r1.add(btnDual);
 
         List<InlineKeyboardButton> r2 = new ArrayList<>();
         InlineKeyboardButton btnUsd = new InlineKeyboardButton();
-        btnUsd.setText((current == CurrencyService.CurrencyMode.USD ? "✅ " : "") + "🇺🇸 Тільки USD ($)");
+        btnUsd.setText((current == CurrencyService.CurrencyMode.USD ? "✅ " : "") + (isEn ? "🇺🇸 USD ($ only)" : "🇺🇸 Тільки USD ($)"));
         btnUsd.setCallbackData("set_curr_usd");
         InlineKeyboardButton btnUah = new InlineKeyboardButton();
-        btnUah.setText((current == CurrencyService.CurrencyMode.UAH ? "✅ " : "") + "🇺🇦 Тільки UAH (грн)");
+        btnUah.setText((current == CurrencyService.CurrencyMode.UAH ? "✅ " : "") + (isEn ? "🇺🇦 UAH (₴ only)" : "🇺🇦 Тільки UAH (грн)"));
         btnUah.setCallbackData("set_curr_uah");
         r2.add(btnUsd);
         r2.add(btnUah);
 
         List<InlineKeyboardButton> r3 = new ArrayList<>();
         InlineKeyboardButton btnEur = new InlineKeyboardButton();
-        btnEur.setText((current == CurrencyService.CurrencyMode.EUR ? "✅ " : "") + "🇪🇺 Тільки EUR (€)");
+        btnEur.setText((current == CurrencyService.CurrencyMode.EUR ? "✅ " : "") + (isEn ? "🇪🇺 EUR (€ only)" : "🇪🇺 Тільки EUR (€)"));
         btnEur.setCallbackData("set_curr_eur");
         InlineKeyboardButton btnOrig = new InlineKeyboardButton();
-        btnOrig.setText((current == CurrencyService.CurrencyMode.ORIGINAL ? "✅ " : "") + "🌐 Як на сайті");
+        btnOrig.setText((current == CurrencyService.CurrencyMode.ORIGINAL ? "✅ " : "") + (isEn ? "🌐 As Listed" : "🌐 Як на сайті"));
         btnOrig.setCallbackData("set_curr_original");
         r3.add(btnEur);
         r3.add(btnOrig);
@@ -266,31 +278,38 @@ public class BotTG extends TelegramLongPollingBot {
     }
 
     private void sendCurrencyChangedMessage(String chatId, CurrencyService.CurrencyMode mode) {
+        I18n.Language lang = SettingsManager.getLanguage();
+        boolean isEn = (lang == I18n.Language.EN);
         String desc = "";
         if (mode != null) {
             switch (mode) {
                 case DUAL:
-                    desc = "🔄 Подвійна: показує ціну з сайту та автоматичний еквівалент (USD + UAH)";
+                    desc = isEn ? "🔄 Dual: shows original price and auto-converted equivalent (USD + UAH)"
+                                : "🔄 Подвійна: показує ціну з сайту та автоматичний еквівалент (USD + UAH)";
                     break;
                 case USD:
-                    desc = "🇺🇸 USD: усі ціни конвертуються та наголошуються в доларах ($)";
+                    desc = isEn ? "🇺🇸 USD: all prices converted and emphasized in Dollars ($)"
+                                : "🇺🇸 USD: усі ціни конвертуються та наголошуються в доларах ($)";
                     break;
                 case UAH:
-                    desc = "🇺🇦 UAH: усі ціни конвертуються в гривні (грн)";
+                    desc = isEn ? "🇺🇦 UAH: all prices converted to Hryvnias (UAH)"
+                                : "🇺🇦 UAH: усі ціни конвертуються в гривні (грн)";
                     break;
                 case EUR:
-                    desc = "🇪🇺 EUR: ціни відображаються в євро (€)";
+                    desc = isEn ? "🇪🇺 EUR: prices displayed in Euros (€)"
+                                : "🇪🇺 EUR: ціни відображаються в євро (€)";
                     break;
                 case ORIGINAL:
                 default:
-                    desc = "🌐 Як на сайті: без конвертації";
+                    desc = isEn ? "🌐 As Listed: direct price with zero conversion"
+                                : "🌐 Як на сайті: без конвертації";
                     break;
             }
         }
 
-        String msg = "✅ <b>Формат валюти оновлено:</b> <code>" + mode.name() + "</code>\n" +
-                desc + "\n\n" +
-                "Усі наступні надходження розраховуватимуться в цьому режимі.";
+        String msg = isEn
+            ? "✅ <b>Currency format updated:</b> <code>" + mode.name() + "</code>\n" + desc + "\n\nAll subsequent listings will be calculated in this mode."
+            : "✅ <b>Формат валюти оновлено:</b> <code>" + mode.name() + "</code>\n" + desc + "\n\nУсі наступні надходження розраховуватимуться в цьому режимі.";
         SendMessage sm = new SendMessage(chatId, msg);
         sm.setParseMode("HTML");
         sm.setReplyMarkup(createPersistentMenu());
@@ -319,8 +338,14 @@ public class BotTG extends TelegramLongPollingBot {
         stopSearchThreads();
 
         List<SettingsManager.CategoryEntry> allCategories = getCurrentCategories();
+        I18n.Language lang = SettingsManager.getLanguage();
+        boolean isEn = (lang == I18n.Language.EN);
+
         if (allCategories.isEmpty()) {
-            SendMessage smEmpty = new SendMessage(chatId, "⚠️ <b>Немає категорій для пошуку!</b>\nДодайте категорію в додатку через 'Конструктор категорій'.");
+            String emptyTxt = isEn
+                ? "⚠️ <b>No search categories configured!</b>\nAdd a category in the desktop app or paste a search link here in the chat."
+                : "⚠️ <b>Немає категорій для пошуку!</b>\nДодайте категорію в додатку через 'Конструктор категорій' або надішліть посилання в чат.";
+            SendMessage smEmpty = new SendMessage(chatId, emptyTxt);
             smEmpty.setParseMode("HTML");
             smEmpty.setReplyMarkup(createPersistentMenu());
             try { execute(smEmpty); } catch (Exception ignored) {}
@@ -335,7 +360,10 @@ public class BotTG extends TelegramLongPollingBot {
         }
 
         if (activeCategories.isEmpty()) {
-            SendMessage smEmpty = new SendMessage(chatId, "⚠️ <b>Всі категорії наразі вимкнені (на паузі)!</b>\nУвімкніть потрібні категорії в меню категорій програми.");
+            String pausedTxt = isEn
+                ? "⚠️ <b>All categories are currently paused!</b>\nEnable your targets in the 'My Categories' menu."
+                : "⚠️ <b>Всі категорії наразі вимкнені (на паузі)!</b>\nУвімкніть потрібні категорії в меню категорій програми.";
+            SendMessage smEmpty = new SendMessage(chatId, pausedTxt);
             smEmpty.setParseMode("HTML");
             smEmpty.setReplyMarkup(createPersistentMenu());
             try { execute(smEmpty); } catch (Exception ignored) {}
@@ -347,10 +375,17 @@ public class BotTG extends TelegramLongPollingBot {
         double delaySec = delayMs / 1000.0;
         int staggerStep = (activeCount > 1) ? (delayMs / activeCount) : 0;
 
-        SendMessage sm0 = new SendMessage(chatId, "🔍 <b>Моніторинг запущено!</b>\n" +
-                "• <b>Активних категорій:</b> " + activeCount + "\n" +
-                "• <b>Адаптивний темп:</b> " + String.format(java.util.Locale.US, "%.1f", delaySec) + " с / категорію (CloudFront Safe 🛡)\n\n" +
-                "⚡ <i>Відстежую появу нових публікацій у реальному часі...</i>");
+        String startedTxt = isEn
+            ? "🔍 <b>Monitoring started!</b>\n" +
+              "• <b>Active targets:</b> " + activeCount + "\n" +
+              "• <b>Adaptive pacing:</b> " + String.format(java.util.Locale.US, "%.1f", delaySec) + " s / target (CloudFront Safe 🛡)\n\n" +
+              "⚡ <i>Tracking incoming organic listings in real-time...</i>"
+            : "🔍 <b>Моніторинг запущено!</b>\n" +
+              "• <b>Активних категорій:</b> " + activeCount + "\n" +
+              "• <b>Адаптивний темп:</b> " + String.format(java.util.Locale.US, "%.1f", delaySec) + " с / категорію (CloudFront Safe 🛡)\n\n" +
+              "⚡ <i>Відстежую появу нових публікацій у реальному часі...</i>";
+
+        SendMessage sm0 = new SendMessage(chatId, startedTxt);
         sm0.setParseMode("HTML");
         sm0.setReplyMarkup(createPersistentMenu());
         try {
@@ -386,9 +421,8 @@ public class BotTG extends TelegramLongPollingBot {
     }
 
     private void sendWelcomeMessage(String chatId) {
-        String welcome = "👋 <b>Вітаю у Property Searcher (OLX & DOM.RIA)!</b>\n\n" +
-                "Бот миттєво відстежує тільки <b>найновіші органічні оголошення</b>, пропускаючи проплачені ТОП-блоки.\n\n" +
-                "Оберіть дію на клавіатурі нижче:";
+        I18n.Language lang = SettingsManager.getLanguage();
+        String welcome = I18n.get("tg.welcome", lang);
 
         SendMessage sm = new SendMessage(chatId, welcome);
         sm.setParseMode("HTML");
@@ -550,7 +584,7 @@ public class BotTG extends TelegramLongPollingBot {
             for (int i = 0; i < count; i += 3) {
                 List<InlineKeyboardButton> row = new ArrayList<>();
                 for (int j = i; j < i + 3 && j < count; j++) {
-                    row.add(createBtn(cities.get(j).name, "wiz_c_" + platform + "_" + j));
+                    row.add(createBtn(cities.get(j).getName(lang), "wiz_c_" + platform + "_" + j));
                 }
                 rows.add(row);
             }
@@ -572,8 +606,8 @@ public class BotTG extends TelegramLongPollingBot {
             CategoryCatalog.City city = CategoryCatalog.getCities().get(cityIdx);
 
             String prompt = isEn
-                ? "🛠 <b>Category Builder (Step 3/5)</b>\nPlatform: <b>" + platform + "</b> | City: <b>" + city.name + "</b>\n\nChoose property type:"
-                : "🛠 <b>Конструктор категорій (Крок 3 з 5)</b>\nПлатформа: <b>" + platform + "</b> | Місто: <b>" + city.name + "</b>\n\nОберіть тип нерухомості:";
+                ? "🛠 <b>Category Builder (Step 3/5)</b>\nPlatform: <b>" + platform + "</b> | City: <b>" + city.getName(lang) + "</b>\n\nChoose property type:"
+                : "🛠 <b>Конструктор категорій (Крок 3 з 5)</b>\nПлатформа: <b>" + platform + "</b> | Місто: <b>" + city.getName(lang) + "</b>\n\nОберіть тип нерухомості:";
 
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
@@ -584,7 +618,7 @@ public class BotTG extends TelegramLongPollingBot {
                 List<InlineKeyboardButton> row = new ArrayList<>();
                 for (int j = i; j < i + 2 && j < pTypes.size(); j++) {
                     String ic = j < icons.length ? icons[j] : "🏠 ";
-                    row.add(createBtn(ic + pTypes.get(j).name, "wiz_t_" + platform + "_" + cityIdx + "_" + j));
+                    row.add(createBtn(ic + pTypes.get(j).getName(lang), "wiz_t_" + platform + "_" + cityIdx + "_" + j));
                 }
                 rows.add(row);
             }
@@ -609,8 +643,8 @@ public class BotTG extends TelegramLongPollingBot {
             CategoryCatalog.PropertyType pType = CategoryCatalog.getPropertyTypes().get(typeIdx);
 
             String prompt = isEn
-                ? "🛠 <b>Category Builder (Step 4/5)</b>\nTarget: <b>" + pType.name + "</b> in <b>" + city.name + "</b>\n\nChoose deal type:"
-                : "🛠 <b>Конструктор категорій (Крок 4 з 5)</b>\nОб'єкт: <b>" + pType.name + "</b> у <b>" + city.name + "</b>\n\nОберіть тип угоди:";
+                ? "🛠 <b>Category Builder (Step 4/5)</b>\nTarget: <b>" + pType.getName(lang) + "</b> in <b>" + city.getName(lang) + "</b>\n\nChoose deal type:"
+                : "🛠 <b>Конструктор категорій (Крок 4 з 5)</b>\nОб'єкт: <b>" + pType.getName(lang) + "</b> у <b>" + city.getName(lang) + "</b>\n\nОберіть тип угоди:";
 
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
@@ -619,7 +653,7 @@ public class BotTG extends TelegramLongPollingBot {
             for (int i = 0; i < dealTypes.size(); i++) {
                 List<InlineKeyboardButton> row = new ArrayList<>();
                 String icon = (i == 0) ? "🏷️ " : (i == 1 ? "🔑 " : "📅 ");
-                row.add(createBtn(icon + dealTypes.get(i).name, "wiz_d_" + platform + "_" + cityIdx + "_" + typeIdx + "_" + i));
+                row.add(createBtn(icon + dealTypes.get(i).getName(lang), "wiz_d_" + platform + "_" + cityIdx + "_" + typeIdx + "_" + i));
                 rows.add(row);
             }
 
@@ -680,7 +714,7 @@ public class BotTG extends TelegramLongPollingBot {
             CategoryCatalog.DealType dealType = CategoryCatalog.getDealTypes().get(dealIdx);
 
             String url = CategoryCatalog.buildUrl(platform, city, pType, dealType, null, null, ownerOnly);
-            String name = pType.name + " " + city.name + " (" + (dealIdx == 0 ? (isEn ? "Buy" : "Купівля") : (isEn ? "Rent" : "Оренда")) + ")" + (ownerOnly ? (isEn ? " [Owner]" : " [Власник]") : "") + " (" + platform + ")";
+            String name = pType.getName(lang) + " " + city.getName(lang) + " (" + (dealIdx == 0 ? (isEn ? "Buy" : "Купівля") : (isEn ? "Rent" : "Оренда")) + ")" + (ownerOnly ? (isEn ? " [Owner]" : " [Власник]") : "") + " (" + platform + ")";
 
             SettingsManager.CategoryEntry newEntry = new SettingsManager.CategoryEntry(name, url, true);
             List<SettingsManager.CategoryEntry> list = getCurrentCategories();
@@ -696,14 +730,14 @@ public class BotTG extends TelegramLongPollingBot {
                 ? "✅ <b>Target category created & activated!</b>\n\n" +
                   "• <b>Name:</b> " + escapeHtml(name) + "\n" +
                   "• <b>Platform:</b> " + platform + "\n" +
-                  "• <b>Target:</b> " + pType.name + " • " + city.name + " • " + dealType.name + "\n" +
+                  "• <b>Target:</b> " + pType.getName(lang) + " • " + city.getName(lang) + " • " + dealType.getName(lang) + "\n" +
                   "• <b>Filter:</b> " + (ownerOnly ? "👤 Direct Owner" : "👥 All") + "\n" +
                   "• <b>URL:</b> <code>" + escapeHtml(url) + "</code>\n\n" +
                   "<i>All parameters synchronized with desktop app and monitoring core.</i>"
                 : "✅ <b>Категорію успішно створено та додано до моніторингу!</b>\n\n" +
                   "• <b>Назва:</b> " + escapeHtml(name) + "\n" +
                   "• <b>Платформа:</b> " + platform + "\n" +
-                  "• <b>Ціль:</b> " + pType.name + " • " + city.name + " • " + dealType.name + "\n" +
+                  "• <b>Ціль:</b> " + pType.getName(lang) + " • " + city.getName(lang) + " • " + dealType.getName(lang) + "\n" +
                   "• <b>Фільтр:</b> " + (ownerOnly ? "👤 Тільки від власника" : "👥 Всі оголошення") + "\n" +
                   "• <b>URL:</b> <code>" + escapeHtml(url) + "</code>\n\n" +
                   "<i>Всі налаштування синхронізовано з десктопним додатком та снайпінг-ядром.</i>";
@@ -993,14 +1027,24 @@ public class BotTG extends TelegramLongPollingBot {
 
         CurrencyService.CurrencyMode currMode = SettingsManager.getCurrencyPreference();
         boolean night = isNightTime();
+        I18n.Language lang = SettingsManager.getLanguage();
+        boolean isEn = (lang == I18n.Language.EN);
 
-        String status = "📊 <b>Статус Property Searcher:</b>\n\n" +
-                "• <b>Моніторинг:</b> " + (running ? "🟢 АКТИВНИЙ" : "⏸ ЗУПИНЕНО") + "\n" +
-                "• <b>Всього категорій:</b> " + all.size() + " (активних: " + activeCount + ")\n" +
-                "• <b>Адаптивний інтервал:</b> " + String.format(java.util.Locale.US, "%.1f", delaySec) + " с на категорію\n" +
-                "• <b>Безпека з'єднань:</b> " + String.format(java.util.Locale.US, "%.2f", currentRps) + " req/s (CloudFront Safe 🛡)\n" +
-                "• <b>Валюта цін:</b> <code>" + currMode.name() + "</code> (1 $ = " + CurrencyService.getUsdRate() + " ₴ | 1 € = " + CurrencyService.getEurRate() + " ₴)\n" +
-                "• <b>Режим сповіщень:</b> " + (night ? "🌙 Нічний (без звуку)" : "☀️ Денний (зі звуком)");
+        String status = isEn
+            ? "📊 <b>Property Searcher System Status:</b>\n\n" +
+              "• <b>Monitoring:</b> " + (running ? "🟢 ACTIVE" : "⏸ PAUSED") + "\n" +
+              "• <b>Total Categories:</b> " + all.size() + " (active: " + activeCount + ")\n" +
+              "• <b>Adaptive Pacing:</b> " + String.format(java.util.Locale.US, "%.1f", delaySec) + " s per target\n" +
+              "• <b>Connection Safety:</b> " + String.format(java.util.Locale.US, "%.2f", currentRps) + " req/s (CloudFront Safe 🛡)\n" +
+              "• <b>Price Currency:</b> <code>" + currMode.name() + "</code> (1 $ = " + CurrencyService.getUsdRate() + " ₴ | 1 € = " + CurrencyService.getEurRate() + " ₴)\n" +
+              "• <b>Notification Mode:</b> " + (night ? "🌙 Night (silent)" : "☀️ Day (with sound)")
+            : "📊 <b>Статус Property Searcher:</b>\n\n" +
+              "• <b>Моніторинг:</b> " + (running ? "🟢 АКТИВНИЙ" : "⏸ ЗУПИНЕНО") + "\n" +
+              "• <b>Всього категорій:</b> " + all.size() + " (активних: " + activeCount + ")\n" +
+              "• <b>Адаптивний інтервал:</b> " + String.format(java.util.Locale.US, "%.1f", delaySec) + " с на категорію\n" +
+              "• <b>Безпека з'єднань:</b> " + String.format(java.util.Locale.US, "%.2f", currentRps) + " req/s (CloudFront Safe 🛡)\n" +
+              "• <b>Валюта цін:</b> <code>" + currMode.name() + "</code> (1 $ = " + CurrencyService.getUsdRate() + " ₴ | 1 € = " + CurrencyService.getEurRate() + " ₴)\n" +
+              "• <b>Режим сповіщень:</b> " + (night ? "🌙 Нічний (без звуку)" : "☀️ Денний (зі звуком)");
 
         SendMessage sm = new SendMessage(chatId, status);
         sm.setParseMode("HTML");
@@ -1011,7 +1055,11 @@ public class BotTG extends TelegramLongPollingBot {
     private void stopSearch() {
         stopSearchThreads();
         if (IDC != null) {
-            SendMessage sm3 = new SendMessage(IDC, "⏸ <b>Моніторинг оголошень зупинено.</b>");
+            I18n.Language lang = SettingsManager.getLanguage();
+            String stopTxt = (lang == I18n.Language.EN)
+                ? "⏸ <b>Listing monitoring stopped.</b>"
+                : "⏸ <b>Моніторинг оголошень зупинено.</b>";
+            SendMessage sm3 = new SendMessage(IDC, stopTxt);
             sm3.setParseMode("HTML");
             sm3.setReplyMarkup(createPersistentMenu());
             try {
@@ -1031,7 +1079,11 @@ public class BotTG extends TelegramLongPollingBot {
     }
 
     private void sendUnknownCommandMessage(String chatId) {
-        SendMessage sm = new SendMessage(chatId, "Невідома команда. Оберіть дію на клавіатурі нижче.");
+        I18n.Language lang = SettingsManager.getLanguage();
+        String unknownTxt = (lang == I18n.Language.EN)
+            ? "Unknown command. Please select an action from the keyboard below."
+            : "Невідома команда. Оберіть дію на клавіатурі нижче.";
+        SendMessage sm = new SendMessage(chatId, unknownTxt);
         sm.setReplyMarkup(createPersistentMenu());
         try {
             execute(sm);
@@ -1238,21 +1290,27 @@ public class BotTG extends TelegramLongPollingBot {
                 String cleanPlatform = escapeHtml(res.platform);
                 String cleanTime = escapeHtml(res.timePublished);
 
+                I18n.Language lang = SettingsManager.getLanguage();
+                String lblPrice = I18n.get("card.price", lang);
+                String lblTime = I18n.get("card.time", lang);
+                String lblSource = I18n.get("card.source", lang);
+                String lblOpen = I18n.get("card.open", lang);
+
                 System.out.println("🔥 [GENUINELY NEW AD DETECTED ON " + cleanPlatform + " | " + cleanCategory + "]: " + cleanTitle + " (" + cleanLink + ") [" + formattedPrice + "]");
 
                 // Concise header: Category name immediately followed by original ad title
                 String text = "🏠 <b>" + cleanCategory + ":</b> " + cleanTitle + "\n\n" +
-                        (cleanPrice.isEmpty() ? "" : "💰 <b>Ціна:</b> " + cleanPrice + "\n") +
-                        (cleanTime.isEmpty() ? "" : "🕒 <b>Час:</b> " + cleanTime + "\n") +
-                        "📍 <b>Джерело:</b> " + cleanPlatform + "\n\n" +
-                        "🔗 <a href=\"" + res.link + "\">Відкрити на " + cleanPlatform + "</a>";
+                        (cleanPrice.isEmpty() ? "" : "💰 <b>" + lblPrice + ":</b> " + cleanPrice + "\n") +
+                        (cleanTime.isEmpty() ? "" : "🕒 <b>" + lblTime + ":</b> " + cleanTime + "\n") +
+                        "📍 <b>" + lblSource + ":</b> " + cleanPlatform + "\n\n" +
+                        "🔗 <a href=\"" + res.link + "\">" + lblOpen + " " + cleanPlatform + "</a>";
 
                 InlineKeyboardMarkup cardInline = new InlineKeyboardMarkup();
                 List<List<InlineKeyboardButton>> rows = new ArrayList<>();
                 List<InlineKeyboardButton> row1 = new ArrayList<>();
 
                 InlineKeyboardButton openBtn = new InlineKeyboardButton();
-                openBtn.setText("🔗 Відкрити на " + cleanPlatform);
+                openBtn.setText("🔗 " + lblOpen + " " + cleanPlatform);
                 openBtn.setUrl(res.link);
                 row1.add(openBtn);
                 rows.add(row1);

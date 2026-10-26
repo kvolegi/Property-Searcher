@@ -58,7 +58,7 @@ public class SmartCategoryBuilderDialog extends JDialog {
         propertyTypeCombo.setBackground(COLOR_FIELD_BG);
         mainPanel.add(propertyTypeCombo);
 
-        // 4. Deal Type (Default: Купівля / Продаж)
+        // 4. Deal Type
         mainPanel.add(createLabel(I18n.get("builder.deal_lbl"), fontLabel));
         dealTypeCombo = new JComboBox<>(CategoryCatalog.getDealTypes().toArray(new CategoryCatalog.DealType[0]));
         dealTypeCombo.setFont(fontInput);
@@ -72,12 +72,12 @@ public class SmartCategoryBuilderDialog extends JDialog {
         minPriceField = new JTextField();
         minPriceField.setFont(fontInput);
         minPriceField.setBackground(COLOR_FIELD_BG);
-        minPriceField.setBorder(BorderFactory.createTitledBorder("Від / From"));
+        minPriceField.setBorder(BorderFactory.createTitledBorder(I18n.get("builder.price_from")));
 
         maxPriceField = new JTextField();
         maxPriceField.setFont(fontInput);
         maxPriceField.setBackground(COLOR_FIELD_BG);
-        maxPriceField.setBorder(BorderFactory.createTitledBorder("До / To"));
+        maxPriceField.setBorder(BorderFactory.createTitledBorder(I18n.get("builder.price_to")));
 
         pricePanel.add(minPriceField);
         pricePanel.add(maxPriceField);
@@ -85,7 +85,7 @@ public class SmartCategoryBuilderDialog extends JDialog {
 
         // 6. Owner Only Checkbox
         mainPanel.add(createLabel(I18n.get("builder.owner_chk"), fontLabel));
-        ownerCheckBox = new JCheckBox("100% Direct / Без ріелторів");
+        ownerCheckBox = new JCheckBox(I18n.get("builder.direct_owner"));
         ownerCheckBox.setFont(fontInput);
         ownerCheckBox.setBackground(COLOR_BG);
         ownerCheckBox.setFocusPainted(false);
@@ -143,7 +143,7 @@ public class SmartCategoryBuilderDialog extends JDialog {
             String title = customTitleField.getText().trim();
             String url = previewUrlField.getText().trim();
             if (title.isEmpty() || url.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Заповніть назву категорії!", "Увага", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, I18n.get("builder.enter_warning"), I18n.get("dialog.warning_title"), JOptionPane.WARNING_MESSAGE);
                 return;
             }
             onCategoryCreated.accept(title + "\n" + url);
@@ -172,6 +172,8 @@ public class SmartCategoryBuilderDialog extends JDialog {
         CategoryCatalog.PropertyType pt = (CategoryCatalog.PropertyType) propertyTypeCombo.getSelectedItem();
         CategoryCatalog.DealType dt = (CategoryCatalog.DealType) dealTypeCombo.getSelectedItem();
 
+        if (city == null || pt == null || dt == null) return;
+
         Integer minPrice = null;
         Integer maxPrice = null;
         try {
@@ -190,10 +192,17 @@ public class SmartCategoryBuilderDialog extends JDialog {
         String url = CategoryCatalog.buildUrl(platform, city, pt, dt, minPrice, maxPrice, owner);
         previewUrlField.setText(url);
 
-        // Auto Title with DealType
-        String autoTitle = pt.name + " " + city.name + " (" + dt.name + ")" + (owner ? " [Власник]" : "");
+        // Auto Title with active language
+        I18n.Language currentLang = I18n.getLanguage();
+        String typeName = pt.getName(currentLang);
+        String cityName = city.getName(currentLang);
+        String dealName = dt.getName(currentLang);
+        String ownerBadge = owner ? I18n.get("builder.owner_suffix") : "";
 
-        if (customTitleField.getText().trim().isEmpty() || customTitleField.getText().contains("Квартири") || customTitleField.getText().contains("Будинки")) {
+        String autoTitle = typeName + " " + cityName + " (" + dealName + ")" + ownerBadge;
+
+        String currentText = customTitleField.getText().trim();
+        if (currentText.isEmpty() || currentText.contains("Квартири") || currentText.contains("Apartments") || currentText.contains("Будинки") || currentText.contains("Houses")) {
             customTitleField.setText(autoTitle);
         }
     }

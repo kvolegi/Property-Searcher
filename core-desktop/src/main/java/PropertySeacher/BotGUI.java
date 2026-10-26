@@ -72,6 +72,7 @@ public class BotGUI extends JFrame {
 
         uaBtn.addActionListener(e -> {
             SettingsManager.setLanguage(I18n.Language.UA);
+            I18n.setLanguage(I18n.Language.UA);
             updateLocalizedTexts();
             dlg.dispose();
             if (parentSettingsDialog != null) {
@@ -82,6 +83,7 @@ public class BotGUI extends JFrame {
 
         enBtn.addActionListener(e -> {
             SettingsManager.setLanguage(I18n.Language.EN);
+            I18n.setLanguage(I18n.Language.EN);
             updateLocalizedTexts();
             dlg.dispose();
             if (parentSettingsDialog != null) {
@@ -229,8 +231,6 @@ public class BotGUI extends JFrame {
     }
 
     private void startBot() {
-        System.out.println("Нажата кнопка старт");
-
         if (botToken == null || botToken.trim().isEmpty() || botName == null || botName.trim().isEmpty()) {
             ErrorWindow.showErrorWindow(this, I18n.get("gui.token_required_err"));
             return;
@@ -245,10 +245,9 @@ public class BotGUI extends JFrame {
             bot = new CreateBot(botName, botToken, categories);
             try {
                 bot.createBot();
-                System.out.println("Бот успішно запущено");
                 isBotRunning = true;
             } catch (TelegramApiException e) {
-                ErrorWindow.showErrorWindow(this, (I18n.getLanguage() == I18n.Language.EN ? "Failed to launch bot: " : "Не вдалося запустити бота: ") + e.getMessage());
+                ErrorWindow.showErrorWindow(this, I18n.get("gui.launch_failed") + e.getMessage());
             }
         } else {
             ErrorWindow.showErrorWindow(this, I18n.get("gui.bot_running_err"));
@@ -257,7 +256,6 @@ public class BotGUI extends JFrame {
 
     private void stopBot() {
         if (isBotRunning && bot != null) {
-            System.out.println("Нажата кнопка стоп");
             isBotRunning = false;
             System.exit(0);
         }
@@ -339,9 +337,6 @@ public class BotGUI extends JFrame {
         tokenDialog.setVisible(true);
     }
 
-    /**
-     * Card Renderer without white frames - matching window background
-     */
     private static class CategoryCardRenderer extends JPanel implements ListCellRenderer<SettingsManager.CategoryEntry> {
         private final JLabel titleLabel = new JLabel();
         private final JLabel badgeStatus = new JLabel();
@@ -385,7 +380,6 @@ public class BotGUI extends JFrame {
         ) {
             titleLabel.setText(value.name);
 
-            // Active vs Paused Status Badge
             badgeStatus.setOpaque(true);
             if (value.active) {
                 badgeStatus.setText(I18n.get("cat.badge_on"));
@@ -397,7 +391,6 @@ public class BotGUI extends JFrame {
                 badgeStatus.setForeground(new Color(75, 85, 99));
             }
 
-            // Platform
             badgePlatform.setOpaque(true);
             if (value.url.contains("dom.ria.com")) {
                 badgePlatform.setText(" DOM.RIA ");
@@ -409,7 +402,6 @@ public class BotGUI extends JFrame {
                 badgePlatform.setForeground(new Color(29, 78, 216));
             }
 
-            // Owner
             if (value.url.contains("without_agent") || value.url.contains("private")) {
                 badgeOwner.setText(I18n.get("cat.badge_owner"));
                 badgeOwner.setOpaque(true);
@@ -423,7 +415,6 @@ public class BotGUI extends JFrame {
             String displayUrl = value.url.length() > 68 ? value.url.substring(0, 68) + "..." : value.url;
             urlLabel.setText(displayUrl);
 
-            // No white boxes: render seamlessly on COLOR_BG
             if (isSelected) {
                 setBackground(new Color(150, 222, 220));
                 setBorder(BorderFactory.createCompoundBorder(
@@ -449,7 +440,6 @@ public class BotGUI extends JFrame {
         categoryDialog.getContentPane().setBackground(COLOR_BG);
         categoryDialog.setResizable(false);
 
-        // Header Panel
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(COLOR_BG);
         headerPanel.setBorder(new EmptyBorder(12, 16, 6, 16));
@@ -465,7 +455,6 @@ public class BotGUI extends JFrame {
         headerPanel.add(headerTitle, BorderLayout.WEST);
         headerPanel.add(countBadge, BorderLayout.EAST);
 
-        // Center: Cards List
         DefaultListModel<SettingsManager.CategoryEntry> categoryModel = new DefaultListModel<>();
         for (SettingsManager.CategoryEntry c : categories) {
             categoryModel.addElement(c);
@@ -481,7 +470,6 @@ public class BotGUI extends JFrame {
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(150, 215, 214), 1));
         scrollPane.getViewport().setBackground(COLOR_BG);
 
-        // Top Action Bar
         JPanel topActionBar = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 6));
         topActionBar.setBackground(COLOR_BG);
 
@@ -500,7 +488,6 @@ public class BotGUI extends JFrame {
         centerContainer.add(topActionBar, BorderLayout.NORTH);
         centerContainer.add(scrollPane, BorderLayout.CENTER);
 
-        // Bottom Action Bar
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 12));
         bottomPanel.setBackground(COLOR_BG);
 
@@ -514,7 +501,6 @@ public class BotGUI extends JFrame {
         bottomPanel.add(removeButton);
         bottomPanel.add(backButton);
 
-        // Actions: Auto-save immediately on any change!
         smartAddBtn.addActionListener(e -> {
             new SmartCategoryBuilderDialog(categoryDialog, newCategoryString -> {
                 String[] parts = newCategoryString.split("\n");
@@ -540,7 +526,7 @@ public class BotGUI extends JFrame {
                 saveAllSettings();
                 countBadge.setText(getCountText());
             } else {
-                JOptionPane.showMessageDialog(categoryDialog, "Оберіть категорію зі списку для перемикання активності!", "Увага", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(categoryDialog, I18n.get("cat.select_active_warning"), I18n.get("dialog.warning_title"), JOptionPane.WARNING_MESSAGE);
             }
         });
 
@@ -552,7 +538,7 @@ public class BotGUI extends JFrame {
                 saveAllSettings();
                 countBadge.setText(getCountText());
             } else {
-                JOptionPane.showMessageDialog(categoryDialog, "Оберіть категорію зі списку для видалення!", "Увага", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(categoryDialog, I18n.get("cat.select_delete_warning"), I18n.get("dialog.warning_title"), JOptionPane.WARNING_MESSAGE);
             }
         });
 
@@ -561,10 +547,10 @@ public class BotGUI extends JFrame {
             if (idx != -1) {
                 SettingsManager.CategoryEntry entry = categoryModel.get(idx);
 
-                String editedName = JOptionPane.showInputDialog(categoryDialog, "Змініть назву категорії:", entry.name);
+                String editedName = JOptionPane.showInputDialog(categoryDialog, I18n.get("cat.edit_name_prompt"), entry.name);
                 if (editedName == null || editedName.trim().isEmpty()) return;
 
-                String editedUrl = JOptionPane.showInputDialog(categoryDialog, "Змініть URL категорії:", entry.url);
+                String editedUrl = JOptionPane.showInputDialog(categoryDialog, I18n.get("cat.edit_url_prompt"), entry.url);
                 if (editedUrl == null || editedUrl.trim().isEmpty()) return;
 
                 entry.name = editedName.trim();
@@ -572,7 +558,7 @@ public class BotGUI extends JFrame {
                 categoryList.repaint();
                 saveAllSettings();
             } else {
-                JOptionPane.showMessageDialog(categoryDialog, "Оберіть категорію зі списку для редагування!", "Увага", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(categoryDialog, I18n.get("cat.select_edit_warning"), I18n.get("dialog.warning_title"), JOptionPane.WARNING_MESSAGE);
             }
         });
 
@@ -627,22 +613,38 @@ public class BotGUI extends JFrame {
         urlField.setBackground(COLOR_CARD_BG);
         urlField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
 
-        JEditorPane helpPane = new JEditorPane("text/html",
-                "<html><head><style>" +
-                "body { font-family: 'Comic Sans MS'; font-size: 11px; background-color: #B6EAE9; padding: 5px; margin: 0; }" +
-                "b { color: #1B6563; }" +
-                "code { background-color: #D2F5F4; border: 1px solid #1B6563; padding: 1px 4px; font-size: 10px; }" +
-                "</style></head><body>" +
-                "<b>Правила формування посилання:</b><br>" +
-                "<b>1. Для OLX.ua:</b><br>" +
-                "• Оберіть показ <b>рядками</b> (не плиткою): параметр <code>view=list</code>.<br>" +
-                "• Оберіть сортування <b>«Найновіші»</b>: параметр <code>search[order]=created_at:desc</code>.<br>" +
-                "• <i>Приклад:</i> <code>https://www.olx.ua/uk/nedvizhimost/kvartiry/od/?currency=UAH&search[order]=created_at:desc&view=list</code><br><br>" +
-                "<b>2. Для DOM.RIA.com:</b><br>" +
-                "• Оберіть місто, купівлю/оренду та увімкніть «Без посередників».<br>" +
-                "• <i>Приклад:</i> <code>https://dom.ria.com/uk/prodazha-kvartir/odessa/?without_agent=1</code>" +
-                "</body></html>"
-        );
+        boolean isEn = (I18n.getLanguage() == I18n.Language.EN);
+        String helpHtml = isEn
+            ? "<html><head><style>" +
+              "body { font-family: 'Comic Sans MS'; font-size: 11px; background-color: #B6EAE9; padding: 5px; margin: 0; }" +
+              "b { color: #1B6563; }" +
+              "code { background-color: #D2F5F4; border: 1px solid #1B6563; padding: 1px 4px; font-size: 10px; }" +
+              "</style></head><body>" +
+              "<b>Search URL Formation Rules:</b><br>" +
+              "<b>1. For OLX.ua:</b><br>" +
+              "• Set display to <b>rows</b> (not grid): parameter <code>view=list</code>.<br>" +
+              "• Set sort to <b>'Newest'</b>: parameter <code>search[order]=created_at:desc</code>.<br>" +
+              "• <i>Example:</i> <code>https://www.olx.ua/uk/nedvizhimost/kvartiry/od/?currency=UAH&search[order]=created_at:desc&view=list</code><br><br>" +
+              "<b>2. For DOM.RIA.com:</b><br>" +
+              "• Choose city, deal type, and enable 'Without agents'.<br>" +
+              "• <i>Example:</i> <code>https://dom.ria.com/uk/prodazha-kvartir/odessa/?without_agent=1</code>" +
+              "</body></html>"
+            : "<html><head><style>" +
+              "body { font-family: 'Comic Sans MS'; font-size: 11px; background-color: #B6EAE9; padding: 5px; margin: 0; }" +
+              "b { color: #1B6563; }" +
+              "code { background-color: #D2F5F4; border: 1px solid #1B6563; padding: 1px 4px; font-size: 10px; }" +
+              "</style></head><body>" +
+              "<b>Правила формування посилання:</b><br>" +
+              "<b>1. Для OLX.ua:</b><br>" +
+              "• Оберіть показ <b>рядками</b> (не плиткою): параметр <code>view=list</code>.<br>" +
+              "• Оберіть сортування <b>«Найновіші»</b>: параметр <code>search[order]=created_at:desc</code>.<br>" +
+              "• <i>Приклад:</i> <code>https://www.olx.ua/uk/nedvizhimost/kvartiry/od/?currency=UAH&search[order]=created_at:desc&view=list</code><br><br>" +
+              "<b>2. Для DOM.RIA.com:</b><br>" +
+              "• Оберіть місто, купівлю/оренду та увімкніть «Без посередників».<br>" +
+              "• <i>Приклад:</i> <code>https://dom.ria.com/uk/prodazha-kvartir/odessa/?without_agent=1</code>" +
+              "</body></html>";
+
+        JEditorPane helpPane = new JEditorPane("text/html", helpHtml);
         helpPane.setEditable(false);
         helpPane.setBackground(COLOR_BG);
 
@@ -666,7 +668,7 @@ public class BotGUI extends JFrame {
             String t = titleField.getText().trim();
             String u = urlField.getText().trim();
             if (t.isEmpty() || u.isEmpty()) {
-                JOptionPane.showMessageDialog(dlg, "Введіть назву та URL!", "Увага", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(dlg, I18n.get("manual.enter_warning"), I18n.get("dialog.warning_title"), JOptionPane.WARNING_MESSAGE);
                 return;
             }
             SettingsManager.CategoryEntry newEntry = new SettingsManager.CategoryEntry(t, u, true);
@@ -693,7 +695,6 @@ public class BotGUI extends JFrame {
         instructionDialog.getContentPane().setBackground(COLOR_BG);
         instructionDialog.setResizable(true);
 
-        // Header with transparent 3D logo
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
         headerPanel.setBackground(COLOR_BG);
 
@@ -708,12 +709,10 @@ public class BotGUI extends JFrame {
         titleLabel.setForeground(new Color(27, 101, 99));
         headerPanel.add(titleLabel);
 
-        // Tabs
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setFont(new Font("Comic Sans MS", Font.BOLD, 13));
         tabbedPane.setBackground(COLOR_BG);
 
-        // TAB 1: BotFather Quick Setup (Light Brand Theme, no black boxes!)
         JPanel botFatherTab = new JPanel(new BorderLayout(10, 10));
         botFatherTab.setBackground(COLOR_BG);
         botFatherTab.setBorder(new EmptyBorder(12, 16, 12, 16));
@@ -722,27 +721,18 @@ public class BotGUI extends JFrame {
         guideBox.setLayout(new BoxLayout(guideBox, BoxLayout.Y_AXIS));
         guideBox.setBackground(COLOR_BG);
 
-        JLabel stepTitle = new JLabel("Налаштування меню та кнопок бота в Telegram:");
+        JLabel stepTitle = new JLabel(I18n.get("ins.botfather_step_title"));
         stepTitle.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
         stepTitle.setForeground(new Color(27, 101, 99));
 
         JLabel stepDesc = new JLabel("<html><body style='width: 580px; font-family: Comic Sans MS; font-size: 11px;'>" +
-                "1. У Telegram відкрийте офіційного бота <b>@BotFather</b>.<br>" +
-                "2. Надішліть йому команду <code>/setcommands</code> та виберіть вашого створеного бота.<br>" +
-                "3. Натисніть кнопку нижче та надішліть скопійований список команд у чат @BotFather:</body></html>");
+                I18n.get("ins.botfather_step_desc") + "</body></html>");
 
         guideBox.add(stepTitle);
         guideBox.add(Box.createRigidArea(new Dimension(0, 6)));
         guideBox.add(stepDesc);
 
-        // Light brand styled commands text area (NO black background)
-        JTextArea codeArea = new JTextArea(
-                "start - Головне меню та запуск\n" +
-                "search - Запустити пошук оголошень\n" +
-                "targets - Список активних категорій\n" +
-                "stop - Зупинити моніторинг\n" +
-                "help - Довідка та інструкція"
-        );
+        JTextArea codeArea = new JTextArea(I18n.get("ins.botfather_commands"));
         codeArea.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
         codeArea.setBackground(new Color(230, 248, 247));
         codeArea.setForeground(new Color(27, 101, 99));
@@ -758,17 +748,13 @@ public class BotGUI extends JFrame {
         JButton copyCommandsButton = createButton(I18n.get("ins.copy_btn"), 0, 0, 380, 42);
         copyCommandsButton.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
         copyCommandsButton.addActionListener(e -> {
-            String botFatherCommands = "start - Головне меню та запуск\n" +
-                    "search - Запустити пошук оголошень\n" +
-                    "targets - Список активних категорій\n" +
-                    "stop - Зупинити моніторинг\n" +
-                    "help - Довідка та інструкція";
+            String botFatherCommands = I18n.get("ins.botfather_commands");
 
             StringSelection selection = new StringSelection(botFatherCommands);
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard.setContents(selection, selection);
 
-            copyCommandsButton.setText("Скопійовано в буфер!");
+            copyCommandsButton.setText(I18n.get("ins.copied_button_text"));
             Timer t = new Timer(2500, evt -> copyCommandsButton.setText(I18n.get("ins.copy_btn")));
             t.setRepeats(false);
             t.start();
@@ -786,15 +772,14 @@ public class BotGUI extends JFrame {
         botFatherTab.add(codeScroll, BorderLayout.CENTER);
         botFatherTab.add(copyBtnWrap, BorderLayout.SOUTH);
 
-        // TAB 2: Quick Start HTML
-        JEditorPane quickStartPane = new JEditorPane("text/html", getQuickStartHtml());
+        I18n.Language currentLang = I18n.getLanguage();
+        JEditorPane quickStartPane = new JEditorPane("text/html", getQuickStartHtml(currentLang));
         quickStartPane.setEditable(false);
         quickStartPane.setBackground(COLOR_BG);
         quickStartPane.setCaret(null);
         JScrollPane tab2Scroll = new JScrollPane(quickStartPane);
 
-        // TAB 3: Filters & Senior Anti-duplicate Architecture
-        JEditorPane filtersPane = new JEditorPane("text/html", getFiltersAndArchitectureHtml());
+        JEditorPane filtersPane = new JEditorPane("text/html", getFiltersAndArchitectureHtml(currentLang));
         filtersPane.setEditable(false);
         filtersPane.setBackground(COLOR_BG);
         filtersPane.setCaret(null);
@@ -804,7 +789,6 @@ public class BotGUI extends JFrame {
         tabbedPane.addTab(I18n.get("ins.tab_quickstart"), tab2Scroll);
         tabbedPane.addTab(I18n.get("ins.tab_filters"), tab3Scroll);
 
-        // Bottom OK
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
         bottomPanel.setBackground(COLOR_BG);
 
@@ -821,7 +805,30 @@ public class BotGUI extends JFrame {
         instructionDialog.setVisible(true);
     }
 
-    private String getQuickStartHtml() {
+    private String getQuickStartHtml(I18n.Language lang) {
+        if (lang == I18n.Language.EN) {
+            return "<html><head><style>" +
+                    "body { font-family: 'Comic Sans MS'; font-size: 12px; background-color: #B6EAE9; padding: 15px; }" +
+                    "h2 { font-size: 18px; font-weight: bold; color: #1B6563; }" +
+                    "h3 { font-size: 14px; font-weight: bold; color: #1B6563; margin-top: 14px; }" +
+                    "p, li { font-size: 12px; line-height: 1.4; }" +
+                    "code { background-color: #D2F5F4; border: 1px solid #1B6563; padding: 2px 5px; font-weight: bold; }" +
+                    "</style></head><body>" +
+                    "<h2>Instant Monitoring Quick Start</h2>" +
+                    "<p>This platform is designed to intercept freshly published listings from <b>OLX.ua</b> and <b>DOM.RIA</b> directly into Telegram!</p>" +
+                    "<h3>Instant Initial Dispatch:</h3>" +
+                    "<p>Whenever you start monitoring or press <i>'Search Now'</i> in Telegram, the bot <b>immediately sends the latest organic listing</b> for each category with full photo album, price, and exact timestamp!</p>" +
+                    "<h3>Telegram Management Controls:</h3>" +
+                    "<ul>" +
+                    "<li><b>'Search Now' button</b> — runs immediate poll of newest listings.</li>" +
+                    "<li><b>'My Categories' button</b> — displays all targets with interactive [Pause / Resume] and [Delete] buttons.</li>" +
+                    "<li><b>'System Status' button</b> — shows thread health, adaptive delay, and current req/s rate.</li>" +
+                    "<li><b>'Stop' button</b> — pauses monitoring daemon.</li>" +
+                    "<li><b>'Open on ...' button</b> — opens listing directly in browser.</li>" +
+                    "</ul>" +
+                    "</body></html>";
+        }
+
         return "<html><head><style>" +
                 "body { font-family: 'Comic Sans MS'; font-size: 12px; background-color: #B6EAE9; padding: 15px; }" +
                 "h2 { font-size: 18px; font-weight: bold; color: #1B6563; }" +
@@ -831,22 +838,42 @@ public class BotGUI extends JFrame {
                 "</style></head><body>" +
                 "<h2>Миттєвий старт моніторингу</h2>" +
                 "<p>Програма призначена для блискавичного перехоплення найсвіжіших оголошень з <b>OLX.ua</b> та <b>DOM.RIA</b> прямо в Telegram!</p>" +
-
                 "<h3>Миттєва відправка при старті:</h3>" +
                 "<p>Як тільки ви запускаєте будь-яку категорію (або тиснете кнопку <i>«Пошук зараз»</i> у Telegram), бот <b>одразу знаходить і надсилає найновіше органічне оголошення</b> в цій категорії разом із його фотографією, ціною та точним часом публікації (години:хвилини)!</p>" +
-
                 "<h3>Зручне керування в Telegram:</h3>" +
                 "<ul>" +
                 "<li><b>Кнопка «Пошук зараз»</b> — запускає швидку перевірку найсвіжіших оголошень.</li>" +
                 "<li><b>Кнопка «Мої категорії»</b> — показує повний перелік активних цілей моніторингу та їхній статус (ВКЛ / ПАУЗА).</li>" +
-                "<li><b>Кнопка «Статус моніторингу»</b> — показує активність потоків і платформ.</li>" +
+                "<li><b>Кнопка «Статус системи»</b> — показує активність потоків і платформ.</li>" +
                 "<li><b>Кнопка «Зупинити»</b> — призупиняє фоновий моніторинг.</li>" +
                 "<li><b>Кнопка «Відкрити на ...»</b> під кожним оголошенням — миттєво відкриває об'єкт у браузері або додатку.</li>" +
                 "</ul>" +
                 "</body></html>";
     }
 
-    private String getFiltersAndArchitectureHtml() {
+    private String getFiltersAndArchitectureHtml(I18n.Language lang) {
+        if (lang == I18n.Language.EN) {
+            return "<html><head><style>" +
+                    "body { font-family: 'Comic Sans MS'; font-size: 12px; background-color: #B6EAE9; padding: 15px; }" +
+                    "h2 { font-size: 18px; font-weight: bold; color: #1B6563; }" +
+                    "h3 { font-size: 14px; font-weight: bold; color: #1B6563; margin-top: 14px; }" +
+                    "p, li { font-size: 12px; line-height: 1.4; }" +
+                    "code { background-color: #D2F5F4; border: 1px solid #1B6563; padding: 2px 5px; font-weight: bold; }" +
+                    "</style></head><body>" +
+                    "<h2>Filter Architecture & Reliability</h2>" +
+                    "<h3>1. Direct Owner Filter (100% No Agencies):</h3>" +
+                    "<p>When enabled, queries automatically attach <code>without_agent=1</code> on DOM.RIA and <code>search[private_business]=private</code> on OLX.</p>" +
+                    "<h3>2. Complete Sponsored Ad Exclusion:</h3>" +
+                    "<p>Paid promoted ads (TOP / Featured) pinned at the top of pages are strictly ignored. The bot intercepts <b>only authentic new listings</b>.</p>" +
+                    "<h3>3. O(1) 50-Slot Circular Memory Ring Buffer:</h3>" +
+                    "<p>Eliminates duplicate alerts if aggregator portals reorder listings. Cold start silently caches active baselines to eliminate startup spam.</p>" +
+                    "<h3>4. CDN Propagation Physics (1.8s Lower Bound):</h3>" +
+                    "<p>Aggregators take 30–90 seconds for moderation and CDN propagation. Property Searcher intercepts listings within <b>1–2 seconds</b> of public edge availability!</p>" +
+                    "<h3>5. Automatic NBU DUAL Currency & Night Silent Mode:</h3>" +
+                    "<p>Live conversions (e.g. <code>$65 000 (≈ 2 704 000 UAH)</code>). Silent notifications between 23:00 and 07:00.</p>" +
+                    "</body></html>";
+        }
+
         return "<html><head><style>" +
                 "body { font-family: 'Comic Sans MS'; font-size: 12px; background-color: #B6EAE9; padding: 15px; }" +
                 "h2 { font-size: 18px; font-weight: bold; color: #1B6563; }" +
@@ -855,24 +882,16 @@ public class BotGUI extends JFrame {
                 "code { background-color: #D2F5F4; border: 1px solid #1B6563; padding: 2px 5px; font-weight: bold; }" +
                 "</style></head><body>" +
                 "<h2>Архітектура фільтрів та надійність</h2>" +
-
                 "<h3>1. Фільтр «Тільки від власника» (100% без посередників):</h3>" +
                 "<p>При увімкненні параметра «Без посередників» у Конструкторі категорій до запиту автоматично додається системний фільтр: <code>without_agent=1</code> для DOM.RIA та <code>search[private_business]=private</code> для OLX. Ріелтори та агенції автоматично відсікаються.</p>" +
-
                 "<h3>2. Повне ігнорування рекламних ТОП-оголошень:</h3>" +
                 "<p>Платні просувані оголошення (TOP / Featured), які постійно закріплені вгорі сторінки, автоматично пропускаються. Бот перехоплює <b>тільки реальні нові надходження</b>.</p>" +
-
-                "<h3>3. Захист від перестановок (Circular Buffer пам'яті на 50 слотів + 30-позиційний тихий старт):</h3>" +
-                "<p>Якщо сайт при частому оновленні змінює найновіші оголошення місцями, внутрішній кільцевий буфер пам'яті перевіряє останні 50 надісланих посилань. На старті бот тихо кешує 30 активних оголошень, тому спам старими записами повністю виключений.</p>" +
-
-                "<h3>4. Відстеження точного часу публікації (HH:mm):</h3>" +
-                "<p>Кожна картка містить точний київський час появи оголошення на платформі для швидкої оцінки його актуальності.</p>" +
-
-                "<h3>5. Фізика швидкості та CDN-кешування сайтів (OLX & DOM.RIA):</h3>" +
-                "<p>Сучасні портали використовують глобальну кешуючу CDN-інфраструктуру (Akamai / Cloudflare). Після того, як автор викладає оголошення, воно потрапляє на модерацію сайту і стає доступним на публічних серверах через <b>30–90 секунд</b>. Property Searcher виявляє його <b>в перші ж 1–2 секунди</b> після фактичної появи у відкритому веб-просторі (швидше фізично бути не може, оскільки до цієї миті об'єкт ще не опублікований у мережі)!</p>" +
-
-                "<h3>6. Автоматичний DUAL-курс НБУ та Нічний тихий режим:</h3>" +
-                "<p>Усі ціни автоматично транслюються у подвійному форматі за курсом НБУ (наприклад, <code>$65 000 (≈ 2 704 000 грн)</code>). У нічний час (23:00 – 07:00) повідомлення приходять без звуку, а керувати валютою можна прямо з Telegram через команду <code>/currency</code>.</p>" +
+                "<h3>3. Захист від перестановок (Circular Buffer пам'яті на 50 слотів):</h3>" +
+                "<p>Внутрішній кільцевий буфер пам'яті перевіряє останні 50 надісланих посилань. На старті бот тихо кешує 30 активних оголошень, тому спам старими записами повністю виключений.</p>" +
+                "<h3>4. Фізика швидкості та CDN-кешування сайтів (OLX & DOM.RIA):</h3>" +
+                "<p>Після публікації оголошення потрапляє на модерацію сайту і стає доступним на публічних серверах через <b>30–90 секунд</b>. Property Searcher виявляє його <b>в перші ж 1–2 секунди</b> після появи у відкритому веб-просторі!</p>" +
+                "<h3>5. Автоматичний DUAL-курс НБУ та Нічний тихий режим:</h3>" +
+                "<p>Усі ціни автоматично транслюються у подвійному форматі за курсом НБУ. У нічний час (23:00 – 07:00) повідомлення приходять без звуку.</p>" +
                 "</body></html>";
     }
 
