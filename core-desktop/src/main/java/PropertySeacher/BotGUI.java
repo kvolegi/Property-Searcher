@@ -26,7 +26,6 @@ public class BotGUI extends JFrame {
     private JButton startButton;
     private JButton stopButton;
     private JButton settingButton;
-    private JButton languageButton;
 
     // Palette
     private static final Color COLOR_BG = new Color(182, 234, 233);
@@ -47,12 +46,6 @@ public class BotGUI extends JFrame {
         return instance;
     }
 
-    public void toggleLanguage() {
-        I18n.Language current = I18n.getLanguage();
-        I18n.Language newLang = (current == I18n.Language.EN) ? I18n.Language.UA : I18n.Language.EN;
-        setLanguage(newLang);
-    }
-
     public void setLanguage(I18n.Language newLang) {
         SettingsManager.setLanguage(newLang);
         I18n.setLanguage(newLang);
@@ -67,11 +60,6 @@ public class BotGUI extends JFrame {
         if (startButton != null) startButton.setText(I18n.get("btn.start"));
         if (stopButton != null) stopButton.setText(I18n.get("btn.stop"));
         if (settingButton != null) settingButton.setText(I18n.get("btn.settings"));
-        if (languageButton != null) {
-            boolean isEn = (I18n.getLanguage() == I18n.Language.EN);
-            languageButton.setText(isEn ? "🇺🇦 UA" : "🇬🇧 EN");
-            languageButton.setToolTipText(isEn ? "Перемкнути інтерфейс на українську" : "Switch interface to English");
-        }
     }
 
     private void checkInitialLanguage() {
@@ -183,8 +171,6 @@ public class BotGUI extends JFrame {
 
         startButton = createButton(I18n.get("btn.start"), 154, 98, 240, 69);
         stopButton = createButton(I18n.get("btn.stop"), 158, 190, 240, 69);
-        boolean isEnInit = (I18n.getLanguage() == I18n.Language.EN);
-        languageButton = createButton(isEnInit ? "🇺🇦 UA" : "🇬🇧 EN", 8, 198, 135, 35);
         settingButton = createButton(I18n.get("btn.settings"), 8, 240, 135, 35);
 
         JLabel titleLabel = new JLabel("Property Searcher");
@@ -204,12 +190,10 @@ public class BotGUI extends JFrame {
 
         startButton.addActionListener(e -> startBot());
         stopButton.addActionListener(e -> stopBot());
-        languageButton.addActionListener(e -> toggleLanguage());
         settingButton.addActionListener(e -> openSettingsDialog());
 
         contentPane.add(startButton);
         contentPane.add(stopButton);
-        contentPane.add(languageButton);
         contentPane.add(settingButton);
         contentPane.add(titleLabel);
         contentPane.add(OlxLabel);
