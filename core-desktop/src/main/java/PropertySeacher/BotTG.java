@@ -1219,16 +1219,16 @@ public class BotTG extends TelegramLongPollingBot {
             try {
                 ParserOLX ps = new ParserOLX(categoryUrl);
                 List<ParserOLX.PropertyResult> initialAds = ps.getTopProperties(30);
-                for (ParserOLX.PropertyResult res : initialAds) {
+                // Buffer older items (index >= 1) so the top organic listing (index 0)
+                // is immediately delivered to Telegram on the first pass for instant user inspection!
+                for (int i = 1; i < initialAds.size(); i++) {
+                    ParserOLX.PropertyResult res = initialAds.get(i);
                     if (res != null && res.link != null && !res.link.isBlank()) {
                         String clean = res.link.split("\\?")[0];
-                        if (this.lastSentAdLink.isEmpty()) {
-                            this.lastSentAdLink = clean;
-                        }
                         updateLastAdLinks(clean);
                     }
                 }
-                System.out.println("📌 [Baseline initialized (SILENT) for " + categoryName + "]: " + initialAds.size() + " active listings buffered");
+                System.out.println("📌 [Baseline initialized for " + categoryName + "]: " + Math.max(0, initialAds.size() - 1) + " active listings buffered (top listing primed for live delivery)");
             } catch (Exception e) {
                 System.err.println("⚠️ Could not init baseline for " + categoryName + ": " + e.getMessage());
             }
