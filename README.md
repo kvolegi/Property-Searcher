@@ -13,6 +13,7 @@
   <a href="https://spring.io/projects/spring-boot"><img src="https://img.shields.io/badge/Spring%20Boot-3.3.4-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot 3" /></a>
   <a href="https://www.postgresql.org/"><img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 16" /></a>
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker&logoColor=white" alt="Docker" /></a>
+  <a href="https://github.com/kvolegi/Property-Searcher/actions/workflows/ci.yml"><img src="https://github.com/kvolegi/Property-Searcher/actions/workflows/ci.yml/badge.svg" alt="CI / Build & Test" /></a>
   <a href="#testing--quality-assurance"><img src="https://img.shields.io/badge/Tests-38%20Passed-brightgreen?logo=junit5&logoColor=white" alt="Tests: 38 Passed" /></a>
   <a href="ARCHITECTURE.md"><img src="https://img.shields.io/badge/Architecture-Event--Driven%20Ingestion-64CFCB" alt="Architecture" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Proprietary%20%2F%20View--Only-red.svg" alt="License: Proprietary / View-Only" /></a>
@@ -71,12 +72,24 @@ Engineered for host environments with intermittent uptime:
 * First-launch auto-detection and interactive modal language selection.
 * Dynamic runtime language switching via desktop preferences and Telegram `/language` inline menus.
 
+### 8. In-Telegram Autonomous Operations & Builder Wizard
+* **Card-Based Target Management (`/categories`)**: Each monitoring target is presented as an interactive visual card displaying real-time status (🟢 Active / ⏸ Paused), platform source, and direct inline action buttons `[⏸ Pause / ▶️ Resume]` and `[🗑 Delete]`.
+* **5-Step Category Builder Wizard (`/add`)**: Conversational step-by-step wizard directly inside Telegram allowing users to construct complex queries (Platform $\to$ City $\to$ Operation Type $\to$ Price Bounds $\to$ Custom Label) with zero URL editing.
+* **Direct URL Intake & Sanitizer**: Users can directly paste raw search URLs from browser address bars (`olx.ua` / `dom.ria.com`); the engine validates syntax, strips tracking parameters, and hot-reloads the target into memory.
+* **4-Tab Interactive Help Hub (`/help`)**: Contextual documentation directly inside Telegram with inline tab navigation: `[📚 Overview] [⚡️ Commands] [🏗 Builder Guide] [⚙️ Direct URLs]`.
+
 ---
 
 ## Repository Structure
 
 ```text
 .
+├── .github/
+│   ├── workflows/ci.yml            # Automated CI/CD pipeline (JUnit 5 + Maven Build)
+│   ├── ISSUE_TEMPLATE/             # Standardized bug & feature templates
+│   └── PULL_REQUEST_TEMPLATE.md    # Engineering QA PR checklist
+├── Makefile                        # Developer CLI orchestration (test, build, docker)
+├── run.sh                          # Cross-platform runner script
 ├── ARCHITECTURE.md                 # C4 model, event sequence flows, and design patterns
 ├── TECHNICAL_SPECIFICATION.md      # Engineering requirements and ISO/IEC/IEEE 29148 spec
 ├── DEPLOYMENT.md                   # Production server deployment guide (Docker & systemd)
@@ -129,7 +142,27 @@ Engineered for host environments with intermittent uptime:
 * **Build System**: Apache Maven 3.8+ (`mvn -version`)
 * **Optional**: Docker 24+ and Docker Compose
 
-### Running the Desktop Client
+### Developer Fast-Path (Makefile & CLI)
+```bash
+# Display all available developer commands
+make help
+
+# Run the full automated test suite (38 JUnit 5 tests)
+make test
+
+# Build both desktop and enterprise backend modules
+make build
+
+# Launch the desktop client daemon
+make run-desktop
+
+# Launch Enterprise Backend & PostgreSQL 16 via Docker Compose
+make docker-up
+```
+
+### Manual Execution
+
+#### Running the Desktop Client
 ```bash
 # Direct launch via prebuilt universal JAR
 java -jar dist/PropertySeacher-Universal.jar
@@ -140,7 +173,7 @@ mvn clean package -DskipTests
 java -jar target/PS-3.0.jar
 ```
 
-### Running the Enterprise Backend
+#### Running the Enterprise Backend
 ```bash
 # Local development run
 cd enterprise-backend

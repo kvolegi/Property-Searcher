@@ -1,0 +1,53 @@
+name: CI / Build & Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core-desktop:
+    name: Core Desktop (Tests & Build)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up OpenJDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run Core Desktop Automated Test Suite
+        working-directory: core-desktop
+        run: mvn clean test --batch-mode
+
+      - name: Build Core Desktop Executable Artifact
+        working-directory: core-desktop
+        run: mvn package -DskipTests --batch-mode
+
+  enterprise-backend:
+    name: Enterprise Backend (Spring Boot 3)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up OpenJDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build Enterprise Backend
+        working-directory: enterprise-backend
+        run: mvn clean compile --batch-mode
