@@ -125,7 +125,7 @@ public class SearchAlgorithmEngine implements Runnable {
                 }
             }
             log.info("Baseline initialized for [{}]: {} active listings buffered",
-                    categoryName, Math.max(0, initialAds.size() - 1));
+                    categoryName, initialAds.size());
         } catch (Exception e) {
             log.warn("Could not init baseline for [{}]: {}", categoryName, e.getMessage());
         }
