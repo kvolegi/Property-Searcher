@@ -1,303 +1,236 @@
-# Архітектура системи: Property Searcher 3 🏛️
+# Software Architecture Document (SAD): Property Searcher 3 🏛️
 
-> **Рівень документа:** Software Architecture Document (SAD)  
-> **Методологія:** C4 Model (Context, Container, Component, Code) & Clean Architecture  
-> **Головний архітектор:** `kvolegi`, -
+> **Standard:** ISO/IEC/IEEE 42010 Architecture Description & C4 Model  
+> **Status:** Production / Release v3.1.0  
+> **System Class:** High-Throughput Real Estate Ingestion & Distributed Valuation Platform  
+> **Author & Lead Architect:** `@kvolegi`
 
-## 1. C4 Контекстна діаграма системи (System Context)
+---
+
+## 1. Executive Architectural Summary
+
+**Property Searcher 3** is a distributed real estate ingestion, valuation, and alerting platform tailored for high-velocity secondary property markets (OLX.ua and DOM.RIA.com). The system detects fresh property listings within **~1.8 seconds** of public availability, normalizes multi-currency pricing using official National Bank of Ukraine (NBU) exchange rates, evaluates dynamic bargain scores, and dispatches rich photo galleries to Telegram subscribers.
+
+The platform is designed around two decoupled runtime tiers:
+1. **Core Desktop Client (`core-desktop`)**: A zero-cloud, footprint-optimized client (15 MB JAR) built on Java 21 LTS and FlatLaf Swing, featuring dual theme switching (Comic Sans MS default vs Corporate Pro Segoe UI), bilingual localization, and an in-memory $O(1)$ ring buffer.
+2. **Enterprise Cloud Backend (`enterprise-backend`)**: A cloud-native microservice built on **Spring Boot 3.3.4** and **Java 21 LTS**, powered by Project Loom virtual threads, Redis 7 cluster state synchronization, PostgreSQL 16 persistence, Flyway migrations, Resilience4j fault barriers, and production Kubernetes/Helm deployment manifests.
+
+---
+
+## 2. C4 Level 1: System Context Diagram
 
 ```mermaid
 flowchart TD
-    User["📱 Рієлтор / Кінцевий користувач"]
+    User["📱 Real Estate Agent / End User"]
     
-    subgraph PlatformBoundary ["Property Searcher 3 Enterprise Platform"]
-        DesktopApp["🖥️ Core Desktop Client\n(Java 21 LTS, Swing, i18n, Ingestion Engine)"]
-        BackendServer["☁️ Enterprise Backend Service\n(Spring Boot 3.3.4, JPA, REST, Actuator)"]
+    subgraph PlatformBoundary ["Property Searcher 3 Platform Boundary"]
+        DesktopApp["🖥️ Core Desktop Client\n(Java 21 LTS, Swing, i18n, Local Ingestion)"]
+        BackendServer["☁️ Enterprise Backend Service\n(Spring Boot 3.3.4, Loom, JPA, REST, Actuator)"]
     end
 
-    subgraph ExternalSources ["Зовнішні провайдери та платформи"]
+    subgraph ExternalServices ["External Services & Gateways"]
         Portal1["🌐 OLX.ua (Akamai CDN Edge Nodes)"]
         Portal2["🌐 DOM.RIA.com (Cloudflare CDN / API)"]
-        NBU["🏦 Національний банк України (Exchange Rates API)"]
+        NBU["🏦 National Bank of Ukraine (NBU Exchange Rate API)"]
         Telegram["📬 Telegram Bot API Gateway"]
+        RedisNode[("⚡ Redis 7 Cluster\n(Distributed Locks & Deduplication Sets)")]
+        PostgresNode[("🐘 PostgreSQL 16 Database\n(Relational & Price History)")]
     end
 
-    User <, >|Візуальне керування фільтрами та мовою| DesktopApp
-    User <, >|Отримання фотоальбомів та команди| Telegram
-    DesktopApp, >|Низьколатентне опитування 1.8с| Portal1
-    DesktopApp, >|Скрапінг перевірених пропозицій| Portal2
-    DesktopApp, >|Запит офіційного курсу раз на добу| NBU
-    DesktopApp, >|Асинхронний SendMediaGroup| Telegram
-    BackendServer, >|REST API / OpenAPI 3.0| User
-    BackendServer -.->|Синхронізація лістингів та цінової історії| DesktopApp
-```, -
+    User <-->|Interactive Filter Builder & Dual Theme UI| DesktopApp
+    User <-->|Instant Alert Feeds & Interactive Commands| Telegram
+    DesktopApp -->|Sub-2s Lightweight CDN Polling| Portal1
+    DesktopApp -->|HTML Parsing & Anti-Bot Bypass| Portal2
+    DesktopApp -->|Daily Exchange Rate Refresh| NBU
+    DesktopApp -->|SendMediaGroup Photo Albums| Telegram
 
-## 2. C4 Діаграма контейнерів (Container Diagram)
+    BackendServer -->|Scheduled Scrape Execution| Portal1
+    BackendServer -->|Headless Browser & Proxy Rotator| Portal2
+    BackendServer -->|Resilience4j Circuit Breaker Gateway| NBU
+    BackendServer -->|Cluster Synchronization| RedisNode
+    BackendServer -->|ACID Persistence & Flyway Migrations| PostgresNode
+    BackendServer -->|Event-Driven Telegram Dispatch| Telegram
+```
+
+---
+
+## 3. C4 Level 2: Container Diagram (Multi-Module Architecture)
+
+The Maven reactor is decoupled into isolated submodules to preserve bounded contexts:
 
 ```mermaid
 flowchart LR
-    subgraph ClientContainer ["Desktop Client Container (Zero-Cloud Native)"]
-        GUI["BotGUI\n(Bilingual UA/EN, FlatLaf)"]
-        Engine["ParserOLX\n(DOM/HTML Ingestion Engine)"]
-        Scheduler["Adaptive Rate Scheduler\n(Token-Bucket & Staggering)"]
-        Buffer["Circular Memory Buffer\n(50 Slots, O(1) Check)"]
-        CurrServ["CurrencyService\n(3-Tier NBU Gateway + Cache)"]
-        AsyncDisp["notificationExecutor\n(Cached Worker Pool)"]
+    subgraph CoreDesktopModule ["core-desktop Module (15 MB Standalone Artifact)"]
+        GUI["BotGUI\n(Dual Theme: Comic Sans / Corporate Pro)"]
+        Parser["ParserOLX\n(JSoup DOM Extraction & Normalization)"]
+        Engine["SearchAlgorithmEngine\n(Adaptive Token-Bucket Limiter)"]
+        RingBuffer["InMemoryRingBufferCacheStrategy\n(ReentrantReadWriteLock, 50 Slots)"]
+        Currency["CurrencyService\n(3-Tier Gateway with Local JSON Cache)"]
+        Dispatcher["TelegramNotificationDispatcher\n(Async SendMediaGroup Pool)"]
     end
 
-    subgraph BackendContainer ["Enterprise Cloud Container (Spring Boot 3)"]
-        Controller["PropertyController\n(REST API & Swagger UI)"]
-        TrackingService["TrackingService\n(Business Workflow Engine)"]
-        Analytics["PriceAnalyticsService\n(Anomaly & Volatility Math)"]
-        Repo["Spring Data Repositories\n(Hibernate / JPA)"]
-        Database[("PostgreSQL 16\n(Relational Storage)")]
+    subgraph EnterpriseBackendModule ["enterprise-backend Module (Cloud Service)"]
+        REST["PropertyController\n(OpenAPI 3.0 REST Endpoints)"]
+        LoomTracker["TrackingService\n(Virtual Thread Parallel Fan-Out)"]
+        PersistService["TrackingPersistenceService\n(Strict Transaction Isolation)"]
+        DistLock["RedisDistributedLockService\n(Lettuce, SET NX PX, Lua Scripts)"]
+        RedisCache["RedisDeduplicationCacheStrategy\n(Native Redis Sets with TTL)"]
+        CircuitBreaker["NbuCurrencyGateway\n(Resilience4j CircuitBreaker & Retry)"]
+        Storage[("PostgreSQL 16\n(Search Targets, Properties, Price History)")]
     end
 
-    GUI, > Engine
-    Engine, > Scheduler
-    Scheduler, > Buffer
-    Buffer, > CurrServ
-    CurrServ, > AsyncDisp
-    AsyncDisp, > Telegram["Telegram API"]
-
-    Controller, > TrackingService
-    TrackingService, > Analytics
-    TrackingService, > Repo
-    Repo, > Database
-```, -
-
-## 3. C4 Діаграма компонентів бекенду (Backend Component Diagram)
-
-```mermaid
-flowchart TD
-    subgraph API_Layer ["API & Interface Layer"]
-        PC["PropertyController\n(@RestController)"]
-        TB["PropertyTelegramBot\n(@Component TelegramLongPollingBot)"]
-        Actuator["Spring Boot Actuator\n(/health, /metrics)"]
-    end
-
-    subgraph Core_Services ["Service & Domain Logic"]
-        TS["TrackingService\n(Координатор оновлень)"]
-        PAS["PriceAnalyticsService\n(Аналітика волатильності & Hot Deal Engine)"]
-        SS["ScraperService\n(Фасад скрапінгу)"]
-        EP["ApplicationEventPublisher\n(Шина подій EDA)"]
-        PEL["PropertyEventListener\n(Асинхронний обробник подій)"]
-        TNS["TelegramNotificationService\n(Диспетчер сповіщень)"]
-    end
-
-    subgraph Strategy_Layer ["Strategy Pattern Layer"]
-        OLX_Strat["OlxScraperStrategy"]
-        DOMRIA_Strat["DomRiaScraperStrategy"]
-        MOCK_Strat["MockScraperStrategy"]
-        Cache_Strat["DeduplicationCacheStrategy\n(InMemoryRingBufferStrategy / Redis-Ready)"]
-    end
-
-    subgraph Persistence_Layer ["Data Access Layer (Spring Data JPA)"]
-        UR["UserRepository"]
-        STR["SearchTargetRepository"]
-        DPR["DiscoveredPropertyRepository"]
-        PHR["PriceHistoryRepository"]
-    end
-
-    PC, > TS
-    TB, > TS
-    TS, > SS
-    TS, > PAS
-    TS, > Cache_Strat
-    TS, > EP
-    EP, > PEL
-    PEL, > TNS
-    SS, > OLX_Strat
-    SS, > DOMRIA_Strat
-    SS, > MOCK_Strat
-    TS, > UR
-    TS, > STR
-    TS, > DPR
-    TS, > PHR
-```, -
-
-## 4. Життєвий цикл лістингу (Listing State Machine)
-
-```mermaid
-stateDiagram-v2
-    [*], > DISCOVERED: Оголошення з'явилося на CDN ноді порталу
-    DISCOVERED, > SILENT_BASELINE: Перший запуск системи (30 перших оголошень)
-    SILENT_BASELINE, > BUFFERED: Запис ID у хеш-сет без нотифікації
-    
-    DISCOVERED, > DUPLICATE_CHECK: Звичайний робочий цикл
-    DUPLICATE_CHECK, > BUFFERED: ID знайдено у 50-слотовому буфері (Пропуск)
-    
-    DUPLICATE_CHECK, > EXTRACTION: Нове унікальне оголошення
-    EXTRACTION, > MEDIA_COMPOSED: Парсинг DOM (галерея до 10 фото, ціна, гео)
-    MEDIA_COMPOSED, > CURRENCY_CONVERTED: DUAL-конвертація за курсом НБУ
-    CURRENCY_CONVERTED, > NIGHT_MODE_CHECK: Перевірка часу (23:00-07:00 Kyiv)
-    
-    NIGHT_MODE_CHECK, > DISPATCHED_SILENT: Ніч (disable_notification = true)
-    NIGHT_MODE_CHECK, > DISPATCHED_NORMAL: День (Звичайний звуковий пуш)
-    
-    DISPATCHED_SILENT, > PERSISTED: Збереження у БД / Оновлення буфера
-    DISPATCHED_NORMAL, > PERSISTED: Збереження у БД / Оновлення буфера
-    PERSISTED, > [*]
-```, -
-
-## 5. Event-Driven Sequence Diagram (Діаграма послідовності)
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Realtor as Рієлтор
-    participant GUI as Desktop GUI / BotTG
-    participant NBU as NBU Currency API
-    participant Cache as currency_cache.json
-    participant Worker as Monitoring Thread (Worker)
-    participant CDN as OLX / DOM.RIA CDN Nodes
-    participant Async as notificationExecutor Pool
-    participant TG as Telegram Bot API
-
-    Realtor->>GUI: Старт моніторингу
-    GUI->>Cache: Перевірка валідності кешу курсів (TTL 24h)
-    alt Кеш застарів або відсутній
-        GUI->>NBU: Фоновий HTTP GET (Timeout 3000ms)
-        NBU, >>Cache: Запис USD/EUR курсів у JSON
-    end
-    GUI->>Worker: Ініціалізація N потоків з фазовим зсувом (Phase Staggering)
-    Worker->>CDN: HTTP GET (User-Agent Spoofer + Jitter ±150ms)
-    CDN, >>Worker: HTML корисне навантаження
-    Worker->>Worker: 50-Slot Circular Buffer: перевірка наявності ID за O(1)
-    alt Новий лістинг виявлено
-        Worker->>Worker: Adaptive Burst Check (+500ms повторна перевірка)
-        Worker->>Async: Делегування відправки у worker pool
-        Note over Worker: Основний моніторинг продовжується без затримок!
-        Async->>Async: Розрахунок ціни DUAL: $65 000 (≈ 2 704 000 грн)
-        Async->>Async: Перевірка Night Silent Mode (23:00 - 07:00)
-        Async->>TG: SendMediaGroup (до 10 фотоальбомних карток)
-        TG, >>Realtor: Миттєве push-сповіщення у Telegram
-    end
-```, -
-
-## 6. Каталог використаних шаблонів проєктування (Design Patterns)
-
-| Шаблон (GoF Pattern) | Клас / Компонент | Роль в системі |
-| :, - | :, - | :, - |
-| **Strategy** | `ScraperStrategy`, `OlxScraperStrategy` | Ізоляція алгоритмів парсингу для різних порталів |
-| **Strategy (Cache)**| `DeduplicationCacheStrategy`, `InMemoryRingBufferCacheStrategy` | Плугабельна стратегія дедуплікації (In-Memory Circular Buffer / Redis-Ready) |
-| **Domain Events (EDA)**| `PropertyDiscoveredEvent`, `PriceChangedEvent`, `PropertyEventListener` | Event-Driven Архітектура для повної ізоляції скрапінгу від диспетчеризації |
-| **Statistical Anomaly (Z-Score)**| `PriceAnalyticsService.evaluateStatisticalBargain()` | Розрахунок емпіричного z-score ($z = \frac{\mu - \text{price}}{\sigma}$) за історією цін для об'єктивного виявлення Hot Deals |
-| **Token-Bucket Rate Limiter** | `SearchAlgorithmEngine.calculateAdaptiveDelay()` | Запобігання блокуванням за IP та WAF CloudFront |
-| **Circuit Breaker / Fallback** | `CurrencyService` / `NbuCurrencyGateway` | 3-рівневий шлюз валют (NBU API $\to$ Local Cache $\to$ Built-in Constants) та Resilience4j Circuit Breaker |
-| **Circular Buffer (FIFO)** | `ArrayDeque` + `HashSet` (50 слотів) у `SearchAlgorithmEngine` | Робота зі стабільною пам'яттю $O(1)$ без витоків та швидка дедуплікація |
-| **Worker Pool (Producer-Consumer)**| `Executors.newCachedThreadPool()` | Асинхронне надсилання важких альбомів без зупинки парсингу |
-| **Observer** | Telegram API `onUpdateReceived()` | Реактивна обробка команд користувачів (`/language`, `/currency`) |
-| **Singleton** | `SettingsManager` | Гарантія єдиного джерела конфігурації в системі |, -
-
-## 7. Візуальний інтерфейс та інтеграція компонентів (UI Showcase)
-
-Архітектура клієнтської частини базується на ергономічному UI з повною двомовною локалізацією:
-
-| Панель моніторингу (Dashboard) | Центр налаштувань (Settings) |
-| :, -: | :, -: |
-| ![Dashboard](docs/screenshots/01_main_dashboard.png) | ![Settings](docs/screenshots/02_settings_dialog.png) |
-| *Керування життєвим циклом демона спостереження.* | *Конфігурація токенів, локалізації та правил.* |
-
-| Розумний конструктор фільтрів | Пряме додавання URL цілей |
-| :, -: | :, -: |
-| ![Smart Builder](docs/screenshots/03_smart_category_builder.png) | ![Direct URL Rules](docs/screenshots/04_manual_url_addition.png) |
-| *Візуальне створення критеріїв пошуку.* | *Валідація та очищення цільових посилань.* |
-
-<p align="center">
-  <b>Інструкція підключення Telegram BotFather</b><br/>
-  <img src="docs/screenshots/05_botfather_instructions.png" alt="BotFather Setup" width="700" /><br/>
-  <i>Інтегроване керівництво швидкого старту та верифікації токенів Telegram.</i>
-</p>
-
-### Інтерфейс взаємодії у Telegram (Bot Operations Hub)
-
-| Центр керування та довідка (Desktop) | Інтерактивне керування категоріями |
-| :, -: | :, -: |
-| ![Desktop Hub](docs/screenshots/06_telegram_desktop_hub.png) | ![Categories](docs/screenshots/07_telegram_category_management.png) |
-| *Інтерактивний довідковий центр `/help`.* | *Картковий моніторинг з діями Pause/Delete.* |
-
-| Мультивалютність та локалізація | Миттєва доставка фотоальбомів |
-| :, -: | :, -: |
-| ![Settings](docs/screenshots/08_telegram_currency_language.png) | ![Alert Card](docs/screenshots/09_telegram_mobile_gallery.png) |
-| *Динамічне налаштування курсів НБУ та мови.* | *Потокова доставка медіагруп без навантаження на диск.* |
+    GUI --> Parser --> Engine --> RingBuffer --> Currency --> Dispatcher
+    REST --> LoomTracker
+    LoomTracker --> DistLock
+    LoomTracker --> RedisCache
+    LoomTracker --> CircuitBreaker
+    LoomTracker --> PersistService --> Storage
+```
 
 ---
 
-## 8. Стратегія протидії Anti-Bot та стійкість до Cloudflare WAF
+## 4. Concurrency Architecture: Java 21 Project Loom & Parallel Fan-Out
 
-Парсинг сучасних дощок оголошень (OLX, DOM.RIA) вимагає суворої інженерної дисципліни через наявність багаторівневих систем захисту (Cloudflare, Akamai WAF, Imperva).
+### 4.1. The Thread Starvation Challenge
+Traditional web scraping services use blocking I/O (HTTP requests to external portals typically take between 200 ms and 2500 ms). Operating-system-bound thread pools (`ThreadPoolExecutor`) quickly exhaust carrier threads under concurrent workloads, leading to thread starvation, high memory overhead (~1 MB stack per OS thread), and latency spikes.
 
-### 8.1. Архітектура захисту від блокувань
-1. **Ротація профілів клієнта та Client Hints**:
-   * Традиційна підміна лише заголовка `User-Agent` миттєво виявляється сучасними алгоритмами через невідповідність заголовків другого покоління (`Client Hints`).
-   * Реалізовано пул профілів із синхронною підміною:
-     * `Sec-Ch-Ua`: `"Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"`
-     * `Sec-Ch-Ua-Platform`: `"macOS"`, `"Windows"`, `"Linux"`
-     * `Sec-Ch-Ua-Mobile`: `?0`
-     * Заголовки навігації: `Sec-Fetch-Dest: document`, `Sec-Fetch-Mode: navigate`, `Sec-Fetch-Site: none`, `Sec-Fetch-User: ?1`, `Upgrade-Insecure-Requests: 1`.
-2. **Детекція Managed Challenge та виняток `AntiBotChallengeException`**:
-   * При отриманні статусів `403 Forbidden`, `429 Too Many Requests` або `503 Service Unavailable`, або при наявності в тілі сторінки сигнатур Cloudflare Turnstile (`Just a moment...`, `cf-turnstile`, `cf-browser-verification`), парсер витягує ідентифікатор `cf-ray` і викидає типізований виняток `AntiBotChallengeException`.
-   * Це виключає «мовчазний збій» (silent failure), коли застосунок помилково вважав, що оголошень просто немає.
-3. **Resilience4j Circuit Breaker Failover**:
-   * `ScraperService` обгорнутий анотацією `@CircuitBreaker(name = "scraperEngine", fallbackMethod = "scrapeFallback")`.
-   * При сплеску `AntiBotChallengeException` запобіжник переходить у стан `OPEN`, запобігаючи масовому спаму та бану всього пулу IP-адрес.
-4. **Підтримка зовнішніх проксі (Residential Proxy Ready)**:
-   * Можливість прозорої конфігурації зовнішнього HTTP/SOCKS проксі через змінні оточення або Spring properties (`scraper.proxy.enabled`, `scraper.proxy.host`, `scraper.proxy.port`, `scraper.proxy.type`).
-
----
-
-## 9. Модель конкурентності: Обґрунтування Virtual Threads (Java 21 Project Loom)
-
-У бекенд-сервісі `enterprise-backend` налаштовано кастомний пул виконання `applicationTaskExecutor` на базі віртуальних потоків:
-
+### 4.2. Virtual Thread Parallel Fan-Out
+`enterprise-backend` configures Java 21 Project Loom via `AsyncConcurrencyConfig.java`:
 ```java
-@Bean(name = "applicationTaskExecutor")
-public AsyncTaskExecutor applicationTaskExecutor() {
-    return new TaskExecutorAdapter(Executors.newVirtualThreadPerTaskExecutor());
+@Bean(name = "virtualThreadExecutor")
+public ExecutorService virtualThreadExecutor() {
+    return Executors.newVirtualThreadPerTaskExecutor();
 }
 ```
 
-### Чому саме Virtual Threads для моніторингу нерухомості?
-* **Характер навантаження**: Застосунок є виключно **I/O-bound**. Скрапінг OLX, отримання котирувань НБУ, запити до Telegram Bot API та запис у PostgreSQL 95% процесорного часу проводять у стані очікування відповіді сокетів мережі.
-* **Порівняння з Platform Threads**:
-  * Платформний потік ОС споживає $\approx 1\text{ МБ}$ пам'яті під стек. Пул із 200 потоків вимагає $\approx 200\text{ МБ}$ виключно на службові структури ОС. При сплеску завдань виникає *Thread Starvation*.
-  * Віртуальні потоки в Project Loom важать лише декілька кілобайт у купі (Heap) і монтуються на невелику кількість потоків ядра (Carrier Threads, рівну числу CPU cores). Під час блокуючого I/O віртуальний потік «паркується», звільняючи Carrier Thread для обробки інших завдань без витрат ресурсів.
+In `TrackingService.java`, active target polling executes via non-blocking parallel fan-out:
+```java
+List<SearchTarget> targets = searchTargetRepository.findAllByActiveTrue();
+
+if (virtualThreadExecutor != null && !targets.isEmpty()) {
+    List<CompletableFuture<Void>> futures = targets.stream()
+            .map(target -> CompletableFuture.runAsync(() -> {
+                try {
+                    processTarget(target);
+                } catch (Exception e) {
+                    log.error("Error processing target [{}] on Loom: {}", target.getTitle(), e.getMessage());
+                }
+            }, virtualThreadExecutor))
+            .toList();
+
+    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+}
+```
+* **Performance Impact:** Every external portal query executes within its own lightweight virtual thread (~1 KB initial footprint). Carrier OS threads are unmounted during socket I/O wait times, allowing hundreds of concurrent search rules to execute simultaneously without thread starvation.
 
 ---
 
-## 10. Модернізація десктопного клієнта: Безпека потоків, High-DPI та $O(1)$ буфер
+## 5. Distributed Systems: Redis 7 Cluster State & Atomic Lua Scripts
 
-1. **Безпечна ініціалізація синглтона**:
-   * У ранніх версіях виклик `instance = this;` відбувався у першому рядку конструктора `BotGUI`, що призводило до антипатерну *Unsafe Publication*: сторонні потоки могли звернутися до `BotGUI.getInstance()` і отримати доступ до наполовину сконструйованого об'єкта з нульовими кнопками.
-   * Посилання тепер встановлюється строго останнім рядком після повного монтажу візуального дерева компонентів.
-2. **Адаптивні менеджери компонування (Cross-Platform High-DPI Scaling)**:
-   * Повністю ліквідовано абсолютне позиціонування `setLayout(null)` та фіксовані координати `setBounds()`.
-   * Головне вікно та діалогові вікна переведені на `BorderLayout`, `GridBagLayout` та `BoxLayout` з відступами `EmptyBorder`. Це гарантує бездоганне відображення без обрізання тексту як на Retina 2x дисплеях macOS, так і при системному масштабуванні Windows (125%, 150%, 175%).
-3. **Кільцевий буфер дедуплікації $O(1)$**:
-   * Ручний зсув масиву `String[50]` у циклі (`for (int i = 49; i > 0; i--) array[i] = array[i-1]`) замінено на комбінацію `ArrayDeque<String>` (фіксована місткість 50) та `HashSet<String>`.
-   * Перевірка дублікатів та додавання нового лістингу тепер виконуються строго за стабільний час $O(1)$, виключаючи деградацію продуктивності та витоки пам'яті.
+To support horizontal scaling across multiple pods in Kubernetes, distributed state synchronization is managed via `spring-boot-starter-data-redis` (Lettuce):
+
+### 5.1. Atomic Mutual Exclusion (`SET NX PX`)
+Distributed execution locks for scheduled cycles are acquired atomically:
+```java
+Boolean acquired = redisTemplate.opsForValue()
+        .setIfAbsent(lockKey, token, leaseDuration);
+```
+
+### 5.2. Atomic Lock Release with Canonical Lua Script
+Releasing a lock requires verifying ownership to avoid releasing another node's lock if the local lease expired during a slow network call. This is executed atomically on the Redis server:
+```lua
+if redis.call('get', KEYS[1]) == ARGV[1] then
+    return redis.call('del', KEYS[1])
+else
+    return 0
+end
+```
+Executed via `RedisScript<Long>` with Spring's `StringRedisTemplate`.
+
+### 5.3. Cluster-Wide Deduplication with Redis Sets & TTL
+`RedisDeduplicationCacheStrategy.java` stores discovered listing IDs in native Redis Sets:
+- `SISMEMBER dedup:<targetKey> <listingUrl>` provides $O(1)$ containment checks.
+- `SADD dedup:<targetKey> <listingUrl>` registers new items.
+- Key TTL expiration (`expire(key, Duration.ofHours(ttlHours))`) automatically purges stale history, guaranteeing memory hygiene.
 
 ---
 
-## 11. Стандарти дистрибуції: Відмінність директорії `dist/` від `target/`
+## 6. Fault Tolerance: Resilience4j Circuit Breaker & Fallback Architecture
 
-| Параметр | Директорія `target/` (або `build/`) | Директорія `dist/` (Distribution) |
+External API dependencies (e.g. National Bank of Ukraine exchange rates) are guarded using **Resilience4j Circuit Breaker & Retry**:
+
+```mermaid
+stateDiagram-v2
+    [*] --> CLOSED: Initial Healthy State
+    CLOSED --> OPEN: Failure Rate > 50% (Sliding Window: 10 calls)
+    OPEN --> HALF_OPEN: Wait Duration Elapsed (5000ms)
+    HALF_OPEN --> CLOSED: Permitted Calls Succeed
+    HALF_OPEN --> OPEN: Permitted Calls Fail
+    
+    note right of OPEN
+        All calls intercepted immediately.
+        Fallback to hardcoded cached rate (41.50 UAH).
+        Zero latency penalty for client threads.
+    end note
+```
+
+* **Retry Policy:** 3 attempts with exponential backoff (`initialInterval = 1000ms`, `multiplier = 2`).
+* **Fallback Degradation:** When upstream NBU returns HTTP 500 or network timeouts occur, the fallback method smoothly provides the cached rate without propagating exceptions or halting the application.
+
+---
+
+## 7. Database Hygiene & Transaction Isolation
+
+A critical design flaw in junior scrapers is placing network calls inside `@Transactional` methods, holding database connections from HikariCP during slow HTTP operations.
+
+`Property-Searcher` enforces strict transactional separation:
+1. `TrackingService.processTarget()` runs **outside any database transaction**. Network I/O and HTML parsing complete entirely in memory.
+2. Only after parsing succeeds, the extracted `PropertyDto` objects are handed to `TrackingPersistenceService.java`:
+```java
+@Transactional
+public void persistDatabaseAnalytics(SearchTarget target, List<PropertyDto> scraped, ...) {
+    // Short-lived, high-speed database write transaction
+    // Releases HikariCP connection in < 15 milliseconds
+}
+```
+
+---
+
+## 8. Cloud-Native Deployment & Kubernetes Stack
+
+The platform includes production-grade container orchestration manifests:
+
+```
+k8s/
+├── namespace.yaml          # Isolated "property-searcher" namespace
+├── configmap.yaml          # Environment settings & active profiles
+├── secret.yaml             # Encrypted DB credentials & Telegram Bot tokens
+├── deployment.yaml        # RollingUpdate strategy, 2 replicas, probes, securityContext
+├── service.yaml           # ClusterIP routing internal traffic on port 8080
+├── hpa.yaml               # HorizontalPodAutoscaler scaling from 2 to 10 pods
+└── ingress.yaml           # NGINX Ingress Controller with TLS termination
+```
+
+* **Helm 3 Chart (`helm/property-searcher/`)**: Parameterized deployment chart with templated `values.yaml`, resource bounds (`requests: 250m / 512Mi`, `limits: 1000m / 1024Mi`), and `PodAntiAffinity` rules for multi-zone resilience.
+
+---
+
+## 9. Comprehensive Verification & Testing Matrix
+
+The platform is validated by **74 automated unit, integration, and socket tests** across all layers:
+
+| Layer | Technology | Key Scenarios Verified |
 | :--- | :--- | :--- |
-| **Призначення** | **Проміжні артефакти компіляції**: `.class` файли, тимчасові кеші компілятора javac, проміжні звіти тестів (Surefire reports). | **Фінальні бінарники для релізу**: готові для кінцевого користувача пакунки (`PropertySeacher-Universal.jar`, `PropertySeacher.app`, скрипти запуску). |
-| **Очищення** | Видаляється командою `mvn clean`. | Створюється скриптами релізу та містить підписані бінарні збірки. |
-| **Git-ігнорування** | Завжди знаходиться в `.gitignore`. | **Не комітиться в Git-історію**. За світовими стандартами великі бінарники розповсюджуються через **GitHub Releases** за допомогою CI/CD (GitHub Actions). |
+| **Circuit Breakers** | WireMock + Spring Context | Real HTTP socket failure injection, trip points, fallback rates. |
+| **Distributed Locks** | Mockito + Lettuce Redis | Atomic `SET NX PX`, ownership token validation, Lua script execution. |
+| **Deduplication Cache** | JUnit 5 + Redis Sets | $O(1)$ set containment, TTL assignment, cluster memory bounds. |
+| **Virtual Threads** | Project Loom Concurrency | Multi-target parallel fan-out, non-blocking execution. |
+| **REST API** | Spring WebMvc MockMvc | Pagination, RFC 7807 problem details, parameter validation. |
+| **Persistence** | Testcontainers + Flyway | PostgreSQL 16 schema creation, composite index verification. |
+| **Rate Limiter** | Pure Java Core | Token-bucket adaptive delays ($\tau = \max(1800\text{ms}, N \times 1000 / 2.2)$). |
 
 ---
 
-## 12. Технічний бриф для архітектурного інтерв'ю (Engineering Q&A Deep Dive)
+## 10. Conclusion
 
-### Питання 1: "Як ви обходите блокування Cloudflare / Akamai при парсингу українських маркетплейсів?"
-* **Відповідь:** *"Ми використовуємо дворівневу архітектуру (Tiered Scraping). На першому рівні (L1) виконуються швидкі запити за допомогою легковагого клієнта Jsoup, в якому емулюється повний набір Client Hints браузера (`Sec-Ch-Ua`, `Sec-Ch-Ua-Platform`, `Sec-Fetch-*`), а запити розподіляються алгоритмом Token Bucket із фазовим зсувом та джиттером. Якщо портал повертає Managed Challenge (JS-челендж або Turnstile), скрапер перехоплює його, реєструє `cf-ray` і викидає типізований `AntiBotChallengeException`. У цей момент Resilience4j Circuit Breaker розмикає коло, захищаючи IP від бану, та перемикає запит на L2 — чергу завдань для headless-браузерів (Playwright/Puppeteer) через пул ротованих резидентних проксі."*
-
-### Питання 2: "Чому ви обрали Virtual Threads (Project Loom) замість WebFlux або класичного ThreadPool у бекенді?"
-* **Відповідь:** *"Reactive WebFlux ускладнює стек: стек-трейси стають фрагментованими, складно використовувати традиційні блокуючі драйвери JDBC/JPA, а поріг входження в команду зростає. Традиційні платформені потоки занадто важкі (1 МБ на потік ОС), що при тисячах одночасних I/O очікувань веде до thread starvation. Virtual Threads у Java 21 дозволили нам зберегти простий, лінійний, імперативний стиль програмування з повною підтримкою Spring Data JPA та Mockito, отримавши при цьому практично безмежну масштабованість для I/O-bound задач (парсинг, HTTP API НБУ, відправка в Telegram)."*
-
-### Питання 3: "Як організовано дедуплікацію та захист від сплесків фальшивих сповіщень при перезапуску?"
-* **Відповідь:** *"При додаванні нового цільового пошуку активується режим Silent Baseline Ingestion: перші 30 лістингів індексуються у буфер без відправки повідомлень у Telegram. Сам буфер реалізований як кільцева структура з місткістю 50 елементів на базі `ArrayDeque` та `HashSet`. Це гарантує $O(1)$ час перевірки дублікатів та строге обмеження пам'яті. Додатково застосовується фільтрація спонсорованих рекламних блоків (TOP-оголошень) за DOM-селекторами, щоб унеможливити повторні спрацьовування на закріплені пости."*
-
+Property Searcher 3 demonstrates production-grade software engineering principles: strict modular encapsulation, non-blocking virtual thread concurrency, resilient distributed synchronization, and enterprise cloud readiness.
