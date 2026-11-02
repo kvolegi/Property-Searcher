@@ -180,6 +180,38 @@ public class SettingsManager {
         } catch (Exception ignored) {}
     }
 
+    public enum UiColorTheme {
+        MINT,
+        GRAY;
+
+        public static UiColorTheme fromString(String val) {
+            if (val == null) return MINT;
+            if ("GRAY".equalsIgnoreCase(val) || "GREY".equalsIgnoreCase(val) || "CORPORATE_PRO".equalsIgnoreCase(val) || "CORPORATE".equalsIgnoreCase(val)) {
+                return GRAY;
+            }
+            return MINT;
+        }
+    }
+
+    public enum UiFontMode {
+        COMIC_SANS("Comic Sans MS"),
+        SYSTEM("Segoe UI");
+
+        public final String fontName;
+
+        UiFontMode(String fontName) {
+            this.fontName = fontName;
+        }
+
+        public static UiFontMode fromString(String val) {
+            if (val == null) return COMIC_SANS;
+            if ("SYSTEM".equalsIgnoreCase(val) || "STANDARD".equalsIgnoreCase(val) || "SEGOE".equalsIgnoreCase(val) || "CORPORATE_PRO".equalsIgnoreCase(val)) {
+                return SYSTEM;
+            }
+            return COMIC_SANS;
+        }
+    }
+
     public enum UiThemeMode {
         COMIC_SANS("Comic Sans MS"),
         CORPORATE_PRO("Segoe UI");
@@ -199,25 +231,49 @@ public class SettingsManager {
         }
     }
 
-    public static UiThemeMode getUiThemePreference() {
+    public static UiColorTheme getColorPreference() {
         File file = getSettingsFile();
         if (file.exists()) {
             try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     line = line.trim();
-                    if (line.startsWith("UI_THEME=") || line.startsWith("UI_THEME:")) {
-                        String val = line.substring(9).trim();
-                        return UiThemeMode.fromString(val);
+                    if (line.startsWith("UI_COLOR=") || line.startsWith("UI_COLOR:")) {
+                        return UiColorTheme.fromString(line.substring(9).trim());
                     }
                 }
             } catch (Exception ignored) {}
         }
-        return UiThemeMode.COMIC_SANS;
+        return UiColorTheme.MINT;
     }
 
-    public static void setUiThemePreference(UiThemeMode mode) {
-        if (mode == null) mode = UiThemeMode.COMIC_SANS;
+    public static void setColorPreference(UiColorTheme color) {
+        if (color == null) color = UiColorTheme.MINT;
+        setDirectiveInFile("UI_COLOR=", color.name());
+    }
+
+    public static UiFontMode getFontPreference() {
+        File file = getSettingsFile();
+        if (file.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = line.trim();
+                    if (line.startsWith("UI_FONT=") || line.startsWith("UI_FONT:")) {
+                        return UiFontMode.fromString(line.substring(8).trim());
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+        return UiFontMode.COMIC_SANS;
+    }
+
+    public static void setFontPreference(UiFontMode font) {
+        if (font == null) font = UiFontMode.COMIC_SANS;
+        setDirectiveInFile("UI_FONT=", font.name());
+    }
+
+    private static void setDirectiveInFile(String prefix, String value) {
         File file = getSettingsFile();
         List<String> lines = new ArrayList<>();
         boolean replaced = false;
@@ -226,8 +282,8 @@ public class SettingsManager {
             try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    if (line.trim().startsWith("UI_THEME=") || line.trim().startsWith("UI_THEME:")) {
-                        lines.add("UI_THEME=" + mode.name());
+                    if (line.trim().startsWith(prefix)) {
+                        lines.add(prefix + value);
                         replaced = true;
                     } else {
                         lines.add(line);
@@ -238,7 +294,7 @@ public class SettingsManager {
 
         if (!replaced) {
             int insertIdx = Math.min(2, lines.size());
-            lines.add(insertIdx, "UI_THEME=" + mode.name());
+            lines.add(insertIdx, prefix + value);
         }
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, false))) {
@@ -246,6 +302,17 @@ public class SettingsManager {
                 writer.write(l + "\n");
             }
         } catch (Exception ignored) {}
+    }
+
+    public static UiThemeMode getUiThemePreference() {
+        UiColorTheme col = getColorPreference();
+        return col == UiColorTheme.GRAY ? UiThemeMode.CORPORATE_PRO : UiThemeMode.COMIC_SANS;
+    }
+
+    public static void setUiThemePreference(UiThemeMode mode) {
+        if (mode == null) mode = UiThemeMode.COMIC_SANS;
+        setColorPreference(mode == UiThemeMode.CORPORATE_PRO ? UiColorTheme.GRAY : UiColorTheme.MINT);
+        setFontPreference(mode == UiThemeMode.CORPORATE_PRO ? UiFontMode.SYSTEM : UiFontMode.COMIC_SANS);
     }
 
     public static boolean isLanguageConfigured() {

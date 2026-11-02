@@ -39,17 +39,19 @@ public class BotGUI extends JFrame {
     private JPanel centerPanel;
     private JPanel bottomPanel;
 
+    private static SettingsManager.UiColorTheme currentColorTheme = SettingsManager.getColorPreference();
+    private static SettingsManager.UiFontMode currentFontMode = SettingsManager.getFontPreference();
     private static SettingsManager.UiThemeMode currentTheme = SettingsManager.getUiThemePreference();
 
     public static Font getAppFont(int style, int size) {
-        if (currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO) {
+        if (currentFontMode == SettingsManager.UiFontMode.SYSTEM) {
             return new Font("Segoe UI", style, size);
         }
         return new Font("Comic Sans MS", style, size);
     }
 
     public static String getAppFontFamily() {
-        return currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO ? "Segoe UI, sans-serif" : "Comic Sans MS, cursive";
+        return currentFontMode == SettingsManager.UiFontMode.SYSTEM ? "Segoe UI, sans-serif" : "Comic Sans MS, cursive";
     }
 
     // Palette - dynamic based on active theme
@@ -61,15 +63,16 @@ public class BotGUI extends JFrame {
     public static Color COLOR_TEXT = new Color(27, 101, 99);
 
     public static void syncThemeColors() {
-        if (currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO) {
-            // Clean, elegant modern light gray where ALL text is solid black
-            COLOR_BG = new Color(234, 237, 242);
-            COLOR_BTN = new Color(255, 255, 255);
-            COLOR_ACCENT = new Color(220, 224, 232);
-            COLOR_FIELD_BG = new Color(255, 255, 255);
-            COLOR_CARD_BG = new Color(255, 255, 255);
+        if (currentColorTheme == SettingsManager.UiColorTheme.GRAY) {
+            // Elegant modern gray where ALL text is solid black
+            COLOR_BG = new Color(204, 208, 214);
+            COLOR_BTN = new Color(228, 232, 238);
+            COLOR_ACCENT = new Color(185, 190, 198);
+            COLOR_FIELD_BG = new Color(245, 246, 248);
+            COLOR_CARD_BG = new Color(240, 242, 246);
             COLOR_TEXT = Color.BLACK;
         } else {
+            // Restored signature mint style
             COLOR_BG = new Color(182, 234, 233);
             COLOR_BTN = new Color(133, 221, 218);
             COLOR_ACCENT = new Color(100, 207, 203);
@@ -80,7 +83,9 @@ public class BotGUI extends JFrame {
     }
 
     public BotGUI() {
-        currentTheme = SettingsManager.getUiThemePreference();
+        currentColorTheme = SettingsManager.getColorPreference();
+        currentFontMode = SettingsManager.getFontPreference();
+        currentTheme = (currentColorTheme == SettingsManager.UiColorTheme.GRAY) ? SettingsManager.UiThemeMode.CORPORATE_PRO : SettingsManager.UiThemeMode.COMIC_SANS;
         syncThemeColors();
         checkInitialLanguageAndTheme();
         loadSettings();
@@ -114,7 +119,9 @@ public class BotGUI extends JFrame {
             showLanguageAndThemeDialog(true, null);
         } else {
             I18n.setLanguage(SettingsManager.getLanguage());
-            currentTheme = SettingsManager.getUiThemePreference();
+            currentColorTheme = SettingsManager.getColorPreference();
+            currentFontMode = SettingsManager.getFontPreference();
+            currentTheme = (currentColorTheme == SettingsManager.UiColorTheme.GRAY) ? SettingsManager.UiThemeMode.CORPORATE_PRO : SettingsManager.UiThemeMode.COMIC_SANS;
             syncThemeColors();
         }
     }
@@ -127,7 +134,7 @@ public class BotGUI extends JFrame {
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.setBackground(COLOR_BG);
-        mainPanel.setBorder(new EmptyBorder(20, 28, 20, 28));
+        mainPanel.setBorder(new EmptyBorder(18, 26, 18, 26));
 
         JLabel titleLbl = new JLabel(I18n.get("theme.prompt"), SwingConstants.CENTER);
         titleLbl.setFont(getAppFont(Font.BOLD, 13));
@@ -161,87 +168,146 @@ public class BotGUI extends JFrame {
         langBox.add(uaRadio);
         langBox.add(enRadio);
 
-        // Theme Section
-        JLabel themeSectionLbl = new JLabel(I18n.get("theme.section_style"));
-        themeSectionLbl.setFont(getAppFont(Font.BOLD, 13));
-        themeSectionLbl.setForeground(COLOR_TEXT);
-        themeSectionLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
+        // Font Section
+        JLabel fontSectionLbl = new JLabel(I18n.get("theme.section_font"));
+        fontSectionLbl.setFont(getAppFont(Font.BOLD, 13));
+        fontSectionLbl.setForeground(COLOR_TEXT);
+        fontSectionLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JRadioButton tiffanyRadio = new JRadioButton(I18n.get("theme.comic_sans"), currentTheme == SettingsManager.UiThemeMode.COMIC_SANS);
-        JRadioButton corporateRadio = new JRadioButton(I18n.get("theme.corporate"), currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO);
-        tiffanyRadio.setFont(getAppFont(Font.PLAIN, 13));
-        corporateRadio.setFont(getAppFont(Font.PLAIN, 13));
-        tiffanyRadio.setBackground(COLOR_BG);
-        corporateRadio.setBackground(COLOR_BG);
-        tiffanyRadio.setForeground(COLOR_TEXT);
-        corporateRadio.setForeground(COLOR_TEXT);
-        tiffanyRadio.setFocusPainted(false);
-        corporateRadio.setFocusPainted(false);
+        JRadioButton comicRadio = new JRadioButton(I18n.get("theme.font_comic"), currentFontMode == SettingsManager.UiFontMode.COMIC_SANS);
+        JRadioButton systemRadio = new JRadioButton(I18n.get("theme.font_system"), currentFontMode == SettingsManager.UiFontMode.SYSTEM);
+        comicRadio.setFont(new Font("Comic Sans MS", Font.PLAIN, 13));
+        systemRadio.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        comicRadio.setBackground(COLOR_BG);
+        systemRadio.setBackground(COLOR_BG);
+        comicRadio.setForeground(COLOR_TEXT);
+        systemRadio.setForeground(COLOR_TEXT);
+        comicRadio.setFocusPainted(false);
+        systemRadio.setFocusPainted(false);
 
-        ButtonGroup themeGroup = new ButtonGroup();
-        themeGroup.add(tiffanyRadio);
-        themeGroup.add(corporateRadio);
+        ButtonGroup fontGroup = new ButtonGroup();
+        fontGroup.add(comicRadio);
+        fontGroup.add(systemRadio);
 
-        JPanel themeBox = new JPanel();
-        themeBox.setLayout(new BoxLayout(themeBox, BoxLayout.Y_AXIS));
-        themeBox.setBackground(COLOR_BG);
-        themeBox.setAlignmentX(Component.LEFT_ALIGNMENT);
-        themeBox.add(tiffanyRadio);
-        themeBox.add(Box.createVerticalStrut(6));
-        themeBox.add(corporateRadio);
+        JPanel fontBox = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
+        fontBox.setBackground(COLOR_BG);
+        fontBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        fontBox.add(comicRadio);
+        fontBox.add(systemRadio);
 
-        // Dynamic language text switcher inside dialog
-        Runnable updateDialogTexts = () -> {
+        // Color Theme Section
+        JLabel colorSectionLbl = new JLabel(I18n.get("theme.section_color"));
+        colorSectionLbl.setFont(getAppFont(Font.BOLD, 13));
+        colorSectionLbl.setForeground(COLOR_TEXT);
+        colorSectionLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JRadioButton mintRadio = new JRadioButton(I18n.get("theme.color_mint"), currentColorTheme == SettingsManager.UiColorTheme.MINT);
+        JRadioButton grayRadio = new JRadioButton(I18n.get("theme.color_gray"), currentColorTheme == SettingsManager.UiColorTheme.GRAY);
+        mintRadio.setFont(getAppFont(Font.PLAIN, 13));
+        grayRadio.setFont(getAppFont(Font.PLAIN, 13));
+        mintRadio.setBackground(COLOR_BG);
+        grayRadio.setBackground(COLOR_BG);
+        mintRadio.setForeground(COLOR_TEXT);
+        grayRadio.setForeground(COLOR_TEXT);
+        mintRadio.setFocusPainted(false);
+        grayRadio.setFocusPainted(false);
+
+        ButtonGroup colorGroup = new ButtonGroup();
+        colorGroup.add(mintRadio);
+        colorGroup.add(grayRadio);
+
+        JPanel colorBox = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
+        colorBox.setBackground(COLOR_BG);
+        colorBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        colorBox.add(mintRadio);
+        colorBox.add(grayRadio);
+
+        // Action button
+        JButton applyBtn = createButton(I18n.get("theme.apply_btn"), 0, 0, 260, 42);
+        applyBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Dynamic text and preview updates
+        Runnable updateDialog = () -> {
             boolean isEn = enRadio.isSelected();
             I18n.Language l = isEn ? I18n.Language.EN : I18n.Language.UA;
-            dlg.setTitle(l == I18n.Language.UA ? "Мова та стиль оформлення" : "Language & UI Style");
+            dlg.setTitle(l == I18n.Language.UA ? "Мова, шрифт та оформлення" : "Language, Font & Theme");
             titleLbl.setText(l == I18n.Language.UA ?
-                    "<html><center><b>Налаштування інтерфейсу</b><br>Оберіть мову та стиль оформлення програми:</center></html>" :
-                    "<html><center><b>Interface Preferences</b><br>Choose interface language and visual style:</center></html>");
+                    "<html><center><b>Налаштування оформлення</b><br>Оберіть мову, шрифт та колірну тему:</center></html>" :
+                    "<html><center><b>Interface Customization</b><br>Choose language, typography and color theme:</center></html>");
             langSectionLbl.setText(l == I18n.Language.UA ? "Мова інтерфейсу:" : "Interface Language:");
-            themeSectionLbl.setText(l == I18n.Language.UA ? "Стиль оформлення та шрифт:" : "Visual Theme & Typography:");
-            tiffanyRadio.setText(l == I18n.Language.UA ? "Тіфані + Comic Sans MS (Фірмова)" : "Tiffany Mint + Comic Sans MS (Signature)");
-            corporateRadio.setText(l == I18n.Language.UA ? "Корпоративна сіра + Строгий шрифт" : "Corporate Slate Gray + Standard UI");
-        };
+            fontSectionLbl.setText(l == I18n.Language.UA ? "Шрифт інтерфейсу:" : "Interface Font:");
+            comicRadio.setText(l == I18n.Language.UA ? "Comic Sans MS (Фірмовий)" : "Comic Sans MS (Signature)");
+            systemRadio.setText(l == I18n.Language.UA ? "Segoe UI / Системний (Строгий)" : "Segoe UI / System (Standard)");
+            colorSectionLbl.setText(l == I18n.Language.UA ? "Колірна тема:" : "Color Theme:");
+            mintRadio.setText(l == I18n.Language.UA ? "Фірмова м'ятна" : "Signature Mint");
+            grayRadio.setText(l == I18n.Language.UA ? "Елегантна сіра" : "Corporate Slate Gray");
+            applyBtn.setText(l == I18n.Language.UA ? "Застосувати" : "Apply");
 
-        uaRadio.addActionListener(e -> updateDialogTexts.run());
-        enRadio.addActionListener(e -> updateDialogTexts.run());
+            boolean isGray = grayRadio.isSelected();
+            Color bg = isGray ? new Color(204, 208, 214) : new Color(182, 234, 233);
+            Color text = isGray ? Color.BLACK : new Color(27, 101, 99);
+            Color btnBg = isGray ? new Color(228, 232, 238) : new Color(133, 221, 218);
+            String fontFam = systemRadio.isSelected() ? "Segoe UI" : "Comic Sans MS";
 
-        // Dynamic theme preview inside dialog
-        Runnable updateThemePreview = () -> {
-            boolean isCorp = corporateRadio.isSelected();
-            Color bg = isCorp ? new Color(234, 237, 242) : new Color(182, 234, 233);
-            Color text = isCorp ? Color.BLACK : new Color(27, 101, 99);
+            Font titleF = new Font(fontFam, Font.BOLD, 13);
+            Font secF = new Font(fontFam, Font.BOLD, 13);
+            Font optF = new Font(fontFam, Font.PLAIN, 13);
+
             dlg.getContentPane().setBackground(bg);
             mainPanel.setBackground(bg);
             langBox.setBackground(bg);
-            themeBox.setBackground(bg);
+            fontBox.setBackground(bg);
+            colorBox.setBackground(bg);
+
+            titleLbl.setFont(titleF);
             titleLbl.setForeground(text);
+            langSectionLbl.setFont(secF);
             langSectionLbl.setForeground(text);
-            themeSectionLbl.setForeground(text);
+            fontSectionLbl.setFont(secF);
+            fontSectionLbl.setForeground(text);
+            colorSectionLbl.setFont(secF);
+            colorSectionLbl.setForeground(text);
+
+            uaRadio.setFont(optF);
             uaRadio.setBackground(bg);
             uaRadio.setForeground(text);
+            enRadio.setFont(optF);
             enRadio.setBackground(bg);
             enRadio.setForeground(text);
-            tiffanyRadio.setBackground(bg);
-            tiffanyRadio.setForeground(text);
-            corporateRadio.setBackground(bg);
-            corporateRadio.setForeground(text);
+
+            comicRadio.setBackground(bg);
+            comicRadio.setForeground(text);
+            systemRadio.setBackground(bg);
+            systemRadio.setForeground(text);
+
+            mintRadio.setFont(optF);
+            mintRadio.setBackground(bg);
+            mintRadio.setForeground(text);
+            grayRadio.setFont(optF);
+            grayRadio.setBackground(bg);
+            grayRadio.setForeground(text);
+
+            applyBtn.setFont(new Font(fontFam, Font.PLAIN, 15));
+            applyBtn.setBackground(btnBg);
+            applyBtn.setForeground(text);
+
             dlg.repaint();
         };
 
-        tiffanyRadio.addActionListener(e -> updateThemePreview.run());
-        corporateRadio.addActionListener(e -> updateThemePreview.run());
+        uaRadio.addActionListener(e -> updateDialog.run());
+        enRadio.addActionListener(e -> updateDialog.run());
+        comicRadio.addActionListener(e -> updateDialog.run());
+        systemRadio.addActionListener(e -> updateDialog.run());
+        mintRadio.addActionListener(e -> updateDialog.run());
+        grayRadio.addActionListener(e -> updateDialog.run());
 
-        // Action button
-        JButton applyBtn = createButton(I18n.get("theme.apply_btn"), 0, 0, 260, 44);
-        applyBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         applyBtn.addActionListener(e -> {
             I18n.Language chosenLang = enRadio.isSelected() ? I18n.Language.EN : I18n.Language.UA;
-            SettingsManager.UiThemeMode chosenTheme = corporateRadio.isSelected() ? SettingsManager.UiThemeMode.CORPORATE_PRO : SettingsManager.UiThemeMode.COMIC_SANS;
+            SettingsManager.UiFontMode chosenFont = systemRadio.isSelected() ? SettingsManager.UiFontMode.SYSTEM : SettingsManager.UiFontMode.COMIC_SANS;
+            SettingsManager.UiColorTheme chosenColor = grayRadio.isSelected() ? SettingsManager.UiColorTheme.GRAY : SettingsManager.UiColorTheme.MINT;
 
             setLanguage(chosenLang);
-            applyTheme(chosenTheme);
+            applyTheme(chosenColor, chosenFont);
 
             dlg.dispose();
             if (parentSettingsDialog != null) {
@@ -251,20 +317,24 @@ public class BotGUI extends JFrame {
         });
 
         mainPanel.add(titleLbl);
-        mainPanel.add(Box.createVerticalStrut(16));
+        mainPanel.add(Box.createVerticalStrut(14));
         mainPanel.add(langSectionLbl);
-        mainPanel.add(Box.createVerticalStrut(6));
+        mainPanel.add(Box.createVerticalStrut(4));
         mainPanel.add(langBox);
-        mainPanel.add(Box.createVerticalStrut(16));
-        mainPanel.add(themeSectionLbl);
-        mainPanel.add(Box.createVerticalStrut(6));
-        mainPanel.add(themeBox);
-        mainPanel.add(Box.createVerticalStrut(20));
+        mainPanel.add(Box.createVerticalStrut(14));
+        mainPanel.add(fontSectionLbl);
+        mainPanel.add(Box.createVerticalStrut(4));
+        mainPanel.add(fontBox);
+        mainPanel.add(Box.createVerticalStrut(14));
+        mainPanel.add(colorSectionLbl);
+        mainPanel.add(Box.createVerticalStrut(4));
+        mainPanel.add(colorBox);
+        mainPanel.add(Box.createVerticalStrut(18));
         mainPanel.add(applyBtn);
 
         dlg.setContentPane(mainPanel);
         dlg.pack();
-        dlg.setMinimumSize(new Dimension(460, 310));
+        dlg.setMinimumSize(new Dimension(480, 360));
         dlg.setLocationRelativeTo(this.isVisible() ? this : null);
         dlg.setVisible(true);
     }
@@ -515,9 +585,12 @@ public class BotGUI extends JFrame {
         settingsDialog.setVisible(true);
     }
 
-    public void applyTheme(SettingsManager.UiThemeMode mode) {
-        currentTheme = mode != null ? mode : SettingsManager.UiThemeMode.COMIC_SANS;
-        SettingsManager.setUiThemePreference(currentTheme);
+    public void applyTheme(SettingsManager.UiColorTheme color, SettingsManager.UiFontMode font) {
+        currentColorTheme = color != null ? color : SettingsManager.UiColorTheme.MINT;
+        currentFontMode = font != null ? font : SettingsManager.UiFontMode.COMIC_SANS;
+        currentTheme = (currentColorTheme == SettingsManager.UiColorTheme.GRAY) ? SettingsManager.UiThemeMode.CORPORATE_PRO : SettingsManager.UiThemeMode.COMIC_SANS;
+        SettingsManager.setColorPreference(currentColorTheme);
+        SettingsManager.setFontPreference(currentFontMode);
         syncThemeColors();
 
         if (contentPane != null) contentPane.setBackground(COLOR_BG);
@@ -563,6 +636,12 @@ public class BotGUI extends JFrame {
 
         SwingUtilities.updateComponentTreeUI(this);
         repaint();
+    }
+
+    public void applyTheme(SettingsManager.UiThemeMode mode) {
+        SettingsManager.UiColorTheme col = (mode == SettingsManager.UiThemeMode.CORPORATE_PRO) ? SettingsManager.UiColorTheme.GRAY : SettingsManager.UiColorTheme.MINT;
+        SettingsManager.UiFontMode fnt = (mode == SettingsManager.UiThemeMode.CORPORATE_PRO) ? SettingsManager.UiFontMode.SYSTEM : SettingsManager.UiFontMode.COMIC_SANS;
+        applyTheme(col, fnt);
     }
 
     private void openTokenNameDialog(JDialog parent) {
