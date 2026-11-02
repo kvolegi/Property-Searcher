@@ -11,10 +11,13 @@
 <p align="center">
   <a href="https://openjdk.org/projects/jdk/21/"><img src="https://img.shields.io/badge/Java-21%20LTS-007396?logo=openjdk&logoColor=white" alt="Java 21" /></a>
   <a href="https://spring.io/projects/spring-boot"><img src="https://img.shields.io/badge/Spring%20Boot-3.3.4-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot 3" /></a>
+  <a href="https://resilience4j.readme.io/"><img src="https://img.shields.io/badge/Resilience4j-Circuit%20Breaker-F58220" alt="Resilience4j" /></a>
+  <a href="https://prometheus.io/"><img src="https://img.shields.io/badge/Prometheus-Metrics-E6522C?logo=prometheus&logoColor=white" alt="Prometheus" /></a>
+  <a href="https://grafana.com/"><img src="https://img.shields.io/badge/Grafana-Dashboards-F46800?logo=grafana&logoColor=white" alt="Grafana" /></a>
   <a href="https://www.postgresql.org/"><img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 16" /></a>
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker&logoColor=white" alt="Docker" /></a>
   <a href="https://github.com/kvolegi/Property-Searcher/actions/workflows/ci.yml"><img src="https://github.com/kvolegi/Property-Searcher/actions/workflows/ci.yml/badge.svg" alt="CI / Build & Test" /></a>
-  <a href="#testing--quality-assurance"><img src="https://img.shields.io/badge/Tests-48%20Passed-brightgreen?logo=junit5&logoColor=white" alt="Tests: 48 Passed" /></a>
+  <a href="#testing--quality-assurance"><img src="https://img.shields.io/badge/Tests-51%20Passed-brightgreen?logo=junit5&logoColor=white" alt="Tests: 51 Passed" /></a>
   <a href="ARCHITECTURE.md"><img src="https://img.shields.io/badge/Architecture-Event--Driven-64CFCB" alt="Architecture" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Proprietary%20%2F%20View--Only-red.svg" alt="License: Proprietary / View-Only" /></a>
   <a href="https://github.com/kvolegi/Property-Searcher/releases"><img src="https://img.shields.io/badge/Release-v3.0.0-blue.svg" alt="Latest Release" /></a>
@@ -29,7 +32,24 @@ Property Searcher 3 is an automated property valuation and monitoring tool built
 The system is split into two complementary layers:
 
 1. **Standalone Core Client (`core-desktop`)**: A zero-cloud desktop application built on Java 21 and FlatLaf Swing. It features bilingual localization (`uk` / `en`), adaptive token-bucket request throttling, an $O(1)$ circular ring buffer for deduplication, and an autonomous currency conversion engine.
-2. **Cloud Microservice Backend (`enterprise-backend`)**: A backend service built with **Spring Boot 3.3.4** and **Java 21 LTS**, with Spring Data JPA, PostgreSQL 16 persistence, Flyway migrations, OpenAPI 3.0 / Swagger documentation, and Actuator metrics.
+2. **Cloud Microservice Backend (`enterprise-backend`)**: A backend service built with **Spring Boot 3.3.4** and **Java 21 LTS**, with Spring Data JPA, PostgreSQL 16 persistence, Flyway migrations, OpenAPI 3.0 / Swagger documentation, Actuator metrics, and **Resilience4j Circuit Breaker & Retry** fault boundaries.
+
+### Architectural Decision Records (ADRs)
+Key engineering trade-offs are documented under [docs/adr/](docs/adr/):
+- **[ADR 0001: Modular Monolith Architecture over Distributed Microservices](docs/adr/0001-modular-monolith-over-microservices.md)**
+- **[ADR 0002: Fault Tolerance via Circuit Breaker & Fallback](docs/adr/0002-resilience-circuit-breaker-fallback.md)**
+- **[ADR 0003: Token Bucket Rate Limiting for Scraper Engine](docs/adr/0003-token-bucket-rate-limiting.md)**
+- **[ADR 0004: Hybrid Relational & Document Schema (PostgreSQL JSONB)](docs/adr/0004-hybrid-relational-jsonb-storage.md)**
+
+### Production Observability & Monitoring
+The backend exposes Prometheus metrics via `/actuator/prometheus`. A ready-to-run monitoring stack with Prometheus and Grafana is available:
+
+```bash
+docker compose -f docker-compose.monitoring.yml up -d
+```
+
+- **Prometheus UI**: `http://localhost:9090`
+- **Grafana Dashboards**: `http://localhost:3000` (pre-provisioned with `Property-Searcher Production Observability` dashboard, user/pass: `admin`/`admin`).
 
 ---
 
