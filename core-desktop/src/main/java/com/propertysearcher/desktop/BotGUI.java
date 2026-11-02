@@ -188,21 +188,20 @@ public class BotGUI extends JFrame {
             topPanel.add(logoLabel);
         }
 
-        JPanel titleBlock = new JPanel();
-        titleBlock.setLayout(new BoxLayout(titleBlock, BoxLayout.Y_AXIS));
+        JPanel titleBlock = new JPanel(new BorderLayout());
         titleBlock.setBackground(COLOR_BG);
 
         JLabel titleLabel = new JLabel("Property Searcher");
         titleLabel.setFont(new Font("Comic Sans MS", Font.PLAIN, 26));
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel OlxLabel = new JLabel("olx / domria");
         OlxLabel.setFont(new Font("Comic Sans MS", Font.PLAIN, 12));
         OlxLabel.setForeground(new Color(27, 101, 99));
-        OlxLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        OlxLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        OlxLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
 
-        titleBlock.add(titleLabel);
-        titleBlock.add(OlxLabel);
+        titleBlock.add(titleLabel, BorderLayout.NORTH);
+        titleBlock.add(OlxLabel, BorderLayout.SOUTH);
         topPanel.add(titleBlock);
 
         // Center Buttons
