@@ -5,7 +5,7 @@
 <h1 align="center">Property Searcher 3</h1>
 
 <p align="center">
-  <b>High-throughput real-time telemetry ingestion & event-driven property valuation platform</b>
+  <b>Real-Time Real Estate Monitoring, Currency Valuation & Telegram Alert Platform</b>
 </p>
 
 <p align="center">
@@ -15,179 +15,175 @@
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker&logoColor=white" alt="Docker" /></a>
   <a href="https://github.com/kvolegi/Property-Searcher/actions/workflows/ci.yml"><img src="https://github.com/kvolegi/Property-Searcher/actions/workflows/ci.yml/badge.svg" alt="CI / Build & Test" /></a>
   <a href="#testing--quality-assurance"><img src="https://img.shields.io/badge/Tests-48%20Passed-brightgreen?logo=junit5&logoColor=white" alt="Tests: 48 Passed" /></a>
-  <a href="ARCHITECTURE.md"><img src="https://img.shields.io/badge/Architecture-Event--Driven%20Ingestion-64CFCB" alt="Architecture" /></a>
+  <a href="ARCHITECTURE.md"><img src="https://img.shields.io/badge/Architecture-Event--Driven-64CFCB" alt="Architecture" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Proprietary%20%2F%20View--Only-red.svg" alt="License: Proprietary / View-Only" /></a>
   <a href="https://github.com/kvolegi/Property-Searcher/releases"><img src="https://img.shields.io/badge/Release-v3.0.0-blue.svg" alt="Latest Release" /></a>
 </p>
 
-A high-throughput, low-latency telemetry ingestion and event-driven dispatch platform designed for secondary real estate market intelligence. The system monitors distributed listing providers, detects newly propagated edge listings with sub-2-second latency, normalizes multi-currency valuation metrics, and streams structured media groups via Telegram Bot API with zero local memory overhead.
+Property Searcher 3 is an automated property valuation and monitoring tool built for the Ukrainian secondary real estate market (OLX.ua and DOM.RIA). It continuously scans listings, detects newly posted properties with ~1.8-second latency, normalizes prices across currencies using official NBU exchange rates, and pushes instant photo galleries to Telegram channels and personal chats.
 
 ---
 
 ## Architecture Overview
 
-Property Searcher 3 is designed as a hybrid dual-tier architecture:
+The system is split into two complementary layers:
 
-1. **Standalone Core Client (`core-desktop`)**: A zero-cloud-dependency desktop daemon built on Java 21 with a modernized Swing UI, bilingual localization (`i18n`), adaptive token-bucket throttling, $O(1)$ circular memory buffering, and autonomous currency synchronization.
-2. **Enterprise Cloud Backend (`enterprise-backend`)**: A microservice built with **Spring Boot 3.3.4** and **Java 21 LTS**, utilizing Spring Data JPA, PostgreSQL 16 persistence, Flyway schema migrations, OpenAPI 3.0/Swagger interactive documentation, and Spring Boot Actuator telemetry.
+1. **Standalone Core Client (`core-desktop`)**: A zero-cloud desktop application built on Java 21 and FlatLaf Swing. It features bilingual localization (`uk` / `en`), adaptive token-bucket request throttling, an $O(1)$ circular ring buffer for deduplication, and an autonomous currency conversion engine.
+2. **Cloud Microservice Backend (`enterprise-backend`)**: A backend service built with **Spring Boot 3.3.4** and **Java 21 LTS**, with Spring Data JPA, PostgreSQL 16 persistence, Flyway migrations, OpenAPI 3.0 / Swagger documentation, and Actuator metrics.
 
 ---
 
-## 📸 Application Showcase & Ecosystem
+## 📸 Screenshots & Showcase
 
-### 🖥️ Desktop Application Interface
+### 🖥️ Desktop Interface
 
 | Main Dashboard & Control Center | Settings & Configuration Dialog |
 | :---: | :---: |
 | <img src="docs/screenshots/01_main_dashboard.png" alt="Main Dashboard" width="450" /> | <img src="docs/screenshots/02_settings_dialog.png" alt="Settings Dialog" width="450" /> |
-| **Intuitive Desktop Control Center**<br/>One-click daemon lifecycle management, live status telemetry, and bilingual language switching. | **Centralized Preference Management**<br/>Telegram Bot credentials, language selector, category builder entry points, and manual target rules. |
+| **Control Center**<br/>One-click scanner control, live status indicators, and language selector. | **Preferences**<br/>Telegram Bot credentials, language preferences, and filter configurations. |
 
 | Smart Category & Filter Builder | Manual URL Rule Addition |
 | :---: | :---: |
 | <img src="docs/screenshots/03_smart_category_builder.png" alt="Smart Category Builder" width="450" /> | <img src="docs/screenshots/04_manual_url_addition.png" alt="Manual URL Addition" width="450" /> |
-| **Visual Query & Filter Wizard**<br/>Multi-platform rule construction (OLX & DOM.RIA), operation types (Rent/Buy), room filters, and budget limits. | **Direct URL Intake & Validation**<br/>Paste complex portal URLs directly; automated parameter stripping and dynamic category naming. |
+| **Filter Wizard**<br/>Construct search rules visually for OLX & DOM.RIA by city, rent/sale type, room count, and price limits. | **Direct URL Intake**<br/>Paste portal search URLs straight from your browser with parameter cleanup. |
 
 <p align="center">
-  <b>Telegram BotFather Integration & Quickstart Manual</b><br/>
+  <b>Telegram BotFather Setup Guide</b><br/>
   <img src="docs/screenshots/05_botfather_instructions.png" alt="BotFather Instructions" width="750" /><br/>
-  <i>Embedded step-by-step BotFather token provisioning guide with direct one-click copy and instant verification.</i>
+  <i>Built-in step-by-step token setup guide with one-click copy and instant verification.</i>
 </p>
 
-### 📱 Telegram Bot Operations Hub & Real-Time Alerts
+### 📱 Telegram Bot & Alerts
 
 | Desktop Command & Help Hub | In-Chat Category Management |
 | :---: | :---: |
 | <img src="docs/screenshots/06_telegram_desktop_hub.png" alt="Telegram Desktop Hub" width="450" /> | <img src="docs/screenshots/07_telegram_category_management.png" alt="Telegram Category Management" width="300" /> |
-| **Desktop Operations Hub & Interactive Manual**<br/>Widescreen desktop Telegram experience featuring multi-tab documentation (`/help`), live status inspection, and persistent shortcut keyboard. | **Card-Based Target Management (`/categories`)**<br/>Real-time target status indicators (🟢 ACTIVE / ⏸ PAUSED) with instant inline action buttons `[Pause]`, `[Delete]`, `[Turn On]`, and builder triggers. |
+| **Desktop Telegram Experience**<br/>Multi-tab guide (`/help`), status checking, and persistent keyboard buttons. | **Card-Based Category Controls (`/categories`)**<br/>Target indicators (🟢 ACTIVE / ⏸ PAUSED) with inline buttons `[Pause]`, `[Delete]`, and `[Resume]`. |
 
-| Multi-Currency & Language Preferences | High-Resolution Photo Album Delivery |
+| Multi-Currency & Language Preferences | Photo Album Alerts |
 | :---: | :---: |
 | <img src="docs/screenshots/08_telegram_currency_language.png" alt="Currency & Language Settings" width="300" /> | <img src="docs/screenshots/09_telegram_mobile_gallery.png" alt="Photo Gallery Alert" width="300" /> |
-| **Dual-Currency Valuation & i18n Switching**<br/>Live NBU cached exchange rates with customizable display modes (`DUAL`, `USD`, `UAH`, `EUR`, `As Listed`) and one-tap English/Ukrainian toggle. | **Sub-2s Real-Time Edge Sniping Alert**<br/>Zero-download media group album delivery with direct portal deep-links, exact timestamps, and formatted property details. |
+| **Exchange Rate & Language Settings**<br/>NBU rates with customizable display modes (`DUAL`, `USD`, `UAH`, `EUR`, `As Listed`). | **Sub-2s Real-Time Alerts**<br/>Photo group albums with portal deep-links, exact timestamps, and price details. |
 
 ---
 
-## Key Technical Innovations & Engineering Highlights
+## Technical Highlights
 
-### 1. Sub-2-Second CDN Edge Detection & Propagation Physics
-* **Moderation Pipeline & CDN Propagation**: Major real estate aggregators utilize multi-tier architectures (SSR backends behind Akamai / Cloudflare edge caches). When a seller publishes a listing, it undergoes internal moderation, spam evaluation, and cache revalidation for approximately 30 to 90 seconds before appearing on public edge nodes.
-* **Near-Instant Sniping**: Property Searcher polls CDN endpoints using lightweight organic queries, intercepting listings within **1.8 seconds** of public edge availability—the theoretical lower bound for external detection without proprietary internal queue access.
+### 1. Sub-2-Second Edge Detection
+Real estate portals deploy CDN layers (Akamai, Cloudflare) and caching tiers. Once a seller posts an ad, it passes moderation and cache invalidation before hitting public edge nodes. Property Searcher polls CDN endpoints with lightweight queries, intercepting listings within **1.8 seconds** of public availability.
 
-### 2. Adaptive Token-Bucket Rate Controller with Phase Jitter
-* **Traffic Protection Formula**: To prevent IP bans and WAF challenges (`HTTP 429 Too Many Requests`), each worker thread dynamically computes its polling interval based on the total number of active targets $N$:
-  $$\tau = \max\left(1800\text{ ms},\; \left\lceil \frac{N \times 1000}{R_{\max}} \right\rceil\right) \quad \text{where } R_{\max} = 2.20\text{ req/s}$$
-* **Phase Staggering**: Thread executions are offset by $\Delta t = \frac{\tau}{N}$, eliminating concurrent burst collisions.
-* **Anti-Fingerprint Jitter**: A pseudo-random temporal jitter ($\pm 150\text{ ms}$) is injected into each cycle to break deterministic timing signatures monitored by WAF systems.
+### 2. Adaptive Token-Bucket Rate Limiter
+To prevent IP blocks and WAF challenges (`HTTP 429 Too Many Requests`), worker threads calculate polling intervals dynamically based on active categories $N$:
+$$\tau = \max\left(1800\text{ ms},\; \left\lceil \frac{N \times 1000}{R_{\max}} \right\rceil\right) \quad \text{where } R_{\max} = 2.20\text{ req/s}$$
+Thread timings are staggered by $\Delta t = \frac{\tau}{N}$ with a small random jitter ($\pm 150\text{ ms}$) to prevent burst collisions.
 
-### 3. Resilient 3-Tier Currency Valuation Gateway
-Engineered for host environments with intermittent uptime:
-* **Tier 1 (Official NBU REST Gateway)**: Direct non-authenticated HTTPS polling of the National Bank of Ukraine open API (`bank.gov.ua`) with strict 3000ms timeouts.
-* **Tier 2 (Autonomous Offline JSON Cache)**: Persisted exchange rates in `currency_cache.json` with a 24-hour TTL. Cold starts execute in **0 ms** using cached values while asynchronous workers refresh rates in the background.
-* **Tier 3 (Safety Constants Fallback)**: Resilient fallback to embedded baseline exchange rates (USD/UAH, EUR/UAH) during catastrophic upstream outages, ensuring 100% service continuity.
-* **DUAL Valuation Mode**: Dynamically parses listing currencies and renders formatted dual-denomination strings:  
+### 3. 3-Tier Currency Engine
+* **Tier 1 (NBU REST API)**: Direct HTTPS fetch from the National Bank of Ukraine open API (`bank.gov.ua`) with 3000ms timeout.
+* **Tier 2 (Local JSON Cache)**: Persists rates in `currency_cache.json` with a 24-hour validity window. Restarts load instantly from cache while a background worker updates rates.
+* **Tier 3 (Embedded Fallback)**: Built-in safety rates (USD/UAH, EUR/UAH) keep the app functional during network outages.
+* **DUAL Mode**: Converts and displays dual currency strings side-by-side:  
   `$65 000 (≈ 2 704 000 UAH)` / `2 500 000 UAH (≈ $60 096)`.
 
-### 4. 50-Slot Circular Memory Buffer & Silent Baseline Initialization
-* **Silent Cold-Start Baseline**: Upon initializing a new target, the system silently indexes the first 30 organic listings without triggering user notifications, completely eliminating stale-data spam upon startup.
-* **$O(1)$ Circular Ring Buffer**: A fixed-capacity 50-slot ring buffer tracks recently observed listing IDs per target. Lookup and eviction operate in constant time $O(1)$ with deterministic memory bounds.
-* **Organic Candidate Filtering**: Promoted and sponsored blocks are identified via DOM attribute inspection and filtered prior to deduplication.
-* **Adaptive Burst Interception**: Upon detecting a new listing, a targeted follow-up probe executes after 500ms to catch multi-listing batches posted by single accounts.
+### 4. 50-Slot Circular Memory Buffer
+* **Silent Initialization**: When adding a target, the app indexes the first 30 listings without sending alerts, preventing startup spam.
+* **$O(1)$ Circular Buffer**: A 50-item ring buffer tracks recent listing IDs per target. Checks and evictions run in constant time.
+* **Sponsored Ad Filtering**: Promoted and banner listings are detected via DOM attributes and skipped before deduplication.
 
-### 5. Asynchronous Zero-Download MediaGroup Dispatcher
-* **Non-Blocking Worker Pool**: Media group compilation and Telegram API transmissions are offloaded to an asynchronous cached executor pool (`notificationExecutor`), isolating network transmission latency from monitoring threads.
-* **Direct CDN Passthrough**: Images are streamed using remote CDN URI references (`InputMediaPhoto(cdnUrl)`). The host client performs zero disk writes and incurs negligible network I/O.
-* **HTML Sanitization**: All incoming listing metadata is escaped (`&`, `<`, `>`) preventing Telegram `400 Bad Request` parsing exceptions.
+### 5. Asynchronous MediaGroup Dispatch
+* **Non-Blocking Pool**: Photo grouping and Telegram Bot API calls run on an asynchronous thread pool (`notificationExecutor`), preventing network latency from holding up scraper threads.
+* **Zero-Download Forwarding**: Photos forward directly using remote CDN URLs (`InputMediaPhoto(cdnUrl)`), avoiding local image saving and disk I/O.
+* **Night Mode**: Between **23:00 and 07:00** (`Europe/Kyiv`), alerts send with `disable_notification = true` for silent delivery.
 
-### 6. Night Silent Mode
-* Scheduled time evaluation (`Europe/Kyiv` timezone): between **23:00 and 07:00**, all Telegram dispatch payloads automatically attach `disable_notification = true` to deliver silent pushes.
-
-### 7. Bilingual Internationalization (i18n)
-* Complete localization dictionary supporting **Ukrainian 🇺🇦** and **English 🇬🇧**.
-* First-launch auto-detection and interactive modal language selection.
-* Dynamic runtime language switching via desktop preferences and Telegram `/language` inline menus.
-
-### 8. In-Telegram Autonomous Operations & Builder Wizard
-* **Card-Based Target Management (`/categories`)**: Each monitoring target is presented as an interactive visual card displaying real-time status (🟢 Active / ⏸ Paused), platform source, and direct inline action buttons `[⏸ Pause / ▶️ Resume]` and `[🗑 Delete]`.
-* **5-Step Category Builder Wizard (`/add`)**: Conversational step-by-step wizard directly inside Telegram allowing users to construct complex queries (Platform $\to$ City $\to$ Operation Type $\to$ Price Bounds $\to$ Custom Label) with zero URL editing.
-* **Direct URL Intake & Sanitizer**: Users can directly paste raw search URLs from browser address bars (`olx.ua` / `dom.ria.com`); the engine validates syntax, strips tracking parameters, and hot-reloads the target into memory.
-* **4-Tab Interactive Help Hub (`/help`)**: Contextual documentation directly inside Telegram with inline tab navigation: `[📚 Overview] [⚡️ Commands] [🏗 Builder Guide] [⚙️ Direct URLs]`.
+### 6. Full Bilingual Support (i18n)
+* Complete localization dictionary for **Ukrainian 🇺🇦** and **English 🇬🇧**.
+* Auto-detects system locale on first launch with manual toggle in settings and in Telegram (`/language`).
 
 ---
 
-## Repository Structure
+## 🚀 How to Run
 
-```text
-.
-├── .github/
-│   ├── workflows/ci.yml            # Automated CI/CD pipeline (JUnit 5 + Maven Build)
-│   ├── ISSUE_TEMPLATE/             # Standardized bug & feature templates
-│   └── PULL_REQUEST_TEMPLATE.md    # Engineering QA PR checklist
-├── .editorconfig                   # Uniform multi-IDE code style configuration
-├── Makefile                        # Developer CLI orchestration (test, build, docker)
-├── run.sh                          # Cross-platform runner script
-├── CHANGELOG.md                    # Keep a Changelog historical version record (v1.0 -> v3.0)
-├── SECURITY.md                     # Responsible disclosure and security policies
-├── ARCHITECTURE.md                 # C4 model, event sequence flows, and design patterns
-├── TECHNICAL_SPECIFICATION.md      # Engineering requirements and ISO/IEC/IEEE 29148 spec
-├── DEPLOYMENT.md                   # Production server deployment guide (Docker & systemd)
-├── CONTRIBUTING.md                 # Contribution guidelines and code style
-├── LICENSE                         # Proprietary Source-Available & Evaluation License
-│
-├── core-desktop/                   # Autonomous desktop client (Java 21, Swing, FlatLaf)
-│   ├── pom.xml                     # Maven build configuration
-│   └── src/
-│       ├── main/java/PropertySeacher/
-│       │   ├── BotGUI.java         # Main application window & bilingual interface
-│       │   ├── BotTG.java          # Telegram engine, rate controller, and event dispatcher
-│       │   ├── ParserOLX.java      # HTML/DOM ingestion engine with organic filters
-│       │   ├── CurrencyService.java# 3-tier NBU FX gateway and offline caching
-│       │   ├── SettingsManager.java# Configuration persistence and synchronization
-│       │   ├── I18n.java           # Bilingual dictionary and string provider
-│       │   ├── CategoryCatalog.java# Hierarchical geographic & property taxonomy
-│       │   └── SmartCategoryBuilderDialog.java # Visual filter constructor
-│       └── test/java/PropertySeacher/
-│           ├── CategoryCatalogTest.java       # URL builders & taxonomy integrity (9 tests)
-│           ├── CurrencyServiceTest.java       # FX conversions & regex extractors (9 tests)
-│           ├── DeduplicationAndSnipingTest.java # Sniping formulas & circular buffers (6 tests)
-│           ├── I18nTest.java                  # 100% dictionary key parity (11 tests)
-│           └── SettingsManagerTest.java       # Isolated configuration persistence (3 tests)
-│
-├── enterprise-backend/             # Cloud-native microservice (Spring Boot 3.3.4, Java 21)
-│   ├── pom.xml                     # Spring Data JPA, Actuator, Swagger OpenAPI
-│   ├── Dockerfile                  # Multi-stage production container build
-│   ├── docker-compose.yml          # Container orchestration (App + PostgreSQL 16)
-│   └── src/main/java/com/propertyseacher/
-│       ├── api/PropertyController.java     # REST API endpoints with OpenAPI 3.0 annotations
-│       ├── domain/entity/          # Relational JPA entities
-│       ├── scraper/strategy/       # Ingestion Strategy pattern implementation
-│       └── telegram/               # Spring-managed bot dispatch service
-│
-└── dist/                           # Production distribution binaries and scripts
-    ├── PropertySeacher-Universal.jar # Cross-platform executable JAR
-    ├── PropertySeacher.desktop     # Linux desktop entry descriptor
-    ├── Run_Windows.bat             # Windows launcher script
-    ├── Run_Linux.sh                # Linux / macOS shell launcher
-    └── assets/                     # High-resolution application iconsets
+### Option 1: Universal JAR (Windows, Linux, macOS)
+
+The standalone executable JAR `dist/PropertySeacher-Universal.jar` runs on all major operating systems.
+
+#### Prerequisites
+Java 17 or Java 21 LTS (`java -version`).
+* **Windows**: Install OpenJDK via winget:
+  ```powershell
+  winget install EclipseAdoptium.Temurin.21.JRE
+  ```
+  Or download the installer from [Adoptium](https://adoptium.net).
+* **Linux (Ubuntu / Debian / Mint)**:
+  ```bash
+  sudo apt update && sudo apt install openjdk-21-jre
+  ```
+* **Linux (Fedora / RHEL)**:
+  ```bash
+  sudo dnf install java-21-openjdk
+  ```
+* **Linux (Arch Linux)**:
+  ```bash
+  sudo pacman -S jre21-openjdk
+  ```
+
+#### Launching the Desktop Client
+From the project directory:
+```bash
+java -jar dist/PropertySeacher-Universal.jar
+```
+* **Windows shortcut**: Double-click `dist/Run_Windows.bat`.
+* **Linux shortcut**: Run `bash dist/Run_Linux.sh` or install `dist/PropertySeacher.desktop` into `~/.local/share/applications/`.
+
+---
+
+### Option 2: Pre-Packaged macOS App (`PropertySeacher.app`)
+
+For macOS users, a standalone release is packaged with an embedded Java runtime.
+
+1. Download **`PropertySearcher-macOS.zip`** from [GitHub Releases v3.0.0](https://github.com/kvolegi/Property-Searcher/releases/tag/v3.0.0).
+2. Unzip the file to obtain `PropertySeacher.app`.
+3. Drag `PropertySeacher.app` to your `/Applications` folder (or run directly).
+4. **If macOS Gatekeeper flags the app** (unidentified developer):
+   * **Terminal command**:
+     ```bash
+     xattr -cr /Applications/PropertySeacher.app
+     ```
+   * **Or via Finder**: Right-click `PropertySeacher.app` $\to$ click **Open** $\to$ click **Open** in the confirmation dialog.
+5. The application will start immediately. No separate Java installation is needed.
+
+---
+
+### Option 3: Enterprise Spring Boot Backend & Docker
+
+#### Running via Docker Compose
+```bash
+docker compose up -d --build
+```
+This spins up PostgreSQL 16 on port 5432 and the Spring Boot microservice on port 8080.
+
+#### Running Backend Locally from Source
+```bash
+cd enterprise-backend
+mvn spring-boot:run
 ```
 
+* **Swagger UI API Docs**: `http://localhost:8080/swagger-ui.html`
+* **Actuator Health Endpoint**: `http://localhost:8080/actuator/health`
+
+For complete production server setups (systemd daemons, Nginx reverse proxy with SSL), see [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ---
 
-## Quick Start
+## 🛠️ Developer Commands
 
-### Prerequisites
-* **Java Runtime**: OpenJDK 17 or OpenJDK 21 LTS (`java -version`)
-* **Build System**: Apache Maven 3.8+ (`mvn -version`)
-* **Optional**: Docker 24+ and Docker Compose
-
-### Developer Fast-Path (Makefile & CLI)
 ```bash
-# Display all available developer commands
+# Display available developer commands
 make help
 
-# Run the full automated test suite (38 JUnit 5 tests)
+# Run the test suite (48 tests across desktop & backend)
 make test
 
-# Build both desktop and enterprise backend modules
+# Build both desktop and backend modules
 make build
 
 # Launch the desktop client daemon
@@ -197,109 +193,40 @@ make run-desktop
 make docker-up
 ```
 
-### Manual Execution
-
-#### Running the Desktop Client
-```bash
-# Direct launch via prebuilt universal JAR
-java -jar dist/PropertySeacher-Universal.jar
-
-# Or build and execute from source
-cd core-desktop
-mvn clean package -DskipTests
-java -jar target/PS-3.0.jar
-```
-
-#### Running the Enterprise Backend
-```bash
-# Local development run
-cd enterprise-backend
-mvn spring-boot:run
-
-# Or containerized deployment via Docker Compose
-docker compose up -d --build
-```
-
-* **Swagger UI API Documentation**: `http://localhost:8080/swagger-ui.html`
-* **Health & Readiness Probes**: `http://localhost:8080/actuator/health`
-
-For complete production server configuration, systemd daemon setups, Nginx reverse proxy with Let's Encrypt SSL, and automated database backups, refer to [DEPLOYMENT.md](DEPLOYMENT.md).
-
 ---
 
-## Engineering Design Patterns
+## 🧪 Testing & Verification
 
-| Pattern | Component | Architectural Purpose |
-| :--- | :--- | :--- |
-| **Strategy Pattern** | `ScraperStrategy`, `OlxScraperStrategy` | Extensible abstraction for multi-source ingestion algorithms |
-| **Token-Bucket Rate Limiter** | `BotTG.calculateAdaptiveDelay()` | Adaptive request throttling preventing CDN IP mitigation |
-| **Circuit Breaker / Fallback**| `CurrencyService` | Resilient 3-tier FX gateway (Remote API $\to$ Local Cache $\to$ Static Fallback) |
-| **Ring Buffer (FIFO)** | Circular memory buffer in `BotTG` | Deterministic $O(1)$ memory deduplication |
-| **Worker Pool** | `Executors.newCachedThreadPool()` | Asynchronous media dispatch decoupled from polling routines |
-| **Observer Pattern** | Telegram update listener | Reactive handling of user commands and inline keyboard callbacks |
-| **Singleton Pattern** | `SettingsManager` | Unified, thread-safe configuration management |
-
----
-
-## Interactive Interface & Dispatch Telemetry Showcase
-
-```text
-┌────────────────────────────────────────────────────────────────────────┐
-│  📲 TELEGRAM SNIPER ALERT (Sample Dispatch)                           │
-├────────────────────────────────────────────────────────────────────────┤
-│  🏢 [DOM.RIA] 1-к квартира, вул. Дерибасівська, Одеса                  │
-│                                                                        │
-│  💰 Ціна: $65 000 (≈ 2 704 000 UAH)                                    │
-│  📍 Локація: Приморський район, Центр                                  │
-│  ⚡️ Швидкість виявлення: 1.8s з моменту публікації на CDN Edge        │
-│  🔗 Посилання: https://dom.ria.com/uk/realty-12345678.html             │
-│  🖼 Фотоальбом: 8 якісних фото (SendMediaGroup CDN passthrough)        │
-├────────────────────────────────────────────────────────────────────────┤
-│  🗂 ІНТЕРАКТИВНЕ КЕРУВАННЯ ТАРГЕТАМИ (/categories)                    │
-│                                                                        │
-│  [🟢 1. Одеса 1-к до $70k]      [⏸ Призупинити]    [🗑 Видалити]       │
-│  [⏸ 2. Київ Печерськ оренда]   [▶️ Відновити]      [🗑 Видалити]       │
-│  [➕ Додати новий таргет через 5-кроковий Wizard (/add)]               │
-└────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Testing & Quality Assurance
-
-The codebase includes an enterprise-grade automated test suite implemented with **JUnit 5 Jupiter** and **Mockito**, delivering rigorous verification of mission-critical business logic, anti-bot safety invariants, data parsing, and fault tolerance:
+The test suite uses **JUnit 5 Jupiter** and **Mockito** to verify business logic, rate limits, parsing, and resilience:
 
 ```bash
-# Execute desktop test suite (40 tests)
+# Run desktop tests (40 tests)
 cd core-desktop && mvn clean test
 
-# Execute enterprise backend test suite (8 tests)
+# Run backend tests (8 tests)
 cd enterprise-backend && mvn clean test
 
-# Or execute all via Makefile
+# Or run all tests together
 make test
 ```
 
-### Test Suite Architecture (48 Test Cases, 100% Pass Rate)
+### Test Suite Structure (48 Tests, 100% Pass Rate)
 
-| Test Module | Coverage Scope | Verified Engineering Invariants |
+| Test Class | Focus | What It Verifies |
 | :--- | :--- | :--- |
-| **`CategoryCatalogTest`** (9 tests) | Taxonomy & URL generation | Validates structured URL generation across OLX and DOM.RIA, price boundaries, owner-only filtering, slug integrity, and Ukrainian city taxonomy completeness. |
-| **`CurrencyServiceTest`** (9 tests) | Multi-tier FX & parsing | Verifies NBU live/fallback exchange rate mathematical conversions (USD/EUR to UAH and vice versa), regex price extraction against various formatting variations, and dual-currency formatting. |
-| **`DeduplicationAndSnipingTest`** (6 tests) | Rate limiting & deduplication | Enforces that `BotTG.calculateAdaptiveDelay()` strictly guarantees global request rates under $2.3\text{ req/s}$ across any category volume $N \in [1, 50]$, eliminating CDN ban vectors; verifies $O(1)$ 50-slot FIFO circular buffer eviction and duplicate rejection. |
-| **`I18nTest`** (13 tests) | Bilingual parity & localization | Validates 100% key parity between Ukrainian (`uk`) and English (`en`) dictionaries (zero missing translations), thread-safe runtime switching, fallback handling, and case-insensitive language code resolution. |
-| **`SettingsManagerTest`** (3 tests) | Configuration persistence | Employs `@TempDir` sandboxed testing to verify round-trip file serialization, deserialization of active/paused (`#OFF#`) targets, custom directives, and backward-compatible settings recovery. |
-| **`PropertyControllerTest`** (5 tests) | REST API & WebMvc MockMvc | Tests Spring Boot 3 WebMvc slice: verifies `200 OK` paginated listings, `201 Created` target persistence with valid DTOs, `400 Bad Request` RFC 7807 global exception handling on invalid URLs, `202 Accepted` async trigger, and telemetry aggregation. |
-| **`TrackingServiceTest`** (3 tests) | Event dispatch & analytics | Tests Spring Boot 3 service layer with Mockito: verifies `LIVE_SNIPE` event publishing with pluggable cache deduplication, `DATABASE_ANALYTICS` price-drop tracking, and statistical `Hot Deal` valuation math ($z$-score / discount ratios). |
+| **`CategoryCatalogTest`** (9 tests) | URL Generation & Taxonomies | Validates query URL formats across OLX and DOM.RIA, price bounds, owner-only toggles, and city taxonomy integrity. |
+| **`CurrencyServiceTest`** (9 tests) | Exchange Rates & Formatting | Verifies NBU live/fallback rate calculations (USD/EUR $\leftrightarrow$ UAH), regex price parsing across multiple notations, and dual-currency text output. |
+| **`DeduplicationAndSnipingTest`** (6 tests) | Rate Limiting & Deduplication | Confirms `calculateAdaptiveDelay()` keeps overall request frequency below $2.3\text{ req/s}$ for any target count $N \in [1, 50]$; verifies $O(1)$ ring buffer eviction and duplicate discarding. |
+| **`I18nTest`** (13 tests) | Bilingual Localization | Checks 100% key parity between Ukrainian (`uk`) and English (`en`) dictionaries (no missing keys), thread-safe runtime switches, and locale fallbacks. |
+| **`SettingsManagerTest`** (3 tests) | Config Persistence | Uses `@TempDir` sandboxes to test round-trip file serialization, active/paused target states (`#OFF#`), and backwards compatibility. |
+| **`PropertyControllerTest`** (5 tests) | REST API & MockMvc | Tests Spring Boot 3 WebMvc endpoints: paginated listings (`200 OK`), target creation (`201 Created`), RFC 7807 global error handling (`400 Bad Request`), and metrics endpoints. |
+| **`TrackingServiceTest`** (3 tests) | Event Dispatch & Analytics | Tests Spring Boot 3 service layer with Mockito: event publishing, price change tracking, and deal score calculations. |
 
 ---
 
-## License & Usage Terms
+## ⚖️ License & Terms
 
-This project is licensed under a strict **Proprietary Source-Available & Evaluation License**.
-
-* **Permitted**: Viewing, inspecting, and auditing the source code and documentation solely for prospective employment evaluation, technical review, and portfolio assessment.
-* **Strictly Prohibited**: Running, deploying, redistributing, modifying, sublicensing, or commercially exploiting any part of this software without prior explicit written authorization from the Author.
+Personal portfolio project. Provided for evaluation, code review, and educational demonstration.
 
 Copyright (c) 2021–2026 **kvolegi**. All Rights Reserved.  
-For complete legal terms and conditions, refer to [LICENSE](LICENSE).
+For full terms, see [LICENSE](LICENSE).

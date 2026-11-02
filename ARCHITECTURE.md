@@ -2,9 +2,7 @@
 
 > **Рівень документа:** Software Architecture Document (SAD)  
 > **Методологія:** C4 Model (Context, Container, Component, Code) & Clean Architecture  
-> **Головний архітектор:** `kvolegi`
-
----
+> **Головний архітектор:** `kvolegi`, -
 
 ## 1. C4 Контекстна діаграма системи (System Context)
 
@@ -24,17 +22,15 @@ flowchart TD
         Telegram["📬 Telegram Bot API Gateway"]
     end
 
-    User <-->|Візуальне керування фільтрами та мовою| DesktopApp
-    User <-->|Отримання фотоальбомів та команди| Telegram
-    DesktopApp -->|Низьколатентне опитування 1.8с| Portal1
-    DesktopApp -->|Скрапінг перевірених пропозицій| Portal2
-    DesktopApp -->|Запит офіційного курсу раз на добу| NBU
-    DesktopApp -->|Асинхронний SendMediaGroup| Telegram
-    BackendServer -->|REST API / OpenAPI 3.0| User
+    User <, >|Візуальне керування фільтрами та мовою| DesktopApp
+    User <, >|Отримання фотоальбомів та команди| Telegram
+    DesktopApp, >|Низьколатентне опитування 1.8с| Portal1
+    DesktopApp, >|Скрапінг перевірених пропозицій| Portal2
+    DesktopApp, >|Запит офіційного курсу раз на добу| NBU
+    DesktopApp, >|Асинхронний SendMediaGroup| Telegram
+    BackendServer, >|REST API / OpenAPI 3.0| User
     BackendServer -.->|Синхронізація лістингів та цінової історії| DesktopApp
-```
-
----
+```, -
 
 ## 2. C4 Діаграма контейнерів (Container Diagram)
 
@@ -57,20 +53,18 @@ flowchart LR
         Database[("PostgreSQL 16\n(Relational Storage)")]
     end
 
-    GUI --> Engine
-    Engine --> Scheduler
-    Scheduler --> Buffer
-    Buffer --> CurrServ
-    CurrServ --> AsyncDisp
-    AsyncDisp --> Telegram["Telegram API"]
+    GUI, > Engine
+    Engine, > Scheduler
+    Scheduler, > Buffer
+    Buffer, > CurrServ
+    CurrServ, > AsyncDisp
+    AsyncDisp, > Telegram["Telegram API"]
 
-    Controller --> TrackingService
-    TrackingService --> Analytics
-    TrackingService --> Repo
-    Repo --> Database
-```
-
----
+    Controller, > TrackingService
+    TrackingService, > Analytics
+    TrackingService, > Repo
+    Repo, > Database
+```, -
 
 ## 3. C4 Діаграма компонентів бекенду (Backend Component Diagram)
 
@@ -105,50 +99,46 @@ flowchart TD
         PHR["PriceHistoryRepository"]
     end
 
-    PC --> TS
-    TB --> TS
-    TS --> SS
-    TS --> PAS
-    TS --> Cache_Strat
-    TS --> EP
-    EP --> PEL
-    PEL --> TNS
-    SS --> OLX_Strat
-    SS --> DOMRIA_Strat
-    SS --> MOCK_Strat
-    TS --> UR
-    TS --> STR
-    TS --> DPR
-    TS --> PHR
-```
-
----
+    PC, > TS
+    TB, > TS
+    TS, > SS
+    TS, > PAS
+    TS, > Cache_Strat
+    TS, > EP
+    EP, > PEL
+    PEL, > TNS
+    SS, > OLX_Strat
+    SS, > DOMRIA_Strat
+    SS, > MOCK_Strat
+    TS, > UR
+    TS, > STR
+    TS, > DPR
+    TS, > PHR
+```, -
 
 ## 4. Життєвий цикл лістингу (Listing State Machine)
 
 ```mermaid
 stateDiagram-v2
-    [*] --> DISCOVERED: Оголошення з'явилося на CDN ноді порталу
-    DISCOVERED --> SILENT_BASELINE: Перший запуск системи (30 перших оголошень)
-    SILENT_BASELINE --> BUFFERED: Запис ID у хеш-сет без нотифікації
+    [*], > DISCOVERED: Оголошення з'явилося на CDN ноді порталу
+    DISCOVERED, > SILENT_BASELINE: Перший запуск системи (30 перших оголошень)
+    SILENT_BASELINE, > BUFFERED: Запис ID у хеш-сет без нотифікації
     
-    DISCOVERED --> DUPLICATE_CHECK: Звичайний робочий цикл
-    DUPLICATE_CHECK --> BUFFERED: ID знайдено у 50-слотовому буфері (Пропуск)
+    DISCOVERED, > DUPLICATE_CHECK: Звичайний робочий цикл
+    DUPLICATE_CHECK, > BUFFERED: ID знайдено у 50-слотовому буфері (Пропуск)
     
-    DUPLICATE_CHECK --> EXTRACTION: Нове унікальне оголошення
-    EXTRACTION --> MEDIA_COMPOSED: Парсинг DOM (галерея до 10 фото, ціна, гео)
-    MEDIA_COMPOSED --> CURRENCY_CONVERTED: DUAL-конвертація за курсом НБУ
-    CURRENCY_CONVERTED --> NIGHT_MODE_CHECK: Перевірка часу (23:00-07:00 Kyiv)
+    DUPLICATE_CHECK, > EXTRACTION: Нове унікальне оголошення
+    EXTRACTION, > MEDIA_COMPOSED: Парсинг DOM (галерея до 10 фото, ціна, гео)
+    MEDIA_COMPOSED, > CURRENCY_CONVERTED: DUAL-конвертація за курсом НБУ
+    CURRENCY_CONVERTED, > NIGHT_MODE_CHECK: Перевірка часу (23:00-07:00 Kyiv)
     
-    NIGHT_MODE_CHECK --> DISPATCHED_SILENT: Ніч (disable_notification = true)
-    NIGHT_MODE_CHECK --> DISPATCHED_NORMAL: День (Звичайний звуковий пуш)
+    NIGHT_MODE_CHECK, > DISPATCHED_SILENT: Ніч (disable_notification = true)
+    NIGHT_MODE_CHECK, > DISPATCHED_NORMAL: День (Звичайний звуковий пуш)
     
-    DISPATCHED_SILENT --> PERSISTED: Збереження у БД / Оновлення буфера
-    DISPATCHED_NORMAL --> PERSISTED: Збереження у БД / Оновлення буфера
-    PERSISTED --> [*]
-```
-
----
+    DISPATCHED_SILENT, > PERSISTED: Збереження у БД / Оновлення буфера
+    DISPATCHED_NORMAL, > PERSISTED: Збереження у БД / Оновлення буфера
+    PERSISTED, > [*]
+```, -
 
 ## 5. Event-Driven Sequence Diagram (Діаграма послідовності)
 
@@ -168,11 +158,11 @@ sequenceDiagram
     GUI->>Cache: Перевірка валідності кешу курсів (TTL 24h)
     alt Кеш застарів або відсутній
         GUI->>NBU: Фоновий HTTP GET (Timeout 3000ms)
-        NBU-->>Cache: Запис USD/EUR курсів у JSON
+        NBU, >>Cache: Запис USD/EUR курсів у JSON
     end
     GUI->>Worker: Ініціалізація N потоків з фазовим зсувом (Phase Staggering)
     Worker->>CDN: HTTP GET (User-Agent Spoofer + Jitter ±150ms)
-    CDN-->>Worker: HTML корисне навантаження
+    CDN, >>Worker: HTML корисне навантаження
     Worker->>Worker: 50-Slot Circular Buffer: перевірка наявності ID за O(1)
     alt Новий лістинг виявлено
         Worker->>Worker: Adaptive Burst Check (+500ms повторна перевірка)
@@ -181,16 +171,14 @@ sequenceDiagram
         Async->>Async: Розрахунок ціни DUAL: $65 000 (≈ 2 704 000 грн)
         Async->>Async: Перевірка Night Silent Mode (23:00 - 07:00)
         Async->>TG: SendMediaGroup (до 10 фотоальбомних карток)
-        TG-->>Realtor: Миттєве push-сповіщення у Telegram
+        TG, >>Realtor: Миттєве push-сповіщення у Telegram
     end
-```
-
----
+```, -
 
 ## 6. Каталог використаних шаблонів проєктування (Design Patterns)
 
 | Шаблон (GoF Pattern) | Клас / Компонент | Роль в системі |
-| :--- | :--- | :--- |
+| :, - | :, - | :, - |
 | **Strategy** | `ScraperStrategy`, `OlxScraperStrategy` | Ізоляція алгоритмів парсингу для різних порталів |
 | **Strategy (Cache)**| `DeduplicationCacheStrategy`, `InMemoryRingBufferCacheStrategy` | Плугабельна стратегія дедуплікації (In-Memory Circular Buffer / Redis-Ready) |
 | **Domain Events (EDA)**| `PropertyDiscoveredEvent`, `PriceChangedEvent`, `PropertyEventListener` | Event-Driven Архітектура для повної ізоляції скрапінгу від диспетчеризації |
@@ -200,21 +188,19 @@ sequenceDiagram
 | **Circular Buffer (FIFO)** | Внутрішній масив 50 слотів у `BotTG` | Робота зі стабільною пам'яттю $O(1)$ без витоків |
 | **Worker Pool (Producer-Consumer)**| `Executors.newCachedThreadPool()` | Асинхронне надсилання важких альбомів без зупинки парсингу |
 | **Observer** | Telegram API `onUpdateReceived()` | Реактивна обробка команд користувачів (`/language`, `/currency`) |
-| **Singleton** | `SettingsManager` | Гарантія єдиного джерела конфігурації в системі |
-
----
+| **Singleton** | `SettingsManager` | Гарантія єдиного джерела конфігурації в системі |, -
 
 ## 7. Візуальний інтерфейс та інтеграція компонентів (UI Showcase)
 
 Архітектура клієнтської частини базується на ергономічному UI з повною двомовною локалізацією:
 
 | Панель моніторингу (Dashboard) | Центр налаштувань (Settings) |
-| :---: | :---: |
+| :, -: | :, -: |
 | ![Dashboard](docs/screenshots/01_main_dashboard.png) | ![Settings](docs/screenshots/02_settings_dialog.png) |
 | *Керування життєвим циклом демона спостереження.* | *Конфігурація токенів, локалізації та правил.* |
 
 | Розумний конструктор фільтрів | Пряме додавання URL цілей |
-| :---: | :---: |
+| :, -: | :, -: |
 | ![Smart Builder](docs/screenshots/03_smart_category_builder.png) | ![Direct URL Rules](docs/screenshots/04_manual_url_addition.png) |
 | *Візуальне створення критеріїв пошуку.* | *Валідація та очищення цільових посилань.* |
 
@@ -227,12 +213,12 @@ sequenceDiagram
 ### Інтерфейс взаємодії у Telegram (Bot Operations Hub)
 
 | Центр керування та довідка (Desktop) | Інтерактивне керування категоріями |
-| :---: | :---: |
+| :, -: | :, -: |
 | ![Desktop Hub](docs/screenshots/06_telegram_desktop_hub.png) | ![Categories](docs/screenshots/07_telegram_category_management.png) |
 | *Інтерактивний довідковий центр `/help`.* | *Картковий моніторинг з діями Pause/Delete.* |
 
 | Мультивалютність та локалізація | Миттєва доставка фотоальбомів |
-| :---: | :---: |
+| :, -: | :, -: |
 | ![Settings](docs/screenshots/08_telegram_currency_language.png) | ![Alert Card](docs/screenshots/09_telegram_mobile_gallery.png) |
 | *Динамічне налаштування курсів НБУ та мови.* | *Потокова доставка медіагруп без навантаження на диск.* |
 

@@ -1,10 +1,8 @@
-# 🚀 Property Searcher 3 — Server Deployment & Operations Guide
+# 🚀 Property Searcher 3, Server Deployment & Operations Guide
 
 > **Author**: `kvolegi`  
 > **Target Environment**: Linux (Ubuntu 22.04 / 24.04 LTS, Debian 12, RHEL 9)  
-> **Minimal System Requirements**: 1 vCPU, 2 GB RAM, 10 GB SSD, OpenJDK 21 LTS or Docker 24+
-
----
+> **Minimal System Requirements**: 1 vCPU, 2 GB RAM, 10 GB SSD, OpenJDK 21 LTS or Docker 24+, -
 
 ## 📑 Зміст (Table of Contents)
 1. [Передумови та налаштування сервера](#1-передумови-та-налаштування-сервера)
@@ -14,9 +12,7 @@
 5. [Синхронізація таймзони (Критично для Night Silent Mode)](#5-синхронізація-таймзони-критично-для-night-silent-mode)
 6. [Моніторинг, Healthcheck та Логування](#6-моніторинг-healthcheck-та-логування)
 7. [Резервне копіювання БД (Automated Backup)](#7-резервне-копіювання-бд-automated-backup)
-8. [Zero-Downtime Оновлення (Deployment Script)](#8-zero-downtime-оновлення-deployment-script)
-
----
+8. [Zero-Downtime Оновлення (Deployment Script)](#8-zero-downtime-оновлення-deployment-script), -
 
 ## 1. Передумови та налаштування сервера
 
@@ -39,9 +35,7 @@ sudo ufw allow ssh
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw enable
-```
-
----
+```, -
 
 ## 2. Спосіб 1: Розгортання через Docker Compose (Рекомендований)
 
@@ -97,9 +91,7 @@ docker compose logs -f app
 ```bash
 docker compose down          # Зупинити
 docker compose restart app   # Перезапустити бекенд
-```
-
----
+```, -
 
 ## 3. Спосіб 2: Розгортання як нативний Linux Systemd Daemon
 
@@ -179,9 +171,7 @@ sudo systemctl status propertyseacher
 
 # Журнал логів у реальному часі
 journalctl -u propertyseacher -f
-```
-
----
+```, -
 
 ## 4. Конфігурація Nginx Reverse Proxy та Let's Encrypt SSL
 
@@ -220,9 +210,7 @@ sudo certbot --nginx -d api.yourdomain.com
 ```
 
 Тепер Swagger UI доступний за адресою:
-`https://api.yourdomain.com/swagger-ui/index.html`
-
----
+`https://api.yourdomain.com/swagger-ui/index.html`, -
 
 ## 5. Синхронізація таймзони (Критично для Night Silent Mode)
 
@@ -235,9 +223,7 @@ sudo timedatectl set-timezone Europe/Kyiv
 timedatectl status
 ```
 
-У логах час має збігатися з офіційним київським часом (EET/EEST).
-
----
+У логах час має збігатися з офіційним київським часом (EET/EEST)., -
 
 ## 6. Моніторинг, Healthcheck та Логування
 
@@ -259,9 +245,7 @@ timedatectl status
     notifempty
     copytruncate
 }
-```
-
----
+```, -
 
 ## 7. Резервне копіювання БД (Automated Backup)
 
@@ -284,9 +268,7 @@ sudo chmod +x /usr/local/bin/backup-property-db.sh
 Додайте в cron (`crontab -e`):
 ```text
 0 3 * * * /usr/local/bin/backup-property-db.sh > /dev/null 2>&1
-```
-
----
+```, -
 
 ## 8. Zero-Downtime Оновлення (Deployment Script)
 

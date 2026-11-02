@@ -3,9 +3,7 @@
 All notable changes to the **Property Searcher** platform will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
----
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)., -
 
 ## [3.0.0] - 2026-10-26
 
@@ -26,18 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Adaptive Sniping Engine**: Enhanced polling algorithm with token-bucket rate limiter mathematically capping global request rate below $2.3\text{ req/s}$ with $\pm 150\text{ ms}$ anti-fingerprint phase jitter.
 - **Deterministic Deduplication**: Fixed-capacity 50-slot circular ring buffer ensuring constant time $O(1)$ lookup and eviction with zero memory leaks.
 - **Bilingual Internationalization (i18n)**: Full key parity between Ukrainian (`uk`) and English (`en`) with dynamic runtime switching.
-- **Licensing**: Transitioned to strict Proprietary Source-Available and Evaluation License.
-
----
+- **Licensing**: Transitioned to strict Proprietary Source-Available and Evaluation License., -
 
 ## [2.1.2] - 2024-03-24
 
 ### Added
 - Cross-platform packaging support for macOS (`.app` bundle and universal `.jar`), Windows (`Run_Windows.bat`), and Linux (`Run_Linux.sh`).
 - High-resolution SVG and multi-size ICNS/ICO brand iconsets.
-- Automated error recovery and exponential backoff retry policies for flaky network connections.
-
----
+- Automated error recovery and exponential backoff retry policies for flaky network connections., -
 
 ## [2.0.0] - 2024-01-29
 
@@ -45,18 +39,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Multi-Source Scraping**: Integrated DOM.RIA real estate ingestion alongside OLX.
 - **Modernized GUI**: Migrated desktop interface to FlatLaf dark modern theme.
 - **Interactive Visual Category Builder**: Desktop modal dialog for geographic taxonomy and price parameter configuration.
-- Multi-threaded worker pool (`Executors.newCachedThreadPool`) for non-blocking Telegram media group dispatch.
-
----
+- Multi-threaded worker pool (`Executors.newCachedThreadPool`) for non-blocking Telegram media group dispatch., -
 
 ## [1.1.0] - 2021-12-30
 
 ### Added
 - Integration with TelegramBots SDK and BotFather registration handlers.
 - SendMediaGroup support for streaming multi-photo albums without local disk persistence.
-- HTML entity escaping and sanitization preventing Telegram markdown parser exceptions.
-
----
+- HTML entity escaping and sanitization preventing Telegram markdown parser exceptions., -
 
 ## [1.0.0] - 2021-12-11
 

@@ -1,26 +1,22 @@
 # Технічна специфікація: Property Searcher 3 🏢⚡
-> **Стандарт:** ISO/IEC/IEEE 29148:2018 (Systems and software engineering — Life cycle processes — Requirements engineering)  
+> **Стандарт:** ISO/IEC/IEEE 29148:2018 (Systems and software engineering, Life cycle processes, Requirements engineering)  
 > **Версія:** 3.0 (Фінальний реліз)  
 > **Статус:** Production-Ready  
 > **Головний інженер / Lead Architect:** `kvolegi`  
-> **Стек технологій:** Java 21 LTS, Spring Boot 3.3.4, Spring Data JPA, PostgreSQL 16, Flyway 10, Jsoup 1.17, TelegramBots 6.8, Maven 3.9, Docker 26+.
-
----
+> **Стек технологій:** Java 21 LTS, Spring Boot 3.3.4, Spring Data JPA, PostgreSQL 16, Flyway 10, Jsoup 1.17, TelegramBots 6.8, Maven 3.9, Docker 26+., -
 
 ## 1. Архітектурне призначення та бізнес-метрики (SLA / SLO)
 
 Система призначена для безперервного низьколатентного збору, валідації, аналізу та трансляції оголошень вторинного ринку нерухомості з публічних агрегаторів (OLX.ua, DOM.RIA.com) у канали Telegram рієлторів та інвесторів.
 
 | Показник (SLO) | Цільове значення | Механізм забезпечення |
-| :--- | :--- | :--- |
+| :, - | :, - | :, - |
 | **Detection Latency** | $\le 1.8\text{ c}$ після появи на CDN Edge | Реактивний polling-воркер з адаптивним темпом |
 | **Dispatch Latency** | $\le 500\text{ мс}$ (SendMediaGroup) | Асинхронний пул потоків `notificationExecutor` |
 | **False-Positive Spam Rate** | $0.00\%$ | 30-елементний Silent Baseline при старті |
 | **Duplicate Delivery Rate** | $0.00\%$ | 50-елементний кільцевий буфер $O(1)$ |
 | **HTTP 429 / WAF Block Rate** | $0.00\%$ | Adaptive Token-Bucket ($\le 2.20\text{ req/s}$) + Phase Staggering |
-| **Memory Footprint** | $\le 45\text{ MB}$ (Desktop) / $\le 250\text{ MB}$ (Server) | Zero-download CDN media streaming, G1GC |
-
----
+| **Memory Footprint** | $\le 45\text{ MB}$ (Desktop) / $\le 250\text{ MB}$ (Server) | Zero-download CDN media streaming, G1GC |, -
 
 ## 2. Модульна декомпозиція системи
 
@@ -60,10 +56,8 @@ Property Searcher 3/
     ├── PropertySeacher-Universal.jar # Універсальний виконуваний кросплатформний JAR
     ├── PropertySeacher-Enterprise-Server.jar # Серверний виконуваний JAR Spring Boot 3
     ├── Run_Windows.bat & Run_Linux.sh # Автоматичні скрипти запуску
-    └── assets/                     # Графічні іконсет-пакети (.icns, .ico, .png)
-```
-
----
+    └── assets/                     # Графічні іконсет-пакети (.icns.ico.png)
+```, -
 
 ## 3. Деталізація алгоритмів ядра (Core Algorithms)
 
@@ -74,7 +68,7 @@ Property Searcher 3/
   де:
   * $\tau_{\min} = 1800\text{ мс}$ (мінімальний інтервал для одиночного потоку);
   * $R_{\max} = 2.20\text{ req/s}$ (емпірично вивірений поріг безпеки від систем CloudFront WAF);
-  * $N$ — кількість активних категорій у `settings.txt`.
+  * $N$, кількість активних категорій у `settings.txt`.
 * **Фазовий зсув (Phase Staggering):**  
   Старт потоків розноситься у часі з кроком $\Delta t = \frac{\tau}{N}$. Це виключає збіг запитів у часі та запобігає імпульсним стрибкам трафіку.
 * **Anti-Fingerprint Jitter:**  
@@ -126,11 +120,9 @@ Property Searcher 3/
 * У проміжку `23:00 <= currentHour || currentHour < 07:00` метод `SendMediaGroup` отримує прапорець `setDisableNotification(true)`. Повідомлення з'являються в чаті без звуку та вібрації.
 
 ### 3.6. Event-Driven Architecture (EDA) & Bargain Anomaly Detection
-* **Шина подій (Spring Event Bus):** При перехопленні оголошення ядро публікує `PropertyDiscoveredEvent`, а при зміні вартості — `PriceChangedEvent`. Обробник `PropertyEventListener` працює асинхронно (`@Async`), виключаючи блокування циклу моніторингу через затримки Telegram Bot API.
+* **Шина подій (Spring Event Bus):** При перехопленні оголошення ядро публікує `PropertyDiscoveredEvent`, а при зміні вартості, `PriceChangedEvent`. Обробник `PropertyEventListener` працює асинхронно (`@Async`), виключаючи блокування циклу моніторингу через затримки Telegram Bot API.
 * **Bargain Detection Engine (Оцінка вигідності):** Метод `PriceAnalyticsService.evaluateBargain(...)` обчислює відносне відхилення ціни від бенчмарку категорії. Лістинги з дисконтом $\ge 20\%$ автоматично маркуються інвесторським бейджем `🔥 HOT DEAL (-XX.X%)`.
-* **Плугабельний Cache Strategy:** Інтерфейс `DeduplicationCacheStrategy` з реалізацією `InMemoryRingBufferCacheStrategy` (50 слотів, $O(1)$) дозволяє без змін у бізнес-коді підключати розподілений Redis у хмарних кластерах.
-
----
+* **Плугабельний Cache Strategy:** Інтерфейс `DeduplicationCacheStrategy` з реалізацією `InMemoryRingBufferCacheStrategy` (50 слотів, $O(1)$) дозволяє без змін у бізнес-коді підключати розподілений Redis у хмарних кластерах., -
 
 ## 4. Схема бази даних Enterprise-бекенду (ERD)
 
@@ -190,25 +182,21 @@ Property Searcher 3/
   │ currency                   │ VARCHAR(8) NOT NULL       │
   │ recorded_at                │ TIMESTAMP WITH TIME ZONE  │
   └────────────────────────────┴───────────────────────────┘
-```
-
----
+```, -
 
 ## 5. RESTful API Специфікація (Enterprise Backend)
 
 Усі ендпоінти повертають JSON і задокументовані через Swagger UI (`/swagger-ui.html`).
 
 | Метод | URL | Опис | Тіло запиту / Параметри | Статус відповіді |
-| :--- | :--- | :--- | :--- | :--- |
+| :, - | :, - | :, - | :, - | :, - |
 | `GET` | `/api/v1/properties` | Список знайдених об'єктів | `page`, `size`, `sortBy` | `200 OK` |
 | `GET` | `/api/v1/properties/{id}` | Деталі оголошення з фото | `id` (path) | `200 OK` / `404 Not Found` |
 | `GET` | `/api/v1/properties/{id}/history` | Історія зміни цін | `id` (path) | `200 OK` |
 | `POST` | `/api/v1/targets` | Створення нової цілі моніторингу | `{"name":"Київ 1к", "url":"..."}` | `201 Created` |
 | `DELETE` | `/api/v1/targets/{id}` | Видалення цілі моніторингу | `id` (path) | `204 No Content` |
-| `GET` | `/actuator/health` | Перевірка стану (Healthcheck) | — | `200 OK` (`UP` / `DOWN`) |
-| `GET` | `/actuator/metrics` | Системні метрики JVM та HikariCP | — | `200 OK` |
-
----
+| `GET` | `/actuator/health` | Перевірка стану (Healthcheck) |, | `200 OK` (`UP` / `DOWN`) |
+| `GET` | `/actuator/metrics` | Системні метрики JVM та HikariCP |, | `200 OK` |, -
 
 ## 6. Фізика мережевого кешування (CDN Edge Propagation Physics)
 
@@ -224,26 +212,24 @@ Property Searcher 3/
                 ▼
   [Публікація на CDN Edge Nodes (Akamai / Cloudflare)] <─── Фактична поява у вебі!
                 │
-                ▼ (1.8 секунди — детекція)
+                ▼ (1.8 секунди, детекція)
   [Property Searcher 3 Sniping Engine]
                 │
-                ▼ (300 мс — асинхронний SendMediaGroup)
+                ▼ (300 мс, асинхронний SendMediaGroup)
   [Telegram рієлтора: Фотоальбом 10 фото]
 ```
 
 > [!IMPORTANT]
 > Затримка 30–90 секунд між публікацією продавцем і появою на нодах CDN є фізичним процесом модерації на боці порталу.  
-> **Property Searcher фіксує оголошення у перші 1–2 секунди після його фактичної появи на публічних CDN-нодах.** Швидше за це не працює жодна система у світі, оскільки до виходу з модерації оголошення фізично не існує в публічній мережі Internet.
-
----
+> **Property Searcher фіксує оголошення у перші 1–2 секунди після його фактичної появи на публічних CDN-нодах.** Швидше за це не працює жодна система у світі, оскільки до виходу з модерації оголошення фізично не існує в публічній мережі Internet., -
 
 ## 7. Конфігураційна матриця (Settings & Environment Matrix)
 
 | Параметр | Файл | Тип | За замовчуванням | Опис |
-| :--- | :--- | :--- | :--- | :--- |
+| :, - | :, - | :, - | :, - | :, - |
 | `app.language` | `settings.txt` | String | `UA` | Мова інтерфейсу (`UA` або `EN`) |
 | `currency.mode` | `settings.txt` | String | `DUAL` | Режим відображення цін (`ORIGINAL`, `UAH`, `USD`, `DUAL`) |
-| `bot.token` | `settings.txt` / ENV | String | — | Токен Telegram Bot API |
+| `bot.token` | `settings.txt` / ENV | String |, | Токен Telegram Bot API |
 | `bot.username`| `settings.txt` / ENV | String | `@Property_Searcher_bot` | Юзернейм бота |
 | `SPRING_PROFILES_ACTIVE` | ENV | String | `prod` | Активний профіль Spring Boot |
 | `SPRING_DATASOURCE_URL` | ENV | String | `jdbc:postgresql://...` | Рядок підключення до БД |
