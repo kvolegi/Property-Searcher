@@ -4,7 +4,7 @@
 
 ---
 
-## 🚀 Стек технологій (Рівень Middle / Senior)
+## 🚀 Стек технологій
 * **Мова & Платформа:** Java 21 (Virtual Threads ready, Records, Pattern Matching)
 * **Фреймворк:** Spring Boot 3.3.4 (Data JPA, Web, Validation, Actuator)
 * **База даних:** PostgreSQL (Production) / H2 Embedded (Local/Testing), міграції Flyway
@@ -19,8 +19,8 @@
 ## 📁 Структура архітектури
 
 ```
-src/main/java/com/propertyseacher
-├── PropertySeacherApplication.java   # Головна точка входу Spring Boot
+src/main/java/com/propertysearcher
+├── PropertySearcherApplication.java  # Головна точка входу Spring Boot
 ├── api                               # REST API Controllers (Swagger / Frontend ready)
 │   └── PropertyController.java
 ├── config                            # Конфігурації (Telegram, Data Initializer, Beans)
@@ -55,7 +55,7 @@ src/main/java/com/propertyseacher
 
 ### Варіант 1: Локальний запуск (Maven)
 ```bash
-cd "план 2/property-seacher-backend"
+cd enterprise-backend
 mvn spring-boot:run
 ```
 * Додаток автоматично підхопить конфігурацію зі старого `settings.txt` (якщо він є) та перенесе цілі пошуку в базу даних.
@@ -64,7 +64,7 @@ mvn spring-boot:run
 
 ### Варіант 2: Запуск у Docker Compose (Full Stack)
 ```bash
-cd "план 2/property-seacher-backend"
+cd enterprise-backend
 docker compose up -d --build
 ```
 Запускає ізольований контейнер застосунку разом із повноцінною базою даних PostgreSQL 16.
