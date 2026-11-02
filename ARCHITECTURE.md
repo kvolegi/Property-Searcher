@@ -183,9 +183,9 @@ sequenceDiagram
 | **Strategy (Cache)**| `DeduplicationCacheStrategy`, `InMemoryRingBufferCacheStrategy` | Плугабельна стратегія дедуплікації (In-Memory Circular Buffer / Redis-Ready) |
 | **Domain Events (EDA)**| `PropertyDiscoveredEvent`, `PriceChangedEvent`, `PropertyEventListener` | Event-Driven Архітектура для повної ізоляції скрапінгу від диспетчеризації |
 | **Statistical Anomaly (Z-Score)**| `PriceAnalyticsService.evaluateStatisticalBargain()` | Розрахунок емпіричного z-score ($z = \frac{\mu - \text{price}}{\sigma}$) за історією цін для об'єктивного виявлення Hot Deals |
-| **Token-Bucket Rate Limiter** | `BotTG.calculateAdaptiveDelay()` | Запобігання блокуванням за IP та WAF CloudFront |
-| **Circuit Breaker / Fallback** | `CurrencyService` | 3-рівневий шлюз валют (NBU API $\to$ Local Cache $\to$ Built-in Constants) |
-| **Circular Buffer (FIFO)** | Внутрішній масив 50 слотів у `BotTG` | Робота зі стабільною пам'яттю $O(1)$ без витоків |
+| **Token-Bucket Rate Limiter** | `SearchAlgorithmEngine.calculateAdaptiveDelay()` | Запобігання блокуванням за IP та WAF CloudFront |
+| **Circuit Breaker / Fallback** | `CurrencyService` / `NbuCurrencyGateway` | 3-рівневий шлюз валют (NBU API $\to$ Local Cache $\to$ Built-in Constants) та Resilience4j Circuit Breaker |
+| **Circular Buffer (FIFO)** | `ArrayDeque` + `HashSet` (50 слотів) у `SearchAlgorithmEngine` | Робота зі стабільною пам'яттю $O(1)$ без витоків та швидка дедуплікація |
 | **Worker Pool (Producer-Consumer)**| `Executors.newCachedThreadPool()` | Асинхронне надсилання важких альбомів без зупинки парсингу |
 | **Observer** | Telegram API `onUpdateReceived()` | Реактивна обробка команд користувачів (`/language`, `/currency`) |
 | **Singleton** | `SettingsManager` | Гарантія єдиного джерела конфігурації в системі |, -
@@ -221,4 +221,83 @@ sequenceDiagram
 | :, -: | :, -: |
 | ![Settings](docs/screenshots/08_telegram_currency_language.png) | ![Alert Card](docs/screenshots/09_telegram_mobile_gallery.png) |
 | *Динамічне налаштування курсів НБУ та мови.* | *Потокова доставка медіагруп без навантаження на диск.* |
+
+---
+
+## 8. Стратегія протидії Anti-Bot та стійкість до Cloudflare WAF
+
+Парсинг сучасних дощок оголошень (OLX, DOM.RIA) вимагає суворої інженерної дисципліни через наявність багаторівневих систем захисту (Cloudflare, Akamai WAF, Imperva).
+
+### 8.1. Архітектура захисту від блокувань
+1. **Ротація профілів клієнта та Client Hints**:
+   * Традиційна підміна лише заголовка `User-Agent` миттєво виявляється сучасними алгоритмами через невідповідність заголовків другого покоління (`Client Hints`).
+   * Реалізовано пул профілів із синхронною підміною:
+     * `Sec-Ch-Ua`: `"Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"`
+     * `Sec-Ch-Ua-Platform`: `"macOS"`, `"Windows"`, `"Linux"`
+     * `Sec-Ch-Ua-Mobile`: `?0`
+     * Заголовки навігації: `Sec-Fetch-Dest: document`, `Sec-Fetch-Mode: navigate`, `Sec-Fetch-Site: none`, `Sec-Fetch-User: ?1`, `Upgrade-Insecure-Requests: 1`.
+2. **Детекція Managed Challenge та виняток `AntiBotChallengeException`**:
+   * При отриманні статусів `403 Forbidden`, `429 Too Many Requests` або `503 Service Unavailable`, або при наявності в тілі сторінки сигнатур Cloudflare Turnstile (`Just a moment...`, `cf-turnstile`, `cf-browser-verification`), парсер витягує ідентифікатор `cf-ray` і викидає типізований виняток `AntiBotChallengeException`.
+   * Це виключає «мовчазний збій» (silent failure), коли застосунок помилково вважав, що оголошень просто немає.
+3. **Resilience4j Circuit Breaker Failover**:
+   * `ScraperService` обгорнутий анотацією `@CircuitBreaker(name = "scraperEngine", fallbackMethod = "scrapeFallback")`.
+   * При сплеску `AntiBotChallengeException` запобіжник переходить у стан `OPEN`, запобігаючи масовому спаму та бану всього пулу IP-адрес.
+4. **Підтримка зовнішніх проксі (Residential Proxy Ready)**:
+   * Можливість прозорої конфігурації зовнішнього HTTP/SOCKS проксі через змінні оточення або Spring properties (`scraper.proxy.enabled`, `scraper.proxy.host`, `scraper.proxy.port`, `scraper.proxy.type`).
+
+---
+
+## 9. Модель конкурентності: Обґрунтування Virtual Threads (Java 21 Project Loom)
+
+У бекенд-сервісі `enterprise-backend` налаштовано кастомний пул виконання `applicationTaskExecutor` на базі віртуальних потоків:
+
+```java
+@Bean(name = "applicationTaskExecutor")
+public AsyncTaskExecutor applicationTaskExecutor() {
+    return new TaskExecutorAdapter(Executors.newVirtualThreadPerTaskExecutor());
+}
+```
+
+### Чому саме Virtual Threads для моніторингу нерухомості?
+* **Характер навантаження**: Застосунок є виключно **I/O-bound**. Скрапінг OLX, отримання котирувань НБУ, запити до Telegram Bot API та запис у PostgreSQL 95% процесорного часу проводять у стані очікування відповіді сокетів мережі.
+* **Порівняння з Platform Threads**:
+  * Платформний потік ОС споживає $\approx 1\text{ МБ}$ пам'яті під стек. Пул із 200 потоків вимагає $\approx 200\text{ МБ}$ виключно на службові структури ОС. При сплеску завдань виникає *Thread Starvation*.
+  * Віртуальні потоки в Project Loom важать лише декілька кілобайт у купі (Heap) і монтуються на невелику кількість потоків ядра (Carrier Threads, рівну числу CPU cores). Під час блокуючого I/O віртуальний потік «паркується», звільняючи Carrier Thread для обробки інших завдань без витрат ресурсів.
+
+---
+
+## 10. Модернізація десктопного клієнта: Безпека потоків, High-DPI та $O(1)$ буфер
+
+1. **Безпечна ініціалізація синглтона**:
+   * У ранніх версіях виклик `instance = this;` відбувався у першому рядку конструктора `BotGUI`, що призводило до антипатерну *Unsafe Publication*: сторонні потоки могли звернутися до `BotGUI.getInstance()` і отримати доступ до наполовину сконструйованого об'єкта з нульовими кнопками.
+   * Посилання тепер встановлюється строго останнім рядком після повного монтажу візуального дерева компонентів.
+2. **Адаптивні менеджери компонування (Cross-Platform High-DPI Scaling)**:
+   * Повністю ліквідовано абсолютне позиціонування `setLayout(null)` та фіксовані координати `setBounds()`.
+   * Головне вікно та діалогові вікна переведені на `BorderLayout`, `GridBagLayout` та `BoxLayout` з відступами `EmptyBorder`. Це гарантує бездоганне відображення без обрізання тексту як на Retina 2x дисплеях macOS, так і при системному масштабуванні Windows (125%, 150%, 175%).
+3. **Кільцевий буфер дедуплікації $O(1)$**:
+   * Ручний зсув масиву `String[50]` у циклі (`for (int i = 49; i > 0; i--) array[i] = array[i-1]`) замінено на комбінацію `ArrayDeque<String>` (фіксована місткість 50) та `HashSet<String>`.
+   * Перевірка дублікатів та додавання нового лістингу тепер виконуються строго за стабільний час $O(1)$, виключаючи деградацію продуктивності та витоки пам'яті.
+
+---
+
+## 11. Стандарти дистрибуції: Відмінність директорії `dist/` від `target/`
+
+| Параметр | Директорія `target/` (або `build/`) | Директорія `dist/` (Distribution) |
+| :--- | :--- | :--- |
+| **Призначення** | **Проміжні артефакти компіляції**: `.class` файли, тимчасові кеші компілятора javac, проміжні звіти тестів (Surefire reports). | **Фінальні бінарники для релізу**: готові для кінцевого користувача пакунки (`PropertySeacher-Universal.jar`, `PropertySeacher.app`, скрипти запуску). |
+| **Очищення** | Видаляється командою `mvn clean`. | Створюється скриптами релізу та містить підписані бінарні збірки. |
+| **Git-ігнорування** | Завжди знаходиться в `.gitignore`. | **Не комітиться в Git-історію**. За світовими стандартами великі бінарники розповсюджуються через **GitHub Releases** за допомогою CI/CD (GitHub Actions). |
+
+---
+
+## 12. Технічний бриф для архітектурного інтерв'ю (Engineering Q&A Deep Dive)
+
+### Питання 1: "Як ви обходите блокування Cloudflare / Akamai при парсингу українських маркетплейсів?"
+* **Відповідь:** *"Ми використовуємо дворівневу архітектуру (Tiered Scraping). На першому рівні (L1) виконуються швидкі запити за допомогою легковагого клієнта Jsoup, в якому емулюється повний набір Client Hints браузера (`Sec-Ch-Ua`, `Sec-Ch-Ua-Platform`, `Sec-Fetch-*`), а запити розподіляються алгоритмом Token Bucket із фазовим зсувом та джиттером. Якщо портал повертає Managed Challenge (JS-челендж або Turnstile), скрапер перехоплює його, реєструє `cf-ray` і викидає типізований `AntiBotChallengeException`. У цей момент Resilience4j Circuit Breaker розмикає коло, захищаючи IP від бану, та перемикає запит на L2 — чергу завдань для headless-браузерів (Playwright/Puppeteer) через пул ротованих резидентних проксі."*
+
+### Питання 2: "Чому ви обрали Virtual Threads (Project Loom) замість WebFlux або класичного ThreadPool у бекенді?"
+* **Відповідь:** *"Reactive WebFlux ускладнює стек: стек-трейси стають фрагментованими, складно використовувати традиційні блокуючі драйвери JDBC/JPA, а поріг входження в команду зростає. Традиційні платформені потоки занадто важкі (1 МБ на потік ОС), що при тисячах одночасних I/O очікувань веде до thread starvation. Virtual Threads у Java 21 дозволили нам зберегти простий, лінійний, імперативний стиль програмування з повною підтримкою Spring Data JPA та Mockito, отримавши при цьому практично безмежну масштабованість для I/O-bound задач (парсинг, HTTP API НБУ, відправка в Telegram)."*
+
+### Питання 3: "Як організовано дедуплікацію та захист від сплесків фальшивих сповіщень при перезапуску?"
+* **Відповідь:** *"При додаванні нового цільового пошуку активується режим Silent Baseline Ingestion: перші 30 лістингів індексуються у буфер без відправки повідомлень у Telegram. Сам буфер реалізований як кільцева структура з місткістю 50 елементів на базі `ArrayDeque` та `HashSet`. Це гарантує $O(1)$ час перевірки дублікатів та строге обмеження пам'яті. Додатково застосовується фільтрація спонсорованих рекламних блоків (TOP-оголошень) за DOM-селекторами, щоб унеможливити повторні спрацьовування на закріплені пости."*
 

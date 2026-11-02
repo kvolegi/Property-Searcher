@@ -17,10 +17,10 @@
   <a href="https://www.postgresql.org/"><img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 16" /></a>
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker&logoColor=white" alt="Docker" /></a>
   <a href="https://github.com/kvolegi/Property-Searcher/actions/workflows/ci.yml"><img src="https://github.com/kvolegi/Property-Searcher/actions/workflows/ci.yml/badge.svg" alt="CI / Build & Test" /></a>
-  <a href="#testing--quality-assurance"><img src="https://img.shields.io/badge/Tests-53%20Passed-brightgreen?logo=junit5&logoColor=white" alt="Tests: 53 Passed" /></a>
+  <a href="#testing--quality-assurance"><img src="https://img.shields.io/badge/Tests-64%20Passed-brightgreen?logo=junit5&logoColor=white" alt="Tests: 64 Passed" /></a>
   <a href="ARCHITECTURE.md"><img src="https://img.shields.io/badge/Architecture-Event--Driven-64CFCB" alt="Architecture" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Proprietary%20%2F%20View--Only-red.svg" alt="License: Proprietary / View-Only" /></a>
-  <a href="https://github.com/kvolegi/Property-Searcher/releases"><img src="https://img.shields.io/badge/Release-v3.0.0-blue.svg" alt="Latest Release" /></a>
+  <a href="https://github.com/kvolegi/Property-Searcher/releases"><img src="https://img.shields.io/badge/Release-v3.1.0-blue.svg" alt="Latest Release" /></a>
 </p>
 
 Property Searcher 3 is an automated property valuation and monitoring tool built for the Ukrainian secondary real estate market (OLX.ua and DOM.RIA). It continuously scans listings, detects newly posted properties with ~1.8-second latency, normalizes prices across currencies using official NBU exchange rates, and pushes instant photo galleries to Telegram channels and personal chats.
@@ -200,7 +200,7 @@ For complete production server setups (systemd daemons, Nginx reverse proxy with
 # Display available developer commands
 make help
 
-# Run the test suite (48 tests across desktop & backend)
+# Run the complete test suite (64 tests across desktop & backend)
 make test
 
 # Build both desktop and backend modules
@@ -215,32 +215,49 @@ make docker-up
 
 ---
 
+## 📦 Distribution & Release Standards (`dist/` vs `target/`)
+
+To adhere to enterprise packaging standards:
+* **`target/` (Temporary Build Artifacts)**: Contains intermediate compiler output (`.class` files), Maven Surefire test execution reports, and unpacked JAR layers. It is fully disposable and cleared by `mvn clean`.
+* **`dist/` (User Distribution Directory)**: Contains the production release packages ready for execution:
+  * `PropertySeacher-Universal.jar`: Self-contained executable JAR for all platforms.
+  * `PropertySeacher-Enterprise-Server.jar`: Standalone Spring Boot 3 enterprise service.
+  * `PropertySeacher.app`: Pre-packaged native macOS application bundle, signed with ad-hoc certificates.
+* **Why Binaries are Not Stored in Git**: Industry standard mandates that compiled binary files are excluded from Git to prevent repository bloat and merge conflicts. All distribution binaries are automatically built in CI/CD and published via **GitHub Releases**.
+
+---
+
 ## 🧪 Testing & Verification
 
 The test suite uses **JUnit 5 Jupiter** and **Mockito** to verify business logic, rate limits, parsing, and resilience:
 
 ```bash
-# Run desktop tests (40 tests)
+# Run desktop tests (46 tests)
 cd core-desktop && mvn clean test
 
-# Run backend tests (8 tests)
+# Run backend tests (18 tests)
 cd enterprise-backend && mvn clean test
 
 # Or run all tests together
 make test
 ```
 
-### Test Suite Structure (48 Tests, 100% Pass Rate)
+### Test Suite Structure (64 Tests, 100% Pass Rate)
 
 | Test Class | Focus | What It Verifies |
 | :--- | :--- | :--- |
 | **`CategoryCatalogTest`** (9 tests) | URL Generation & Taxonomies | Validates query URL formats across OLX and DOM.RIA, price bounds, owner-only toggles, and city taxonomy integrity. |
 | **`CurrencyServiceTest`** (9 tests) | Exchange Rates & Formatting | Verifies NBU live/fallback rate calculations (USD/EUR $\leftrightarrow$ UAH), regex price parsing across multiple notations, and dual-currency text output. |
 | **`DeduplicationAndSnipingTest`** (6 tests) | Rate Limiting & Deduplication | Confirms `calculateAdaptiveDelay()` keeps overall request frequency below $2.3\text{ req/s}$ for any target count $N \in [1, 50]$; verifies $O(1)$ ring buffer eviction and duplicate discarding. |
+| **`SearchAlgorithmEngineTest`** (6 tests) | Bounded Deduplication Buffer | Verifies bounded $O(1)$ FIFO capacity (50 items) using `ArrayDeque` and `HashSet`, ensuring zero duplicate alerts upon rapid stream ingest. |
 | **`I18nTest`** (13 tests) | Bilingual Localization | Checks 100% key parity between Ukrainian (`uk`) and English (`en`) dictionaries (no missing keys), thread-safe runtime switches, and locale fallbacks. |
 | **`SettingsManagerTest`** (3 tests) | Config Persistence | Uses `@TempDir` sandboxes to test round-trip file serialization, active/paused target states (`#OFF#`), and backwards compatibility. |
 | **`PropertyControllerTest`** (5 tests) | REST API & MockMvc | Tests Spring Boot 3 WebMvc endpoints: paginated listings (`200 OK`), target creation (`201 Created`), RFC 7807 global error handling (`400 Bad Request`), and metrics endpoints. |
-| **`TrackingServiceTest`** (3 tests) | Event Dispatch & Analytics | Tests Spring Boot 3 service layer with Mockito: event publishing, price change tracking, and deal score calculations. |
+| **`TrackingServiceTest`** (4 tests) | Event Dispatch & Analytics | Tests Spring Boot 3 service layer with Mockito: event publishing, price change tracking, and deal score calculations. |
+| **`TrackingPersistenceServiceTest`** (2 tests) | Transactional Persistence | Validates transaction boundaries, atomic saving of discovered properties, and event emission. |
+| **`NbuCurrencyGatewayTest`** (3 tests) | NBU Rate Ingestion | Validates currency retrieval, XML/JSON parsing, and local caching. |
+| **`NbuCurrencyGatewayWireMockTest`** (2 tests) | Mock HTTP Ingestion | Tests WireMock-based server failure simulation and circuit breaker trip points. |
+| **`NbuCurrencyResilienceSpringTest`** (1 test) | Full Spring Circuit Breaker | Full context verification of Resilience4j Circuit Breaker fallback to rate 41.50 during upstream outages. |
 
 ---
 
