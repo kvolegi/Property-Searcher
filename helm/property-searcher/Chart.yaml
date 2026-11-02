@@ -1,0 +1,18 @@
+apiVersion: v2
+name: property-searcher
+description: Production-grade Helm chart for Property-Searcher Enterprise Backend with Redis Cluster Locking and PostgreSQL
+type: application
+version: 1.0.0
+appVersion: "3.1.0"
+maintainers:
+  - name: kvolegi
+    url: https://github.com/kvolegi
+dependencies:
+  - name: redis
+    version: 18.14.0
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+  - name: postgresql
+    version: 14.2.0
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled

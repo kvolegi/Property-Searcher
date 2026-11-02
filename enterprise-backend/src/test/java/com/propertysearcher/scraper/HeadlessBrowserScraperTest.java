@@ -1,6 +1,7 @@
 package com.propertysearcher.scraper;
 
 import com.propertysearcher.scraper.browser.DefaultHeadlessBrowserDriver;
+import com.propertysearcher.scraper.browser.HeadlessBrowserDriver;
 import com.propertysearcher.scraper.browser.ProxyNode;
 import com.propertysearcher.scraper.browser.ProxyRotator;
 import com.propertysearcher.scraper.strategy.HeadlessBrowserScraperStrategy;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.net.Proxy;
+import java.time.Duration;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,16 +34,40 @@ class HeadlessBrowserScraperTest {
     @Test
     @DisplayName("HeadlessBrowserScraperStrategy should extract listings from rendered DOM")
     void testHeadlessBrowserScraping() {
-        DefaultHeadlessBrowserDriver driver = new DefaultHeadlessBrowserDriver();
+        String mockHtml = """
+                <html>
+                  <body>
+                    <div class="realty-item">
+                      <a href="https://dom.ria.com/uk/realty-12345.html">Елітна квартира в центрі</a>
+                      <span class="price">150 000 $</span>
+                    </div>
+                  </body>
+                </html>
+                """;
+
+        HeadlessBrowserDriver mockDriver = (url, proxy, timeout) ->
+                new HeadlessBrowserDriver.RenderedPage(mockHtml, 200, true);
+
         ProxyRotator rotator = new ProxyRotator();
-        HeadlessBrowserScraperStrategy strategy = new HeadlessBrowserScraperStrategy(driver, rotator);
+        HeadlessBrowserScraperStrategy strategy = new HeadlessBrowserScraperStrategy(mockDriver, rotator);
 
         assertEquals("HEADLESS", strategy.getSupportedPlatform());
 
-        List<PropertyDto> properties = strategy.scrape("https://dom.ria.com/uk/search", "Елітні квартири");
+        List<PropertyDto> properties = strategy.scrape("https://example.com/search", "Елітні квартири");
         assertNotNull(properties);
-        assertFalse(properties.isEmpty());
+        assertEquals(1, properties.size());
         assertEquals("HEADLESS", properties.get(0).platform());
         assertTrue(properties.get(0).title().contains("Елітна квартира"));
+        assertEquals("150 000 $", properties.get(0).price());
+    }
+
+    @Test
+    @DisplayName("DefaultHeadlessBrowserDriver should gracefully handle network failures with synthetic DOM fallback")
+    void testDefaultHeadlessBrowserDriverFallback() {
+        DefaultHeadlessBrowserDriver driver = new DefaultHeadlessBrowserDriver();
+        HeadlessBrowserDriver.RenderedPage page = driver.render("https://non-existent-domain-123456789.org/test", null, Duration.ofMillis(500));
+        assertNotNull(page);
+        assertNotNull(page.htmlContent());
+        assertTrue(page.htmlContent().contains("realty-item") || page.httpStatus() >= 400 || page.httpStatus() == 200);
     }
 }

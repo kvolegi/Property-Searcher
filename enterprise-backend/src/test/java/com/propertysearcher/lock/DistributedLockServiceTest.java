@@ -41,7 +41,7 @@ class DistributedLockServiceTest {
     @Test
     @DisplayName("RedisDistributedLockService should enforce SETNX mutual exclusion and automatic release")
     void testRedisLockLifecycle() {
-        RedisDistributedLockService redisLock = new RedisDistributedLockService();
+        RedisDistributedLockService redisLock = new RedisDistributedLockService(null);
         String resource = "cluster:target:456";
 
         boolean acquired = redisLock.tryAcquire(resource, Duration.ofSeconds(10));

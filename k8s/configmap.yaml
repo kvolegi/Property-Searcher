@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: property-searcher-config
+  namespace: property-searcher
+data:
+  SPRING_PROFILES_ACTIVE: "prod"
+  APP_LOCK_TYPE: "redis"
+  APP_CACHE_TYPE: "redis"
+  SPRING_DATA_REDIS_HOST: "redis-master.property-searcher.svc.cluster.local"
+  SPRING_DATA_REDIS_PORT: "6379"
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres-postgresql.property-searcher.svc.cluster.local:5432/property_db"
+  TELEGRAM_BOT_USERNAME: "Property_Searcher_bot"

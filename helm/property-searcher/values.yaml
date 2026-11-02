@@ -1,0 +1,78 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/kvolegi/property-searcher-backend
+  pullPolicy: IfNotPresent
+  tag: "3.1.0"
+
+serviceAccount:
+  create: true
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/path: "/actuator/prometheus"
+  prometheus.io/port: "8080"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  fsGroup: 10001
+
+securityContext:
+  readOnlyRootFilesystem: false
+  allowPrivilegeEscalation: false
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: api.property-searcher.kvolegi.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: property-searcher-tls
+      hosts:
+        - api.property-searcher.kvolegi.com
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 75
+  targetMemoryUtilizationPercentage: 80
+
+env:
+  SPRING_PROFILES_ACTIVE: "prod"
+  APP_LOCK_TYPE: "redis"
+  APP_CACHE_TYPE: "redis"
+  TELEGRAM_BOT_USERNAME: "Property_Searcher_bot"
+
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false
+
+postgresql:
+  enabled: true
+  auth:
+    database: property_db
+    username: postgres
+    password: postgres_secure_password

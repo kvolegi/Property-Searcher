@@ -1,6 +1,11 @@
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      timeout: 3000ms
   jpa:
     hibernate:
       ddl-auto: validate
@@ -10,3 +15,11 @@ spring:
   h2:
     console:
       enabled: false
+
+app:
+  lock:
+    type: ${APP_LOCK_TYPE:redis}
+  cache:
+    type: ${APP_CACHE_TYPE:redis}
+    redis:
+      ttl-hours: 48

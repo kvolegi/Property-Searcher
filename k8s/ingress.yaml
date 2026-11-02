@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: property-searcher-ingress
+  namespace: property-searcher
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "16m"
+spec:
+  tls:
+    - hosts:
+        - api.property-searcher.kvolegi.com
+      secretName: property-searcher-tls
+  rules:
+    - host: api.property-searcher.kvolegi.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: property-searcher-service
+                port:
+                  number: 80
