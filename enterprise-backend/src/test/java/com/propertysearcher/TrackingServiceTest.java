@@ -57,6 +57,9 @@ class TrackingServiceTest {
     @Mock
     private TrackingPersistenceService trackingPersistenceService;
 
+    @Mock
+    private com.propertysearcher.lock.DistributedLockService distributedLockService;
+
     @org.mockito.Spy
     private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -160,5 +163,28 @@ class TrackingServiceTest {
         assertTrue(valuation.zScore() >= 2.0, "Expected Z-Score >= 2.0 but was " + valuation.zScore());
         assertTrue(valuation.badge().contains("HOT DEAL"));
         assertTrue(valuation.analysisText().contains("standard deviations below"));
+    }
+
+    @Test
+    @DisplayName("Should skip tracking cycle when distributed lock cannot be acquired by this pod")
+    void shouldSkipTrackingCycleWhenLockBusy() {
+        when(distributedLockService.tryAcquire(any(), any())).thenReturn(false);
+
+        trackingService.trackAllTargets();
+
+        verify(searchTargetRepository, never()).findAllByActiveTrue();
+        verify(distributedLockService, never()).release(any());
+    }
+
+    @Test
+    @DisplayName("Should acquire and release distributed lock upon successful tracking cycle")
+    void shouldAcquireAndReleaseDistributedLock() {
+        when(distributedLockService.tryAcquire(any(), any())).thenReturn(true);
+        when(searchTargetRepository.findAllByActiveTrue()).thenReturn(List.of());
+
+        trackingService.trackAllTargets();
+
+        verify(distributedLockService, times(1)).tryAcquire(eq("lock:tracking:cycle"), any());
+        verify(distributedLockService, times(1)).release(eq("lock:tracking:cycle"));
     }
 }

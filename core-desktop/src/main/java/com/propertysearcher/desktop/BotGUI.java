@@ -26,6 +26,22 @@ public class BotGUI extends JFrame {
     private JButton startButton;
     private JButton stopButton;
     private JButton settingButton;
+    private JLabel mainTitleLabel;
+    private JLabel mainSubtitleLabel;
+    private JLabel authorLabel;
+
+    private static SettingsManager.UiThemeMode currentTheme = SettingsManager.getUiThemePreference();
+
+    public static Font getAppFont(int style, int size) {
+        if (currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO) {
+            return new Font("Segoe UI", style, size);
+        }
+        return new Font("Comic Sans MS", style, size);
+    }
+
+    public static String getAppFontFamily() {
+        return currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO ? "Segoe UI, sans-serif" : "Comic Sans MS, cursive";
+    }
 
     // Palette
     private static final Color COLOR_BG = new Color(182, 234, 233);
@@ -80,7 +96,7 @@ public class BotGUI extends JFrame {
         mainPanel.setBorder(new EmptyBorder(20, 30, 20, 30));
 
         JLabel prompt = new JLabel("<html><center><b>Welcome to Property Searcher 3!</b><br>Please choose your language / Оберіть мову інтерфейсу:</center></html>", SwingConstants.CENTER);
-        prompt.setFont(new Font("Comic Sans MS", Font.PLAIN, 13));
+        prompt.setFont(getAppFont(Font.PLAIN, 13));
         prompt.setForeground(new Color(27, 101, 99));
 
         JPanel buttonsPanel = new JPanel();
@@ -191,17 +207,17 @@ public class BotGUI extends JFrame {
         JPanel titleBlock = new JPanel(new BorderLayout());
         titleBlock.setBackground(COLOR_BG);
 
-        JLabel titleLabel = new JLabel("Property Searcher");
-        titleLabel.setFont(new Font("Comic Sans MS", Font.PLAIN, 26));
+        mainTitleLabel = new JLabel("Property Searcher");
+        mainTitleLabel.setFont(getAppFont(Font.PLAIN, 26));
 
-        JLabel OlxLabel = new JLabel("olx / domria");
-        OlxLabel.setFont(new Font("Comic Sans MS", Font.PLAIN, 12));
-        OlxLabel.setForeground(new Color(27, 101, 99));
-        OlxLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-        OlxLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
+        mainSubtitleLabel = new JLabel("olx / domria");
+        mainSubtitleLabel.setFont(getAppFont(Font.PLAIN, 12));
+        mainSubtitleLabel.setForeground(new Color(27, 101, 99));
+        mainSubtitleLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        mainSubtitleLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
 
-        titleBlock.add(titleLabel, BorderLayout.NORTH);
-        titleBlock.add(OlxLabel, BorderLayout.SOUTH);
+        titleBlock.add(mainTitleLabel, BorderLayout.NORTH);
+        titleBlock.add(mainSubtitleLabel, BorderLayout.SOUTH);
         topPanel.add(titleBlock);
 
         // Center Buttons
@@ -229,12 +245,12 @@ public class BotGUI extends JFrame {
         settingButton = createButton(I18n.get("btn.settings"), 0, 0, 135, 35);
         settingButton.addActionListener(e -> openSettingsDialog());
 
-        JLabel kvolegiLabel = new JLabel("@kvolegi");
-        kvolegiLabel.setFont(new Font("Comic Sans MS", Font.PLAIN, 12));
-        kvolegiLabel.setForeground(new Color(27, 101, 99));
+        authorLabel = new JLabel("@kvolegi");
+        authorLabel.setFont(getAppFont(Font.PLAIN, 12));
+        authorLabel.setForeground(new Color(27, 101, 99));
 
         bottomPanel.add(settingButton, BorderLayout.WEST);
-        bottomPanel.add(kvolegiLabel, BorderLayout.EAST);
+        bottomPanel.add(authorLabel, BorderLayout.EAST);
 
         contentPane.add(topPanel, BorderLayout.NORTH);
         contentPane.add(centerPanel, BorderLayout.CENTER);
@@ -248,7 +264,7 @@ public class BotGUI extends JFrame {
     public static JButton createButton(String text, int x, int y, int width, int height) {
         JButton button = new JButton(text);
         button.setBackground(COLOR_BTN);
-        button.setFont(new Font("Comic Sans MS", Font.PLAIN, 15));
+        button.setFont(getAppFont(Font.PLAIN, 15));
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
@@ -328,9 +344,10 @@ public class BotGUI extends JFrame {
         JButton categoryButton = createButton(I18n.get("gui.category_btn"), 0, 0, 300, 48);
         JButton instructionButton = createButton(I18n.get("gui.instruction_btn"), 0, 0, 300, 48);
         JButton langButton = createButton(I18n.get("gui.lang_btn"), 0, 0, 300, 48);
+        JButton themeButton = createButton(I18n.get("gui.theme_btn"), 0, 0, 300, 48);
         JButton backButton = createButton(I18n.get("gui.back_btn"), 0, 0, 300, 45);
 
-        for (JButton btn : List.of(tokenButton, categoryButton, instructionButton, langButton, backButton)) {
+        for (JButton btn : List.of(tokenButton, categoryButton, instructionButton, langButton, themeButton, backButton)) {
             btn.setMaximumSize(new Dimension(320, 48));
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
         }
@@ -339,6 +356,7 @@ public class BotGUI extends JFrame {
         categoryButton.addActionListener(e -> openCategoryDialog(settingsDialog));
         instructionButton.addActionListener(e -> openInstructionDialog(settingsDialog));
         langButton.addActionListener(e -> showLanguageSelectionDialog(false, settingsDialog));
+        themeButton.addActionListener(e -> showThemeSelectionDialog(settingsDialog));
         backButton.addActionListener(e -> settingsDialog.dispose());
 
         content.add(tokenButton);
@@ -348,14 +366,88 @@ public class BotGUI extends JFrame {
         content.add(instructionButton);
         content.add(Box.createVerticalStrut(10));
         content.add(langButton);
+        content.add(Box.createVerticalStrut(10));
+        content.add(themeButton);
         content.add(Box.createVerticalStrut(16));
         content.add(backButton);
 
         settingsDialog.setContentPane(content);
         settingsDialog.pack();
-        settingsDialog.setMinimumSize(new Dimension(380, 380));
+        settingsDialog.setMinimumSize(new Dimension(380, 420));
         settingsDialog.setLocationRelativeTo(this);
         settingsDialog.setVisible(true);
+    }
+
+    private void showThemeSelectionDialog(JDialog parentSettingsDialog) {
+        JDialog dlg = new JDialog(this, I18n.get("theme.dialog_title"), true);
+        dlg.getContentPane().setBackground(COLOR_BG);
+        dlg.setResizable(false);
+
+        JPanel mainPanel = new JPanel(new BorderLayout(15, 15));
+        mainPanel.setBackground(COLOR_BG);
+        mainPanel.setBorder(new EmptyBorder(20, 30, 20, 30));
+
+        JLabel prompt = new JLabel(I18n.get("theme.prompt"), SwingConstants.CENTER);
+        prompt.setFont(getAppFont(Font.PLAIN, 13));
+        prompt.setForeground(new Color(27, 101, 99));
+
+        JPanel buttonsPanel = new JPanel();
+        buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
+        buttonsPanel.setBackground(COLOR_BG);
+
+        JButton comicBtn = createButton(I18n.get("theme.comic_sans"), 0, 0, 320, 48);
+        comicBtn.setMaximumSize(new Dimension(340, 48));
+        comicBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JButton corporateBtn = createButton(I18n.get("theme.corporate"), 0, 0, 320, 48);
+        corporateBtn.setMaximumSize(new Dimension(340, 48));
+        corporateBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        comicBtn.addActionListener(e -> {
+            applyTheme(SettingsManager.UiThemeMode.COMIC_SANS);
+            dlg.dispose();
+            if (parentSettingsDialog != null) {
+                parentSettingsDialog.dispose();
+                openSettingsDialog();
+            }
+        });
+
+        corporateBtn.addActionListener(e -> {
+            applyTheme(SettingsManager.UiThemeMode.CORPORATE_PRO);
+            dlg.dispose();
+            if (parentSettingsDialog != null) {
+                parentSettingsDialog.dispose();
+                openSettingsDialog();
+            }
+        });
+
+        buttonsPanel.add(comicBtn);
+        buttonsPanel.add(Box.createVerticalStrut(12));
+        buttonsPanel.add(corporateBtn);
+
+        mainPanel.add(prompt, BorderLayout.NORTH);
+        mainPanel.add(buttonsPanel, BorderLayout.CENTER);
+
+        dlg.setContentPane(mainPanel);
+        dlg.pack();
+        dlg.setMinimumSize(new Dimension(460, 240));
+        dlg.setLocationRelativeTo(this);
+        dlg.setVisible(true);
+    }
+
+    public void applyTheme(SettingsManager.UiThemeMode mode) {
+        currentTheme = mode != null ? mode : SettingsManager.UiThemeMode.COMIC_SANS;
+        SettingsManager.setUiThemePreference(currentTheme);
+
+        if (mainTitleLabel != null) mainTitleLabel.setFont(getAppFont(Font.PLAIN, 26));
+        if (mainSubtitleLabel != null) mainSubtitleLabel.setFont(getAppFont(Font.PLAIN, 12));
+        if (authorLabel != null) authorLabel.setFont(getAppFont(Font.PLAIN, 12));
+        if (startButton != null) startButton.setFont(getAppFont(Font.PLAIN, 15));
+        if (stopButton != null) stopButton.setFont(getAppFont(Font.PLAIN, 15));
+        if (settingButton != null) settingButton.setFont(getAppFont(Font.PLAIN, 15));
+
+        SwingUtilities.updateComponentTreeUI(this);
+        repaint();
     }
 
     private void openTokenNameDialog(JDialog parent) {
@@ -372,7 +464,7 @@ public class BotGUI extends JFrame {
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        Font font = new Font("Comic Sans MS", Font.PLAIN, 15);
+        Font font = getAppFont(Font.PLAIN, 15);
 
         JLabel nameLabel = new JLabel(I18n.get("gui.bot_name_lbl"));
         nameLabel.setFont(font);
@@ -436,9 +528,9 @@ public class BotGUI extends JFrame {
             setLayout(new BorderLayout(4, 2));
             setOpaque(true);
 
-            Font fontTitle = new Font("Comic Sans MS", Font.BOLD, 14);
-            Font fontBadge = new Font("Comic Sans MS", Font.BOLD, 11);
-            Font fontUrl = new Font("Comic Sans MS", Font.PLAIN, 11);
+            Font fontTitle = getAppFont(Font.BOLD, 14);
+            Font fontBadge = getAppFont(Font.BOLD, 11);
+            Font fontUrl = getAppFont(Font.PLAIN, 11);
 
             titleLabel.setFont(fontTitle);
             badgeStatus.setFont(fontBadge);
@@ -532,11 +624,11 @@ public class BotGUI extends JFrame {
         headerPanel.setBorder(new EmptyBorder(12, 16, 6, 16));
 
         JLabel headerTitle = new JLabel(I18n.get("cat.header_title"));
-        headerTitle.setFont(new Font("Comic Sans MS", Font.BOLD, 16));
+        headerTitle.setFont(getAppFont(Font.BOLD, 16));
         headerTitle.setForeground(new Color(27, 101, 99));
 
         JLabel countBadge = new JLabel(getCountText());
-        countBadge.setFont(new Font("Comic Sans MS", Font.BOLD, 12));
+        countBadge.setFont(getAppFont(Font.BOLD, 12));
         countBadge.setForeground(new Color(27, 101, 99));
 
         headerPanel.add(headerTitle, BorderLayout.WEST);
@@ -561,10 +653,10 @@ public class BotGUI extends JFrame {
         topActionBar.setBackground(COLOR_BG);
 
         JButton smartAddBtn = createButton(I18n.get("cat.smart_builder_btn"), 0, 0, 230, 40);
-        smartAddBtn.setFont(new Font("Comic Sans MS", Font.BOLD, 13));
+        smartAddBtn.setFont(getAppFont(Font.BOLD, 13));
 
         JButton manualAddBtn = createButton(I18n.get("cat.manual_add_btn"), 0, 0, 210, 40);
-        manualAddBtn.setFont(new Font("Comic Sans MS", Font.BOLD, 13));
+        manualAddBtn.setFont(getAppFont(Font.BOLD, 13));
 
         topActionBar.add(smartAddBtn);
         topActionBar.add(manualAddBtn);
@@ -683,8 +775,8 @@ public class BotGUI extends JFrame {
         p.setBackground(COLOR_BG);
         p.setBorder(new EmptyBorder(15, 20, 15, 20));
 
-        Font fontHead = new Font("Comic Sans MS", Font.BOLD, 14);
-        Font fontInput = new Font("Comic Sans MS", Font.PLAIN, 13);
+        Font fontHead = getAppFont(Font.BOLD, 14);
+        Font fontInput = getAppFont(Font.PLAIN, 13);
 
         JLabel titleLbl = new JLabel(I18n.get("manual.name_lbl"));
         titleLbl.setFont(fontHead);
@@ -792,12 +884,12 @@ public class BotGUI extends JFrame {
         }
 
         JLabel titleLabel = new JLabel("Property Searcher — " + I18n.get("ins.dialog_title"));
-        titleLabel.setFont(new Font("Comic Sans MS", Font.BOLD, 18));
+        titleLabel.setFont(getAppFont(Font.BOLD, 18));
         titleLabel.setForeground(new Color(27, 101, 99));
         headerPanel.add(titleLabel);
 
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.setFont(new Font("Comic Sans MS", Font.BOLD, 13));
+        tabbedPane.setFont(getAppFont(Font.BOLD, 13));
         tabbedPane.setBackground(COLOR_BG);
 
         JPanel botFatherTab = new JPanel(new BorderLayout(10, 10));
@@ -809,10 +901,10 @@ public class BotGUI extends JFrame {
         guideBox.setBackground(COLOR_BG);
 
         JLabel stepTitle = new JLabel(I18n.get("ins.botfather_step_title"));
-        stepTitle.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
+        stepTitle.setFont(getAppFont(Font.BOLD, 14));
         stepTitle.setForeground(new Color(27, 101, 99));
 
-        JLabel stepDesc = new JLabel("<html><body style='width: 580px; font-family: 'Comic Sans MS'; font-size: 11px;'>" +
+        JLabel stepDesc = new JLabel("<html><body style='width: 580px; font-family: " + getAppFontFamily() + "; font-size: 11px;'>" +
                 I18n.get("ins.botfather_step_desc") + "</body></html>");
 
         guideBox.add(stepTitle);
@@ -820,7 +912,7 @@ public class BotGUI extends JFrame {
         guideBox.add(stepDesc);
 
         JTextArea codeArea = new JTextArea(I18n.get("ins.botfather_commands"));
-        codeArea.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
+        codeArea.setFont(getAppFont(Font.BOLD, 14));
         codeArea.setBackground(new Color(230, 248, 247));
         codeArea.setForeground(new Color(27, 101, 99));
         codeArea.setEditable(false);
@@ -833,7 +925,7 @@ public class BotGUI extends JFrame {
         codeScroll.setBorder(null);
 
         JButton copyCommandsButton = createButton(I18n.get("ins.copy_btn"), 0, 0, 380, 42);
-        copyCommandsButton.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
+        copyCommandsButton.setFont(getAppFont(Font.BOLD, 14));
         copyCommandsButton.addActionListener(e -> {
             String botFatherCommands = I18n.get("ins.botfather_commands");
 

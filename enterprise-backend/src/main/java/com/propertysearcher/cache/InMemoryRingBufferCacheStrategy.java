@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Thread-safe 50-slot in-memory circular buffer strategy with true O(1) containment checks
@@ -52,6 +53,7 @@ public class InMemoryRingBufferCacheStrategy implements DeduplicationCacheStrate
     public static class RingBuffer {
         private final String[] elements;
         private final Set<String> lookupSet;
+        private final ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
         private int head = 0;
         private int count = 0;
 
@@ -60,30 +62,46 @@ public class InMemoryRingBufferCacheStrategy implements DeduplicationCacheStrate
             this.lookupSet = new HashSet<>(capacity * 2);
         }
 
-        public synchronized boolean contains(String item) {
-            return item != null && lookupSet.contains(item);
+        public boolean contains(String item) {
+            if (item == null) return false;
+            rwLock.readLock().lock();
+            try {
+                return lookupSet.contains(item);
+            } finally {
+                rwLock.readLock().unlock();
+            }
         }
 
-        public synchronized void add(String item) {
+        public void add(String item) {
             if (item == null || item.isBlank()) return;
-            if (lookupSet.contains(item)) {
-                return;
-            }
-            if (count == elements.length) {
-                String oldest = elements[head];
-                if (oldest != null) {
-                    lookupSet.remove(oldest);
+            rwLock.writeLock().lock();
+            try {
+                if (lookupSet.contains(item)) {
+                    return;
                 }
-            } else {
-                count++;
+                if (count == elements.length) {
+                    String oldest = elements[head];
+                    if (oldest != null) {
+                        lookupSet.remove(oldest);
+                    }
+                } else {
+                    count++;
+                }
+                elements[head] = item;
+                lookupSet.add(item);
+                head = (head + 1) % elements.length;
+            } finally {
+                rwLock.writeLock().unlock();
             }
-            elements[head] = item;
-            lookupSet.add(item);
-            head = (head + 1) % elements.length;
         }
 
-        public synchronized int size() {
-            return count;
+        public int size() {
+            rwLock.readLock().lock();
+            try {
+                return count;
+            } finally {
+                rwLock.readLock().unlock();
+            }
         }
     }
 }

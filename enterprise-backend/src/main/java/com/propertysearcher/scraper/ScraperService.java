@@ -1,5 +1,7 @@
 package com.propertysearcher.scraper;
 
+import com.propertysearcher.scraper.exception.AntiBotChallengeException;
+import com.propertysearcher.scraper.strategy.HeadlessBrowserScraperStrategy;
 import com.propertysearcher.scraper.strategy.ScraperStrategy;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +43,18 @@ public class ScraperService {
         if (strategy == null) {
             return List.of();
         }
-        return strategy.scrape(url, category);
+
+        try {
+            return strategy.scrape(url, category);
+        } catch (AntiBotChallengeException challengeException) {
+            log.warn("[ANTI_BOT_ESCALATION] Primary scraper encountered barrier ({}: {}). Escalating to Headless Browser Automation...",
+                    challengeException.getStatusCode(), challengeException.getDetectedChallenge());
+            ScraperStrategy headless = strategies.get(HeadlessBrowserScraperStrategy.PLATFORM);
+            if (headless != null) {
+                return headless.scrape(url, category);
+            }
+            throw challengeException;
+        }
     }
 
     public List<PropertyDto> scrapeFallback(String platform, String url, String category, Throwable t) {

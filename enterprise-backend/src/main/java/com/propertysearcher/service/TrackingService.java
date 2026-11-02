@@ -7,6 +7,7 @@ import com.propertysearcher.domain.repository.PriceHistoryRepository;
 import com.propertysearcher.domain.repository.SearchTargetRepository;
 import com.propertysearcher.event.PropertyDiscoveredEvent;
 import com.propertysearcher.event.TriggerScanEvent;
+import com.propertysearcher.lock.DistributedLockService;
 import com.propertysearcher.scraper.PropertyDto;
 import com.propertysearcher.scraper.ScraperService;
 import lombok.Getter;
@@ -19,12 +20,16 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.*;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TrackingService {
+
+    private static final String TRACKING_CYCLE_LOCK_KEY = "lock:tracking:cycle";
+    private static final Duration LOCK_LEASE_TIME = Duration.ofMinutes(2);
 
     public enum TrackingMode {
         LIVE_SNIPE,          // In-memory 50-slot circular buffer (sub-2s sniping, like core-desktop)
@@ -38,8 +43,7 @@ public class TrackingService {
     private final DeduplicationCacheStrategy deduplicationCacheStrategy;
     private final ApplicationEventPublisher eventPublisher;
     private final TrackingPersistenceService trackingPersistenceService;
-
-    private final java.util.concurrent.atomic.AtomicBoolean isScanInProgress = new java.util.concurrent.atomic.AtomicBoolean(false);
+    private final DistributedLockService distributedLockService;
 
     @Getter
     @Setter
@@ -57,8 +61,8 @@ public class TrackingService {
 
     @Scheduled(fixedDelayString = "${app.tracker.delay-ms:10000}", initialDelay = 5000)
     public void trackAllTargets() {
-        if (!isScanInProgress.compareAndSet(false, true)) {
-            log.warn("[CONCURRENCY_GUARD] Tracking cycle already in progress, skipping overlapping execution.");
+        if (!distributedLockService.tryAcquire(TRACKING_CYCLE_LOCK_KEY, LOCK_LEASE_TIME)) {
+            log.warn("[CONCURRENCY_GUARD] Tracking cycle already in progress across cluster, skipping overlapping execution.");
             return;
         }
         try {
@@ -74,7 +78,7 @@ public class TrackingService {
             }
             log.info("Completed tracking cycle.");
         } finally {
-            isScanInProgress.set(false);
+            distributedLockService.release(TRACKING_CYCLE_LOCK_KEY);
         }
     }
 

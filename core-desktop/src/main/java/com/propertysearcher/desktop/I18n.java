@@ -47,6 +47,11 @@ public class I18n {
         UA_MAP.put("gui.category_btn", "Категорії пошуку");
         UA_MAP.put("gui.instruction_btn", "Інструкція та BotFather");
         UA_MAP.put("gui.lang_btn", "🌐 Мова / Language (UA / EN)");
+        UA_MAP.put("gui.theme_btn", "🎨 Стиль оформлення (Comic Sans / Pro)");
+        UA_MAP.put("theme.dialog_title", "Стиль оформлення інтерфейсу");
+        UA_MAP.put("theme.prompt", "<html><center><b>Оберіть стиль оформлення:</b><br>Фірмовий Comic Sans або сучасний корпоративний Clean UI</center></html>");
+        UA_MAP.put("theme.comic_sans", "🎨 Фірмовий Comic Sans (Classic / Signature)");
+        UA_MAP.put("theme.corporate", "💼 Corporate Pro (Clean Inter / Segoe UI)");
         UA_MAP.put("gui.back_btn", "Назад");
         UA_MAP.put("gui.save_btn", "Зберегти");
         UA_MAP.put("gui.bot_name_lbl", "Назва бота:");
@@ -167,6 +172,11 @@ public class I18n {
         EN_MAP.put("gui.category_btn", "Search Categories");
         EN_MAP.put("gui.instruction_btn", "Manual & BotFather");
         EN_MAP.put("gui.lang_btn", "🌐 Language / Мова (UA / EN)");
+        EN_MAP.put("gui.theme_btn", "🎨 UI Theme Style (Comic Sans / Pro)");
+        EN_MAP.put("theme.dialog_title", "UI Style & Theme Selection");
+        EN_MAP.put("theme.prompt", "<html><center><b>Choose UI Typography & Style:</b><br>Classic Signature Comic Sans or Modern Corporate Clean UI</center></html>");
+        EN_MAP.put("theme.comic_sans", "🎨 Signature Comic Sans (Classic / Signature)");
+        EN_MAP.put("theme.corporate", "💼 Corporate Pro (Clean Inter / Segoe UI)");
         EN_MAP.put("gui.back_btn", "Back");
         EN_MAP.put("gui.save_btn", "Save");
         EN_MAP.put("gui.bot_name_lbl", "Bot Name:");

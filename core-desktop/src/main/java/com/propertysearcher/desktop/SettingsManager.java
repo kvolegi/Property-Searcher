@@ -180,6 +180,74 @@ public class SettingsManager {
         } catch (Exception ignored) {}
     }
 
+    public enum UiThemeMode {
+        COMIC_SANS("Comic Sans MS"),
+        CORPORATE_PRO("Segoe UI");
+
+        public final String fontName;
+
+        UiThemeMode(String fontName) {
+            this.fontName = fontName;
+        }
+
+        public static UiThemeMode fromString(String val) {
+            if (val == null) return COMIC_SANS;
+            if ("CORPORATE_PRO".equalsIgnoreCase(val) || "CORPORATE".equalsIgnoreCase(val) || "MODERN".equalsIgnoreCase(val)) {
+                return CORPORATE_PRO;
+            }
+            return COMIC_SANS;
+        }
+    }
+
+    public static UiThemeMode getUiThemePreference() {
+        File file = getSettingsFile();
+        if (file.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = line.trim();
+                    if (line.startsWith("UI_THEME=") || line.startsWith("UI_THEME:")) {
+                        String val = line.substring(9).trim();
+                        return UiThemeMode.fromString(val);
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+        return UiThemeMode.COMIC_SANS;
+    }
+
+    public static void setUiThemePreference(UiThemeMode mode) {
+        if (mode == null) mode = UiThemeMode.COMIC_SANS;
+        File file = getSettingsFile();
+        List<String> lines = new ArrayList<>();
+        boolean replaced = false;
+
+        if (file.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.trim().startsWith("UI_THEME=") || line.trim().startsWith("UI_THEME:")) {
+                        lines.add("UI_THEME=" + mode.name());
+                        replaced = true;
+                    } else {
+                        lines.add(line);
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+
+        if (!replaced) {
+            int insertIdx = Math.min(2, lines.size());
+            lines.add(insertIdx, "UI_THEME=" + mode.name());
+        }
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, false))) {
+            for (String l : lines) {
+                writer.write(l + "\n");
+            }
+        } catch (Exception ignored) {}
+    }
+
     public static boolean isLanguageConfigured() {
         File file = getSettingsFile();
         if (!file.exists()) return false;
@@ -300,7 +368,8 @@ public class SettingsManager {
                 writer.write((botName != null ? botName : "") + "\n");
                 writer.write((botToken != null ? botToken : "") + "\n");
                 writer.write("LANGUAGE=" + I18n.getLanguage().name() + "\n");
-                writer.write("CURRENCY=" + getCurrencyPreference().name() + "\n\n");
+                writer.write("CURRENCY=" + getCurrencyPreference().name() + "\n");
+                writer.write("UI_THEME=" + getUiThemePreference().name() + "\n\n");
 
                 for (CategoryEntry c : categories) {
                     if (c.active) {
