@@ -56,29 +56,41 @@ public class BotGUI extends JFrame {
 
     // Palette - dynamic based on active theme
     public static Color COLOR_BG = new Color(182, 234, 233);
-    public static Color COLOR_BTN = new Color(133, 221, 218);
-    public static Color COLOR_ACCENT = new Color(100, 207, 203);
+    public static Color COLOR_BTN = new Color(182, 234, 233);
+    public static Color COLOR_ACCENT = new Color(160, 226, 225);
     public static Color COLOR_FIELD_BG = new Color(210, 245, 244);
     public static Color COLOR_CARD_BG = new Color(248, 253, 253);
-    public static Color COLOR_TEXT = new Color(27, 101, 99);
+    public static Color COLOR_TEXT = Color.BLACK;
+
+    public static String getThemeBgHex() {
+        return currentColorTheme == SettingsManager.UiColorTheme.GRAY ? "#CCD0D6" : "#B6EAE9";
+    }
+
+    public static String getThemeTextHex() {
+        return currentColorTheme == SettingsManager.UiColorTheme.GRAY ? "#000000" : "#1B6563";
+    }
+
+    public static String getThemeCardBgHex() {
+        return currentColorTheme == SettingsManager.UiColorTheme.GRAY ? "#E4E8EE" : "#D2F5F4";
+    }
 
     public static void syncThemeColors() {
         if (currentColorTheme == SettingsManager.UiColorTheme.GRAY) {
-            // Elegant modern gray where ALL text is solid black
+            // Elegant modern gray: buttons match window background, text is solid black
             COLOR_BG = new Color(204, 208, 214);
-            COLOR_BTN = new Color(228, 232, 238);
+            COLOR_BTN = new Color(204, 208, 214);
             COLOR_ACCENT = new Color(185, 190, 198);
             COLOR_FIELD_BG = new Color(245, 246, 248);
-            COLOR_CARD_BG = new Color(240, 242, 246);
+            COLOR_CARD_BG = new Color(228, 232, 238);
             COLOR_TEXT = Color.BLACK;
         } else {
-            // Restored signature mint style
+            // Restored signature mint style: buttons match window background, black text
             COLOR_BG = new Color(182, 234, 233);
-            COLOR_BTN = new Color(133, 221, 218);
-            COLOR_ACCENT = new Color(100, 207, 203);
+            COLOR_BTN = new Color(182, 234, 233);
+            COLOR_ACCENT = new Color(160, 226, 225);
             COLOR_FIELD_BG = new Color(210, 245, 244);
             COLOR_CARD_BG = new Color(248, 253, 253);
-            COLOR_TEXT = new Color(27, 101, 99);
+            COLOR_TEXT = Color.BLACK;
         }
     }
 
@@ -245,8 +257,8 @@ public class BotGUI extends JFrame {
 
             boolean isGray = grayRadio.isSelected();
             Color bg = isGray ? new Color(204, 208, 214) : new Color(182, 234, 233);
-            Color text = isGray ? Color.BLACK : new Color(27, 101, 99);
-            Color btnBg = isGray ? new Color(228, 232, 238) : new Color(133, 221, 218);
+            Color text = Color.BLACK;
+            Color btnBg = bg;
             String fontFam = systemRadio.isSelected() ? "Segoe UI" : "Comic Sans MS";
 
             Font titleF = new Font(fontFam, Font.BOLD, 13);
@@ -486,7 +498,7 @@ public class BotGUI extends JFrame {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 button.setBackground(COLOR_ACCENT);
-                button.setBorder(BorderFactory.createLineBorder(COLOR_TEXT, 2));
+                button.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
             }
 
             @Override
@@ -502,6 +514,7 @@ public class BotGUI extends JFrame {
 
             @Override
             public void mouseReleased(java.awt.event.MouseEvent evt) {
+                button.setBackground(COLOR_BTN);
                 button.setBorder(BorderFactory.createLineBorder(Color.BLACK));
             }
         });
@@ -599,39 +612,43 @@ public class BotGUI extends JFrame {
         if (centerPanel != null) centerPanel.setBackground(COLOR_BG);
         if (bottomPanel != null) bottomPanel.setBackground(COLOR_BG);
 
-        Color labelColor = COLOR_TEXT;
+        Color labelColor = Color.BLACK;
+        Color brandSubColor = (currentColorTheme == SettingsManager.UiColorTheme.GRAY) ? Color.BLACK : new Color(27, 101, 99);
         if (mainTitleLabel != null) {
             mainTitleLabel.setFont(getAppFont(Font.PLAIN, 26));
             mainTitleLabel.setForeground(labelColor);
         }
         if (mainSubtitleLabel != null) {
             mainSubtitleLabel.setFont(getAppFont(Font.PLAIN, 12));
-            mainSubtitleLabel.setForeground(labelColor);
+            mainSubtitleLabel.setForeground(brandSubColor);
         }
         if (authorLabel != null) {
             authorLabel.setFont(getAppFont(Font.PLAIN, 12));
-            authorLabel.setForeground(labelColor);
+            authorLabel.setForeground(brandSubColor);
         }
         if (startButton != null) {
             startButton.setFont(getAppFont(Font.PLAIN, 15));
             startButton.setOpaque(true);
             startButton.setContentAreaFilled(true);
             startButton.setBackground(COLOR_BTN);
-            startButton.setForeground(COLOR_TEXT);
+            startButton.setForeground(Color.BLACK);
+            startButton.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         }
         if (stopButton != null) {
             stopButton.setFont(getAppFont(Font.PLAIN, 15));
             stopButton.setOpaque(true);
             stopButton.setContentAreaFilled(true);
             stopButton.setBackground(COLOR_BTN);
-            stopButton.setForeground(COLOR_TEXT);
+            stopButton.setForeground(Color.BLACK);
+            stopButton.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         }
         if (settingButton != null) {
             settingButton.setFont(getAppFont(Font.PLAIN, 15));
             settingButton.setOpaque(true);
             settingButton.setContentAreaFilled(true);
             settingButton.setBackground(COLOR_BTN);
-            settingButton.setForeground(COLOR_TEXT);
+            settingButton.setForeground(Color.BLACK);
+            settingButton.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         }
 
         SwingUtilities.updateComponentTreeUI(this);
@@ -987,11 +1004,16 @@ public class BotGUI extends JFrame {
         urlField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
 
         boolean isEn = (I18n.getLanguage() == I18n.Language.EN);
+        String bgHex = getThemeBgHex();
+        String textHex = getThemeTextHex();
+        String cardBgHex = getThemeCardBgHex();
+        String fontFam = getAppFontFamily();
+
         String helpHtml = isEn
             ? "<html><head><style>" +
-              "body { font-family: 'Comic Sans MS'; font-size: 11px; background-color: #B6EAE9; padding: 5px; margin: 0; }" +
-              "b { color: #1B6563; }" +
-              "code { background-color: #D2F5F4; border: 1px solid #1B6563; padding: 1px 4px; font-size: 10px; }" +
+              "body { font-family: " + fontFam + "; font-size: 11px; background-color: " + bgHex + "; color: " + textHex + "; padding: 5px; margin: 0; }" +
+              "b { color: " + textHex + "; }" +
+              "code { background-color: " + cardBgHex + "; border: 1px solid " + textHex + "; padding: 1px 4px; font-size: 10px; }" +
               "</style></head><body>" +
               "<b>Search URL Formation Rules:</b><br>" +
               "<b>1. For OLX.ua:</b><br>" +
@@ -1003,9 +1025,9 @@ public class BotGUI extends JFrame {
               "• <i>Example:</i> <code>https://dom.ria.com/uk/prodazha-kvartir/odessa/?without_agent=1</code>" +
               "</body></html>"
             : "<html><head><style>" +
-              "body { font-family: 'Comic Sans MS'; font-size: 11px; background-color: #B6EAE9; padding: 5px; margin: 0; }" +
-              "b { color: #1B6563; }" +
-              "code { background-color: #D2F5F4; border: 1px solid #1B6563; padding: 1px 4px; font-size: 10px; }" +
+              "body { font-family: " + fontFam + "; font-size: 11px; background-color: " + bgHex + "; color: " + textHex + "; padding: 5px; margin: 0; }" +
+              "b { color: " + textHex + "; }" +
+              "code { background-color: " + cardBgHex + "; border: 1px solid " + textHex + "; padding: 1px 4px; font-size: 10px; }" +
               "</style></head><body>" +
               "<b>Правила формування посилання:</b><br>" +
               "<b>1. Для OLX.ua:</b><br>" +
@@ -1179,13 +1201,18 @@ public class BotGUI extends JFrame {
     }
 
     private String getQuickStartHtml(I18n.Language lang) {
+        String bgHex = getThemeBgHex();
+        String textHex = getThemeTextHex();
+        String cardBgHex = getThemeCardBgHex();
+        String fontFam = getAppFontFamily();
+
         if (lang == I18n.Language.EN) {
             return "<html><head><style>" +
-                    "body { font-family: 'Comic Sans MS'; font-size: 12px; background-color: #B6EAE9; padding: 15px; }" +
-                    "h2 { font-size: 18px; font-weight: bold; color: #1B6563; }" +
-                    "h3 { font-size: 14px; font-weight: bold; color: #1B6563; margin-top: 14px; }" +
-                    "p, li { font-size: 12px; line-height: 1.4; }" +
-                    "code { background-color: #D2F5F4; border: 1px solid #1B6563; padding: 2px 5px; font-weight: bold; }" +
+                    "body { font-family: " + fontFam + "; font-size: 12px; background-color: " + bgHex + "; color: " + textHex + "; padding: 15px; }" +
+                    "h2 { font-size: 18px; font-weight: bold; color: " + textHex + "; }" +
+                    "h3 { font-size: 14px; font-weight: bold; color: " + textHex + "; margin-top: 14px; }" +
+                    "p, li { font-size: 12px; line-height: 1.4; color: " + textHex + "; }" +
+                    "code { background-color: " + cardBgHex + "; border: 1px solid " + textHex + "; padding: 2px 5px; font-weight: bold; }" +
                     "</style></head><body>" +
                     "<h2>Instant Monitoring Quick Start</h2>" +
                     "<p>This platform is designed to intercept freshly published listings from <b>OLX.ua</b> and <b>DOM.RIA</b> directly into Telegram!</p>" +
@@ -1203,11 +1230,11 @@ public class BotGUI extends JFrame {
         }
 
         return "<html><head><style>" +
-                "body { font-family: 'Comic Sans MS'; font-size: 12px; background-color: #B6EAE9; padding: 15px; }" +
-                "h2 { font-size: 18px; font-weight: bold; color: #1B6563; }" +
-                "h3 { font-size: 14px; font-weight: bold; color: #1B6563; margin-top: 14px; }" +
-                "p, li { font-size: 12px; line-height: 1.4; }" +
-                "code { background-color: #D2F5F4; border: 1px solid #1B6563; padding: 2px 5px; font-weight: bold; }" +
+                "body { font-family: " + fontFam + "; font-size: 12px; background-color: " + bgHex + "; color: " + textHex + "; padding: 15px; }" +
+                "h2 { font-size: 18px; font-weight: bold; color: " + textHex + "; }" +
+                "h3 { font-size: 14px; font-weight: bold; color: " + textHex + "; margin-top: 14px; }" +
+                "p, li { font-size: 12px; line-height: 1.4; color: " + textHex + "; }" +
+                "code { background-color: " + cardBgHex + "; border: 1px solid " + textHex + "; padding: 2px 5px; font-weight: bold; }" +
                 "</style></head><body>" +
                 "<h2>Миттєвий старт моніторингу</h2>" +
                 "<p>Програма призначена для блискавичного перехоплення найсвіжіших оголошень з <b>OLX.ua</b> та <b>DOM.RIA</b> прямо в Telegram!</p>" +
@@ -1225,13 +1252,18 @@ public class BotGUI extends JFrame {
     }
 
     private String getFiltersAndArchitectureHtml(I18n.Language lang) {
+        String bgHex = getThemeBgHex();
+        String textHex = getThemeTextHex();
+        String cardBgHex = getThemeCardBgHex();
+        String fontFam = getAppFontFamily();
+
         if (lang == I18n.Language.EN) {
             return "<html><head><style>" +
-                    "body { font-family: 'Comic Sans MS'; font-size: 12px; background-color: #B6EAE9; padding: 15px; }" +
-                    "h2 { font-size: 18px; font-weight: bold; color: #1B6563; }" +
-                    "h3 { font-size: 14px; font-weight: bold; color: #1B6563; margin-top: 14px; }" +
-                    "p, li { font-size: 12px; line-height: 1.4; }" +
-                    "code { background-color: #D2F5F4; border: 1px solid #1B6563; padding: 2px 5px; font-weight: bold; }" +
+                    "body { font-family: " + fontFam + "; font-size: 12px; background-color: " + bgHex + "; color: " + textHex + "; padding: 15px; }" +
+                    "h2 { font-size: 18px; font-weight: bold; color: " + textHex + "; }" +
+                    "h3 { font-size: 14px; font-weight: bold; color: " + textHex + "; margin-top: 14px; }" +
+                    "p, li { font-size: 12px; line-height: 1.4; color: " + textHex + "; }" +
+                    "code { background-color: " + cardBgHex + "; border: 1px solid " + textHex + "; padding: 2px 5px; font-weight: bold; }" +
                     "</style></head><body>" +
                     "<h2>Filter Architecture & Reliability</h2>" +
                     "<h3>1. Direct Owner Filter (100% No Agencies):</h3>" +
@@ -1248,11 +1280,11 @@ public class BotGUI extends JFrame {
         }
 
         return "<html><head><style>" +
-                "body { font-family: 'Comic Sans MS'; font-size: 12px; background-color: #B6EAE9; padding: 15px; }" +
-                "h2 { font-size: 18px; font-weight: bold; color: #1B6563; }" +
-                "h3 { font-size: 14px; font-weight: bold; color: #1B6563; margin-top: 14px; }" +
-                "p, li { font-size: 12px; line-height: 1.4; }" +
-                "code { background-color: #D2F5F4; border: 1px solid #1B6563; padding: 2px 5px; font-weight: bold; }" +
+                "body { font-family: " + fontFam + "; font-size: 12px; background-color: " + bgHex + "; color: " + textHex + "; padding: 15px; }" +
+                "h2 { font-size: 18px; font-weight: bold; color: " + textHex + "; }" +
+                "h3 { font-size: 14px; font-weight: bold; color: " + textHex + "; margin-top: 14px; }" +
+                "p, li { font-size: 12px; line-height: 1.4; color: " + textHex + "; }" +
+                "code { background-color: " + cardBgHex + "; border: 1px solid " + textHex + "; padding: 2px 5px; font-weight: bold; }" +
                 "</style></head><body>" +
                 "<h2>Архітектура фільтрів та надійність</h2>" +
                 "<h3>1. Фільтр «Тільки від власника» (100% без посередників):</h3>" +
