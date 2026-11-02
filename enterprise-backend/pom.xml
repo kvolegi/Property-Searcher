@@ -11,10 +11,10 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.propertyseacher</groupId>
-    <artifactId>property-seacher-backend</artifactId>
+    <groupId>com.propertysearcher</groupId>
+    <artifactId>enterprise-backend</artifactId>
     <version>3.0.0</version>
-    <name>property-seacher-backend</name>
+    <name>enterprise-backend</name>
     <description>Enterprise Real Estate Tracker with Telegram Bot, Scraper Engine, and Spring Boot 3</description>
 
     <properties>

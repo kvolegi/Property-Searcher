@@ -4,8 +4,12 @@ import com.propertysearcher.desktop.ParserOLX;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 
@@ -34,7 +38,9 @@ public class SearchAlgorithmEngine implements Runnable {
     private final int initialStaggerMs;
     private final BiConsumer<ParserOLX.PropertyResult, String> onNewPropertyFound;
 
-    private final String[] lastAdLinks = new String[50];
+    private static final int MAX_BUFFER_CAPACITY = 50;
+    private final Deque<String> recentAdQueue = new ArrayDeque<>(MAX_BUFFER_CAPACITY);
+    private final Set<String> recentAdSet = new HashSet<>(MAX_BUFFER_CAPACITY);
     private String lastSentAdLink = "";
 
     public SearchAlgorithmEngine(String categoryUrl,
@@ -164,20 +170,20 @@ public class SearchAlgorithmEngine implements Runnable {
         }
     }
 
-    private void updateLastAdLinks(String adLink) {
-        for (int i = lastAdLinks.length - 1; i > 0; i--) {
-            lastAdLinks[i] = lastAdLinks[i - 1];
+    private synchronized void updateLastAdLinks(String adLink) {
+        if (adLink == null || adLink.isBlank()) return;
+        if (recentAdSet.contains(adLink)) {
+            recentAdQueue.remove(adLink);
+        } else if (recentAdQueue.size() >= MAX_BUFFER_CAPACITY) {
+            String oldest = recentAdQueue.removeLast();
+            recentAdSet.remove(oldest);
         }
-        lastAdLinks[0] = adLink;
+        recentAdQueue.addFirst(adLink);
+        recentAdSet.add(adLink);
     }
 
-    public boolean isDuplicate(String adLink) {
-        for (String link : lastAdLinks) {
-            if (adLink != null && adLink.equals(link)) {
-                return true;
-            }
-        }
-        return false;
+    public synchronized boolean isDuplicate(String adLink) {
+        return adLink != null && recentAdSet.contains(adLink);
     }
 
     public String getCategoryName() {

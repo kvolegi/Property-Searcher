@@ -35,11 +35,11 @@ public class BotGUI extends JFrame {
     private static final Color COLOR_CARD_BG = new Color(248, 253, 253);
 
     public BotGUI() {
-        instance = this;
         checkInitialLanguage();
         loadSettings();
         initComponents();
         updateLocalizedTexts();
+        instance = this;
     }
 
     public static BotGUI getInstance() {
@@ -72,18 +72,28 @@ public class BotGUI extends JFrame {
 
     private void showLanguageSelectionDialog(boolean isFirstLaunch, JDialog parentSettingsDialog) {
         JDialog dlg = new JDialog(this, isFirstLaunch ? "Select Language / Оберіть мову" : "Language / Мова", true);
-        dlg.setSize(420, 250);
-        dlg.setLayout(null);
         dlg.getContentPane().setBackground(COLOR_BG);
         dlg.setResizable(false);
+
+        JPanel mainPanel = new JPanel(new BorderLayout(15, 15));
+        mainPanel.setBackground(COLOR_BG);
+        mainPanel.setBorder(new EmptyBorder(20, 30, 20, 30));
 
         JLabel prompt = new JLabel("<html><center><b>Welcome to Property Searcher 3!</b><br>Please choose your language / Оберіть мову інтерфейсу:</center></html>", SwingConstants.CENTER);
         prompt.setFont(new Font("Comic Sans MS", Font.PLAIN, 13));
         prompt.setForeground(new Color(27, 101, 99));
-        prompt.setBounds(20, 15, 380, 50);
 
-        JButton uaBtn = createButton("🇺🇦 Українська", 60, 80, 300, 48);
-        JButton enBtn = createButton("🇬🇧 English", 60, 140, 300, 48);
+        JPanel buttonsPanel = new JPanel();
+        buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
+        buttonsPanel.setBackground(COLOR_BG);
+
+        JButton uaBtn = createButton("🇺🇦 Українська", 0, 0, 300, 48);
+        uaBtn.setMaximumSize(new Dimension(320, 48));
+        uaBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JButton enBtn = createButton("🇬🇧 English", 0, 0, 300, 48);
+        enBtn.setMaximumSize(new Dimension(320, 48));
+        enBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         uaBtn.addActionListener(e -> {
             setLanguage(I18n.Language.UA);
@@ -103,9 +113,16 @@ public class BotGUI extends JFrame {
             }
         });
 
-        dlg.add(prompt);
-        dlg.add(uaBtn);
-        dlg.add(enBtn);
+        buttonsPanel.add(uaBtn);
+        buttonsPanel.add(Box.createVerticalStrut(12));
+        buttonsPanel.add(enBtn);
+
+        mainPanel.add(prompt, BorderLayout.NORTH);
+        mainPanel.add(buttonsPanel, BorderLayout.CENTER);
+
+        dlg.setContentPane(mainPanel);
+        dlg.pack();
+        dlg.setMinimumSize(new Dimension(420, 230));
         dlg.setLocationRelativeTo(this);
         dlg.setVisible(true);
     }
@@ -148,7 +165,7 @@ public class BotGUI extends JFrame {
 
     private void initComponents() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setPreferredSize(new Dimension(530, 311));
+        setPreferredSize(new Dimension(530, 320));
         setResizable(false);
         setTitle(I18n.get("app.title"));
 
@@ -157,47 +174,72 @@ public class BotGUI extends JFrame {
             setIconImage(logoImg);
         }
 
-        JPanel contentPane = new JPanel();
+        JPanel contentPane = new JPanel(new BorderLayout(10, 10));
         contentPane.setBackground(COLOR_BG);
-        contentPane.setLayout(null);
+        contentPane.setBorder(new EmptyBorder(15, 20, 15, 20));
 
-        // Logo icon in the upper-left of title
+        // Top Header
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 5));
+        topPanel.setBackground(COLOR_BG);
+
         if (logoImg != null) {
-            Image scaled = logoImg.getScaledInstance(50, 50, Image.SCALE_SMOOTH);
+            Image scaled = logoImg.getScaledInstance(45, 45, Image.SCALE_SMOOTH);
             JLabel logoLabel = new JLabel(new ImageIcon(scaled));
-            logoLabel.setBounds(92, 32, 50, 50);
-            contentPane.add(logoLabel);
+            topPanel.add(logoLabel);
         }
 
-        startButton = createButton(I18n.get("btn.start"), 154, 98, 240, 69);
-        stopButton = createButton(I18n.get("btn.stop"), 158, 190, 240, 69);
-        settingButton = createButton(I18n.get("btn.settings"), 8, 240, 135, 35);
+        JPanel titleBlock = new JPanel();
+        titleBlock.setLayout(new BoxLayout(titleBlock, BoxLayout.Y_AXIS));
+        titleBlock.setBackground(COLOR_BG);
 
         JLabel titleLabel = new JLabel("Property Searcher");
-        titleLabel.setFont(new Font("Comic Sans MS", Font.PLAIN, 28));
-        titleLabel.setBounds(154, 38, 356, 40);
+        titleLabel.setFont(new Font("Comic Sans MS", Font.PLAIN, 26));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Exact original labels restored
         JLabel OlxLabel = new JLabel("olx / domria");
         OlxLabel.setFont(new Font("Comic Sans MS", Font.PLAIN, 12));
-        OlxLabel.setForeground(new Color(100, 207, 203));
-        OlxLabel.setBounds(395, 55, 100, 20);
+        OlxLabel.setForeground(new Color(27, 101, 99));
+        OlxLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel kvolegiLabel = new JLabel("@kvolegi");
-        kvolegiLabel.setFont(new Font("Comic Sans MS", Font.PLAIN, 12));
-        kvolegiLabel.setForeground(new Color(100, 207, 203));
-        kvolegiLabel.setBounds(445, 255, 100, 20);
+        titleBlock.add(titleLabel);
+        titleBlock.add(OlxLabel);
+        topPanel.add(titleBlock);
+
+        // Center Buttons
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        centerPanel.setBackground(COLOR_BG);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.insets = new Insets(6, 0, 6, 0);
+
+        startButton = createButton(I18n.get("btn.start"), 0, 0, 240, 56);
+        stopButton = createButton(I18n.get("btn.stop"), 0, 0, 240, 56);
 
         startButton.addActionListener(e -> startBot());
         stopButton.addActionListener(e -> stopBot());
+
+        gbc.gridy = 0;
+        centerPanel.add(startButton, gbc);
+        gbc.gridy = 1;
+        centerPanel.add(stopButton, gbc);
+
+        // Bottom Bar
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.setBackground(COLOR_BG);
+
+        settingButton = createButton(I18n.get("btn.settings"), 0, 0, 135, 35);
         settingButton.addActionListener(e -> openSettingsDialog());
 
-        contentPane.add(startButton);
-        contentPane.add(stopButton);
-        contentPane.add(settingButton);
-        contentPane.add(titleLabel);
-        contentPane.add(OlxLabel);
-        contentPane.add(kvolegiLabel);
+        JLabel kvolegiLabel = new JLabel("@kvolegi");
+        kvolegiLabel.setFont(new Font("Comic Sans MS", Font.PLAIN, 12));
+        kvolegiLabel.setForeground(new Color(27, 101, 99));
+
+        bottomPanel.add(settingButton, BorderLayout.WEST);
+        bottomPanel.add(kvolegiLabel, BorderLayout.EAST);
+
+        contentPane.add(topPanel, BorderLayout.NORTH);
+        contentPane.add(centerPanel, BorderLayout.CENTER);
+        contentPane.add(bottomPanel, BorderLayout.SOUTH);
 
         setContentPane(contentPane);
         pack();
@@ -212,6 +254,7 @@ public class BotGUI extends JFrame {
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         button.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        button.setPreferredSize(new Dimension(width, height));
 
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
@@ -274,16 +317,24 @@ public class BotGUI extends JFrame {
 
     private void openSettingsDialog() {
         JDialog settingsDialog = new JDialog(this, I18n.get("gui.settings_dialog_title"), true);
-        settingsDialog.setSize(400, 375);
-        settingsDialog.setLayout(null);
         settingsDialog.getContentPane().setBackground(COLOR_BG);
         settingsDialog.setResizable(false);
 
-        JButton tokenButton = createButton(I18n.get("gui.token_btn"), 50, 20, 300, 48);
-        JButton categoryButton = createButton(I18n.get("gui.category_btn"), 50, 78, 300, 48);
-        JButton instructionButton = createButton(I18n.get("gui.instruction_btn"), 50, 136, 300, 48);
-        JButton langButton = createButton(I18n.get("gui.lang_btn"), 50, 194, 300, 48);
-        JButton backButton = createButton(I18n.get("gui.back_btn"), 50, 260, 300, 45);
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBackground(COLOR_BG);
+        content.setBorder(new EmptyBorder(20, 30, 20, 30));
+
+        JButton tokenButton = createButton(I18n.get("gui.token_btn"), 0, 0, 300, 48);
+        JButton categoryButton = createButton(I18n.get("gui.category_btn"), 0, 0, 300, 48);
+        JButton instructionButton = createButton(I18n.get("gui.instruction_btn"), 0, 0, 300, 48);
+        JButton langButton = createButton(I18n.get("gui.lang_btn"), 0, 0, 300, 48);
+        JButton backButton = createButton(I18n.get("gui.back_btn"), 0, 0, 300, 45);
+
+        for (JButton btn : List.of(tokenButton, categoryButton, instructionButton, langButton, backButton)) {
+            btn.setMaximumSize(new Dimension(320, 48));
+            btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        }
 
         tokenButton.addActionListener(e -> openTokenNameDialog(settingsDialog));
         categoryButton.addActionListener(e -> openCategoryDialog(settingsDialog));
@@ -291,41 +342,63 @@ public class BotGUI extends JFrame {
         langButton.addActionListener(e -> showLanguageSelectionDialog(false, settingsDialog));
         backButton.addActionListener(e -> settingsDialog.dispose());
 
-        settingsDialog.add(tokenButton);
-        settingsDialog.add(categoryButton);
-        settingsDialog.add(instructionButton);
-        settingsDialog.add(langButton);
-        settingsDialog.add(backButton);
+        content.add(tokenButton);
+        content.add(Box.createVerticalStrut(10));
+        content.add(categoryButton);
+        content.add(Box.createVerticalStrut(10));
+        content.add(instructionButton);
+        content.add(Box.createVerticalStrut(10));
+        content.add(langButton);
+        content.add(Box.createVerticalStrut(16));
+        content.add(backButton);
 
+        settingsDialog.setContentPane(content);
+        settingsDialog.pack();
+        settingsDialog.setMinimumSize(new Dimension(380, 380));
         settingsDialog.setLocationRelativeTo(this);
         settingsDialog.setVisible(true);
     }
 
     private void openTokenNameDialog(JDialog parent) {
         JDialog tokenDialog = new JDialog(parent, I18n.get("gui.token_dialog_title"), true);
-        tokenDialog.setSize(420, 280);
-        tokenDialog.setLayout(null);
         tokenDialog.getContentPane().setBackground(COLOR_BG);
+
+        JPanel mainPanel = new JPanel(new BorderLayout(15, 15));
+        mainPanel.setBackground(COLOR_BG);
+        mainPanel.setBorder(new EmptyBorder(25, 25, 25, 25));
+
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBackground(COLOR_BG);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
         Font font = new Font("Comic Sans MS", Font.PLAIN, 15);
 
         JLabel nameLabel = new JLabel(I18n.get("gui.bot_name_lbl"));
         nameLabel.setFont(font);
-        nameLabel.setBounds(30, 25, 140, 30);
-        JTextField nameField = new JTextField(botName);
+        JTextField nameField = new JTextField(botName, 18);
         nameField.setFont(font);
         nameField.setBackground(COLOR_FIELD_BG);
-        nameField.setBounds(180, 25, 200, 32);
 
         JLabel tokenLabel = new JLabel(I18n.get("gui.token_lbl"));
         tokenLabel.setFont(font);
-        tokenLabel.setBounds(30, 75, 140, 30);
-        JTextField tokenField = new JTextField(botToken);
+        JTextField tokenField = new JTextField(botToken, 18);
         tokenField.setFont(font);
         tokenField.setBackground(COLOR_FIELD_BG);
-        tokenField.setBounds(180, 75, 200, 32);
 
-        JButton saveButton = createButton(I18n.get("gui.save_btn"), 140, 150, 140, 42);
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.3;
+        formPanel.add(nameLabel, gbc);
+        gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 0.7;
+        formPanel.add(nameField, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.3;
+        formPanel.add(tokenLabel, gbc);
+        gbc.gridx = 1; gbc.gridy = 1; gbc.weightx = 0.7;
+        formPanel.add(tokenField, gbc);
+
+        JButton saveButton = createButton(I18n.get("gui.save_btn"), 0, 0, 160, 42);
+        saveButton.setPreferredSize(new Dimension(160, 42));
         saveButton.addActionListener(e -> {
             String token = tokenField.getText().trim();
             if (token.length() < 30) {
@@ -338,12 +411,16 @@ public class BotGUI extends JFrame {
             }
         });
 
-        tokenDialog.add(nameLabel);
-        tokenDialog.add(nameField);
-        tokenDialog.add(tokenLabel);
-        tokenDialog.add(tokenField);
-        tokenDialog.add(saveButton);
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        btnPanel.setBackground(COLOR_BG);
+        btnPanel.add(saveButton);
 
+        mainPanel.add(formPanel, BorderLayout.CENTER);
+        mainPanel.add(btnPanel, BorderLayout.SOUTH);
+
+        tokenDialog.setContentPane(mainPanel);
+        tokenDialog.pack();
+        tokenDialog.setMinimumSize(new Dimension(420, 260));
         tokenDialog.setLocationRelativeTo(parent);
         tokenDialog.setVisible(true);
     }

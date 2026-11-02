@@ -1,6 +1,6 @@
 spring:
   application:
-    name: property-seacher-backend
+    name: enterprise-backend
 
   threads:
     virtual.enabled: true
