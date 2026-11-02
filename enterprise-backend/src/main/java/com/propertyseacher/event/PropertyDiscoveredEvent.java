@@ -1,5 +1,6 @@
 package com.propertyseacher.event;
 
+import com.propertyseacher.analytics.PriceAnalyticsService.DealValuation;
 import com.propertyseacher.scraper.PropertyDto;
 
 /**
@@ -8,9 +9,14 @@ import com.propertyseacher.scraper.PropertyDto;
  */
 public record PropertyDiscoveredEvent(
         PropertyDto property,
+        DealValuation valuation,
         long timestamp
 ) {
     public PropertyDiscoveredEvent(PropertyDto property) {
-        this(property, System.currentTimeMillis());
+        this(property, null, System.currentTimeMillis());
+    }
+
+    public PropertyDiscoveredEvent(PropertyDto property, DealValuation valuation) {
+        this(property, valuation, System.currentTimeMillis());
     }
 }

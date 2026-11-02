@@ -4,12 +4,12 @@ import com.propertyseacher.domain.entity.SearchTarget;
 import com.propertyseacher.domain.entity.User;
 import com.propertyseacher.domain.repository.SearchTargetRepository;
 import com.propertyseacher.domain.repository.UserRepository;
-import com.propertyseacher.service.TrackingService;
+import com.propertyseacher.event.TriggerScanEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -20,6 +20,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 @Component
 public class PropertyTelegramBot extends TelegramLongPollingBot {
@@ -29,20 +30,22 @@ public class PropertyTelegramBot extends TelegramLongPollingBot {
     private final String botUsername;
     private final UserRepository userRepository;
     private final SearchTargetRepository searchTargetRepository;
-
-    @Autowired
-    @Lazy
-    private TrackingService trackingService;
+    private final ApplicationEventPublisher eventPublisher;
+    private final ExecutorService virtualThreadExecutor;
 
     public PropertyTelegramBot(
             @Value("${telegram.bot.token}") String botToken,
             @Value("${telegram.bot.username}") String botUsername,
             UserRepository userRepository,
-            SearchTargetRepository searchTargetRepository) {
+            SearchTargetRepository searchTargetRepository,
+            ApplicationEventPublisher eventPublisher,
+            @Qualifier("virtualThreadExecutor") ExecutorService virtualThreadExecutor) {
         super(botToken);
         this.botUsername = botUsername;
         this.userRepository = userRepository;
         this.searchTargetRepository = searchTargetRepository;
+        this.eventPublisher = eventPublisher;
+        this.virtualThreadExecutor = virtualThreadExecutor;
     }
 
     @Override
@@ -76,12 +79,12 @@ public class PropertyTelegramBot extends TelegramLongPollingBot {
             showTargets(chatId);
         } else if (messageText.equalsIgnoreCase("/search") || messageText.contains("Пошук зараз")) {
             sendResponse(chatId, "⚡ Запуск сканування OLX та DOM.RIA...");
-            if (trackingService != null) {
-                new Thread(trackingService::trackAllTargets).start();
-            }
+            virtualThreadExecutor.submit(() -> {
+                log.info("Dispatched on-demand scan event from Telegram user: {}", chatId);
+                eventPublisher.publishEvent(new TriggerScanEvent(chatId));
+            });
         } else if (messageText.equalsIgnoreCase("/mode") || messageText.contains("Режим")) {
-            String currentMode = trackingService != null ? trackingService.getCurrentMode() : "LIVE_SNIPE";
-            sendResponse(chatId, "⚙️ *Поточний режим:* `" + currentMode + "`\n\n" +
+            sendResponse(chatId, "⚙️ *Поточний режим:* `LIVE_SNIPE`\n\n" +
                     "• *LIVE_SNIPE* — ультрашвидке відстеження без затримок I/O (пам'ять).\n" +
                     "• *DATABASE_ANALYTICS* — повна аналітика, дедуплікація та історія цін.");
         } else if (messageText.equalsIgnoreCase("/botfather") || messageText.contains("Команди для BotFather")) {

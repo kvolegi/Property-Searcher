@@ -25,7 +25,11 @@ public class PropertyEventListener {
     public void onPropertyDiscovered(PropertyDiscoveredEvent event) {
         log.info("Handling PropertyDiscoveredEvent asynchronously for: [{}] {}", 
                 event.property().category(), event.property().title());
-        telegramNotificationService.broadcastNewProperty(event.property());
+        if (event.valuation() != null && event.valuation().isHotDeal()) {
+            telegramNotificationService.broadcastNewProperty(event.property(), event.valuation().badge());
+        } else {
+            telegramNotificationService.broadcastNewProperty(event.property());
+        }
     }
 
     @Async

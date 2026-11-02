@@ -47,6 +47,9 @@ Thumbs.db
 dist/PropertySeacher-Enterprise-Server.jar
 last_chat_id.txt
 currency_cache.json
+*.mv.db
+data/
+enterprise-backend/data/
 
 # Private user configuration and secrets
 settings.txt

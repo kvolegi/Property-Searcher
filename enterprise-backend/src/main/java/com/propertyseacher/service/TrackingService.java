@@ -10,6 +10,7 @@ import com.propertyseacher.domain.repository.PriceHistoryRepository;
 import com.propertyseacher.domain.repository.SearchTargetRepository;
 import com.propertyseacher.event.PriceChangedEvent;
 import com.propertyseacher.event.PropertyDiscoveredEvent;
+import com.propertyseacher.event.TriggerScanEvent;
 import com.propertyseacher.scraper.PropertyDto;
 import com.propertyseacher.scraper.ScraperService;
 import lombok.Getter;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +50,12 @@ public class TrackingService {
 
     public String getCurrentMode() {
         return trackingMode.name();
+    }
+
+    @EventListener
+    public void onTriggerScan(TriggerScanEvent event) {
+        log.info("Received on-demand scan trigger from chatId: {}", event.requestedByChatId());
+        trackAllTargets();
     }
 
     @Scheduled(fixedDelayString = "${app.tracker.delay-ms:10000}", initialDelay = 5000)
@@ -96,7 +104,13 @@ public class TrackingService {
             if (!deduplicationCacheStrategy.contains(target.getUrl(), dto.url())) {
                 log.info("[LIVE_SNIPE] Fresh organic property detected: [{}] {}", dto.category(), dto.title());
                 deduplicationCacheStrategy.add(target.getUrl(), dto.url());
-                eventPublisher.publishEvent(new PropertyDiscoveredEvent(dto));
+
+                BigDecimal numericPrice = priceAnalyticsService.parseNumericPrice(dto.price());
+                String currency = priceAnalyticsService.detectCurrency(dto.price());
+                BigDecimal benchmark = target.getUrl().toLowerCase().contains("dom.ria") ? BigDecimal.valueOf(60000) : BigDecimal.valueOf(45000);
+                PriceAnalyticsService.DealValuation valuation = priceAnalyticsService.evaluateBargain(numericPrice, benchmark, currency);
+
+                eventPublisher.publishEvent(new PropertyDiscoveredEvent(dto, valuation));
             }
         }
     }
@@ -112,6 +126,14 @@ public class TrackingService {
             if (existingOpt.isEmpty()) {
                 log.info("[DB_ANALYTICS] New property detected: [{}] {}", dto.category(), dto.title());
 
+                BigDecimal numericPrice = priceAnalyticsService.parseNumericPrice(dto.price());
+                String currency = priceAnalyticsService.detectCurrency(dto.price());
+                BigDecimal benchmark = target.getUrl().toLowerCase().contains("dom.ria") ? BigDecimal.valueOf(60000) : BigDecimal.valueOf(45000);
+                PriceAnalyticsService.DealValuation valuation = priceAnalyticsService.evaluateBargain(numericPrice, benchmark, currency);
+
+                String rawJson = String.format("{\"externalId\":\"%s\",\"platform\":\"%s\",\"title\":\"%s\",\"price\":\"%s\",\"url\":\"%s\"}",
+                        dto.externalId(), dto.platform(), dto.title().replace("\"", "\\\""), dto.price(), dto.url());
+
                 DiscoveredProperty entity = DiscoveredProperty.builder()
                         .externalId(dto.externalId())
                         .platform(dto.platform())
@@ -119,11 +141,12 @@ public class TrackingService {
                         .price(dto.price())
                         .url(dto.url())
                         .category(dto.category())
+                        .rawPayload(rawJson)
                         .build();
 
                 DiscoveredProperty saved = discoveredPropertyRepository.save(entity);
                 recordPrice(saved, dto.price());
-                eventPublisher.publishEvent(new PropertyDiscoveredEvent(dto));
+                eventPublisher.publishEvent(new PropertyDiscoveredEvent(dto, valuation));
             } else {
                 DiscoveredProperty existing = existingOpt.get();
                 if (!dto.price().equalsIgnoreCase(existing.getPrice())) {

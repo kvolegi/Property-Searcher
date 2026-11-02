@@ -23,11 +23,14 @@ import java.util.List;
 public class TelegramNotificationService {
 
     private final UserRepository userRepository;
-    @Lazy
     private final PropertyTelegramBot telegramBot;
 
     public void broadcastNewProperty(PropertyDto dto) {
         broadcastPropertyMessage(dto, "🏠 *Нове оголошення!*");
+    }
+
+    public void broadcastNewProperty(PropertyDto dto, String dealBadge) {
+        broadcastPropertyMessage(dto, dealBadge + " 🏠 *Нове оголошення!*");
     }
 
     public void broadcastPriceChange(PropertyDto dto, String changeInfo) {

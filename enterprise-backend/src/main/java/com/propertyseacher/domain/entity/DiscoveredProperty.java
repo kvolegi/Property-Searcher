@@ -40,6 +40,9 @@ public class DiscoveredProperty {
     @Column(name = "category")
     private String category;
 
+    @Column(name = "raw_payload", columnDefinition = "TEXT")
+    private String rawPayload;
+
     @CreationTimestamp
     @Column(name = "discovered_at", updatable = false)
     private LocalDateTime discoveredAt;
