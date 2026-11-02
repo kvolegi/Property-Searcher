@@ -62,12 +62,13 @@ public class BotGUI extends JFrame {
 
     public static void syncThemeColors() {
         if (currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO) {
-            COLOR_BG = new Color(230, 233, 237);
-            COLOR_BTN = new Color(212, 217, 224);
-            COLOR_ACCENT = new Color(190, 196, 206);
+            // Midpoint between #e6e9ed (230, 233, 237) and #1b1b1b (27, 27, 27) = RGB(128, 130, 132) (#808284)
+            COLOR_BG = new Color(128, 130, 132);
+            COLOR_BTN = new Color(230, 233, 237);
+            COLOR_ACCENT = new Color(245, 247, 250);
             COLOR_FIELD_BG = new Color(255, 255, 255);
             COLOR_CARD_BG = new Color(245, 246, 248);
-            COLOR_TEXT = new Color(40, 44, 52);
+            COLOR_TEXT = new Color(27, 27, 27);
         } else {
             COLOR_BG = new Color(182, 234, 233);
             COLOR_BTN = new Color(133, 221, 218);
@@ -139,8 +140,8 @@ public class BotGUI extends JFrame {
         langSectionLbl.setForeground(COLOR_TEXT);
         langSectionLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JRadioButton uaRadio = new JRadioButton("🇺🇦 Українська", I18n.getLanguage() == I18n.Language.UA);
-        JRadioButton enRadio = new JRadioButton("🇬🇧 English", I18n.getLanguage() == I18n.Language.EN);
+        JRadioButton uaRadio = new JRadioButton("Українська", I18n.getLanguage() == I18n.Language.UA);
+        JRadioButton enRadio = new JRadioButton("English", I18n.getLanguage() == I18n.Language.EN);
         uaRadio.setFont(getAppFont(Font.PLAIN, 13));
         enRadio.setFont(getAppFont(Font.PLAIN, 13));
         uaRadio.setBackground(COLOR_BG);
@@ -199,8 +200,8 @@ public class BotGUI extends JFrame {
                     "<html><center><b>Interface Preferences</b><br>Choose interface language and visual style:</center></html>");
             langSectionLbl.setText(l == I18n.Language.UA ? "Мова інтерфейсу:" : "Interface Language:");
             themeSectionLbl.setText(l == I18n.Language.UA ? "Стиль оформлення та шрифт:" : "Visual Theme & Typography:");
-            tiffanyRadio.setText(l == I18n.Language.UA ? "💎 Тіфані + Comic Sans MS (Фірмова)" : "💎 Tiffany Mint + Comic Sans MS (Signature)");
-            corporateRadio.setText(l == I18n.Language.UA ? "🏢 Корпоративна сіра + Строгий шрифт" : "🏢 Corporate Slate Gray + Standard UI");
+            tiffanyRadio.setText(l == I18n.Language.UA ? "Тіфані + Comic Sans MS (Фірмова)" : "Tiffany Mint + Comic Sans MS (Signature)");
+            corporateRadio.setText(l == I18n.Language.UA ? "Корпоративна сіра + Строгий шрифт" : "Corporate Slate Gray + Standard UI");
         };
 
         uaRadio.addActionListener(e -> updateDialogTexts.run());
@@ -209,8 +210,8 @@ public class BotGUI extends JFrame {
         // Dynamic theme preview inside dialog
         Runnable updateThemePreview = () -> {
             boolean isCorp = corporateRadio.isSelected();
-            Color bg = isCorp ? new Color(230, 233, 237) : new Color(182, 234, 233);
-            Color text = isCorp ? new Color(40, 44, 52) : new Color(27, 101, 99);
+            Color bg = isCorp ? new Color(128, 130, 132) : new Color(182, 234, 233);
+            Color text = isCorp ? Color.WHITE : new Color(27, 101, 99);
             dlg.getContentPane().setBackground(bg);
             mainPanel.setBackground(bg);
             langBox.setBackground(bg);
@@ -334,11 +335,11 @@ public class BotGUI extends JFrame {
 
         mainTitleLabel = new JLabel("Property Searcher");
         mainTitleLabel.setFont(getAppFont(Font.PLAIN, 26));
-        mainTitleLabel.setForeground(COLOR_TEXT);
+        mainTitleLabel.setForeground((currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO) ? Color.WHITE : COLOR_TEXT);
 
         mainSubtitleLabel = new JLabel("olx / domria");
         mainSubtitleLabel.setFont(getAppFont(Font.PLAIN, 12));
-        mainSubtitleLabel.setForeground(COLOR_TEXT);
+        mainSubtitleLabel.setForeground((currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO) ? Color.WHITE : COLOR_TEXT);
         mainSubtitleLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         mainSubtitleLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
 
@@ -373,7 +374,7 @@ public class BotGUI extends JFrame {
 
         authorLabel = new JLabel("@kvolegi");
         authorLabel.setFont(getAppFont(Font.PLAIN, 12));
-        authorLabel.setForeground(COLOR_TEXT);
+        authorLabel.setForeground((currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO) ? Color.WHITE : COLOR_TEXT);
 
         bottomPanel.add(settingButton, BorderLayout.WEST);
         bottomPanel.add(authorLabel, BorderLayout.EAST);
@@ -512,17 +513,18 @@ public class BotGUI extends JFrame {
         if (centerPanel != null) centerPanel.setBackground(COLOR_BG);
         if (bottomPanel != null) bottomPanel.setBackground(COLOR_BG);
 
+        Color labelColor = (currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO) ? Color.WHITE : COLOR_TEXT;
         if (mainTitleLabel != null) {
             mainTitleLabel.setFont(getAppFont(Font.PLAIN, 26));
-            mainTitleLabel.setForeground(COLOR_TEXT);
+            mainTitleLabel.setForeground(labelColor);
         }
         if (mainSubtitleLabel != null) {
             mainSubtitleLabel.setFont(getAppFont(Font.PLAIN, 12));
-            mainSubtitleLabel.setForeground(COLOR_TEXT);
+            mainSubtitleLabel.setForeground(labelColor);
         }
         if (authorLabel != null) {
             authorLabel.setFont(getAppFont(Font.PLAIN, 12));
-            authorLabel.setForeground(COLOR_TEXT);
+            authorLabel.setForeground(labelColor);
         }
         if (startButton != null) {
             startButton.setFont(getAppFont(Font.PLAIN, 15));

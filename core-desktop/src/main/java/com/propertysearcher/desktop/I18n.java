@@ -6,8 +6,8 @@ import java.util.Map;
 public class I18n {
 
     public enum Language {
-        UA("Українська", "🇺🇦"),
-        EN("English", "🇬🇧");
+        UA("Українська", "UA"),
+        EN("English", "EN");
 
         public final String title;
         public final String flag;
@@ -46,15 +46,15 @@ public class I18n {
         UA_MAP.put("gui.token_btn", "Токен та назва");
         UA_MAP.put("gui.category_btn", "Категорії пошуку");
         UA_MAP.put("gui.instruction_btn", "Інструкція та BotFather");
-        UA_MAP.put("gui.lang_btn", "🌐 Мова та стиль оформлення");
-        UA_MAP.put("gui.theme_btn", "🎨 Стиль оформлення");
+        UA_MAP.put("gui.lang_btn", "Мова та стиль оформлення");
+        UA_MAP.put("gui.theme_btn", "Стиль оформлення");
         UA_MAP.put("theme.dialog_title", "Мова та стиль оформлення");
         UA_MAP.put("theme.prompt", "<html><center><b>Налаштування інтерфейсу</b><br>Оберіть мову та стиль оформлення програми:</center></html>");
         UA_MAP.put("theme.section_lang", "Мова інтерфейсу:");
         UA_MAP.put("theme.section_style", "Стиль оформлення та шрифт:");
-        UA_MAP.put("theme.comic_sans", "💎 Тіфані + Comic Sans MS (Фірмова)");
-        UA_MAP.put("theme.corporate", "🏢 Корпоративна сіра + Строгий шрифт");
-        UA_MAP.put("theme.apply_btn", "✅ Застосувати");
+        UA_MAP.put("theme.comic_sans", "Тіфані + Comic Sans MS (Фірмова)");
+        UA_MAP.put("theme.corporate", "Корпоративна сіра + Строгий шрифт");
+        UA_MAP.put("theme.apply_btn", "Застосувати");
         UA_MAP.put("gui.back_btn", "Назад");
         UA_MAP.put("gui.save_btn", "Зберегти");
         UA_MAP.put("gui.bot_name_lbl", "Назва бота:");
@@ -77,8 +77,8 @@ public class I18n {
         UA_MAP.put("cat.edit_btn", "Редагувати");
         UA_MAP.put("cat.remove_btn", "Видалити");
         UA_MAP.put("cat.close_btn", "Закрити");
-        UA_MAP.put("cat.badge_on", " 🟢 ВКЛ ");
-        UA_MAP.put("cat.badge_pause", " ⏸ ПАУЗА ");
+        UA_MAP.put("cat.badge_on", " ВКЛ ");
+        UA_MAP.put("cat.badge_pause", " ПАУЗА ");
         UA_MAP.put("cat.badge_owner", " Власник ");
         UA_MAP.put("cat.total", "Всього");
         UA_MAP.put("cat.active", "активних");
@@ -118,7 +118,7 @@ public class I18n {
         UA_MAP.put("ins.tab_botfather", "BotFather (Команди меню)");
         UA_MAP.put("ins.tab_quickstart", "Швидкий старт та Робота");
         UA_MAP.put("ins.tab_filters", "Фільтри та Архітектура");
-        UA_MAP.put("ins.copy_btn", "📋 Скопіювати команди для BotFather");
+        UA_MAP.put("ins.copy_btn", "Скопіювати команди для BotFather");
         UA_MAP.put("ins.copied_notice", "Команди успішно скопійовано в буфер обміну!\n\nТепер надішліть їх боту @BotFather після команди /setcommands.");
         UA_MAP.put("ins.copied_title", "Успішно скопійовано");
         UA_MAP.put("ins.close_btn", "Закрити");
@@ -127,8 +127,8 @@ public class I18n {
         UA_MAP.put("ins.botfather_commands", "start - Головне меню та запуск\nsearch - Запустити пошук оголошень\ntargets - Список активних категорій\ncurrency - Валюта цін (USD/UAH)\nstop - Зупинити моніторинг\nhelp - Довідка та інструкція");
         UA_MAP.put("ins.copied_button_text", "Скопійовано в буфер!");
 
-        UA_MAP.put("status.active", "🟢 АКТИВНИЙ");
-        UA_MAP.put("status.paused", "⏸ ЗУПИНЕНО");
+        UA_MAP.put("status.active", "АКТИВНИЙ");
+        UA_MAP.put("status.paused", "ЗУПИНЕНО");
         UA_MAP.put("status.monitoring", "Моніторинг");
         UA_MAP.put("status.total_categories", "Всього категорій");
         UA_MAP.put("status.active_categories", "активних");
@@ -136,8 +136,8 @@ public class I18n {
         UA_MAP.put("status.safe_rps", "Безпека з'єднань");
         UA_MAP.put("status.currency_mode", "Валюта цін");
         UA_MAP.put("status.night_mode", "Режим сповіщень");
-        UA_MAP.put("status.night_silent", "🌙 Нічний (без звуку)");
-        UA_MAP.put("status.day_sound", "☀️ Денний (зі звуком)");
+        UA_MAP.put("status.night_silent", "Нічний (без звуку)");
+        UA_MAP.put("status.day_sound", "Денний (зі звуком)");
 
         UA_MAP.put("tg.welcome", "👋 <b>Вітаю у Property Searcher 3!</b>\n\nБот миттєво відстежує тільки <b>найновіші органічні оголошення</b> (OLX & DOM.RIA), пропускаючи проплачені ТОП-блоки.\n\nОберіть дію на клавіатурі нижче:");
         UA_MAP.put("tg.menu.search", "🔍 Пошук зараз");
@@ -174,15 +174,15 @@ public class I18n {
         EN_MAP.put("gui.token_btn", "Token & Bot Name");
         EN_MAP.put("gui.category_btn", "Search Categories");
         EN_MAP.put("gui.instruction_btn", "Manual & BotFather");
-        EN_MAP.put("gui.lang_btn", "🌐 Language & UI Style");
-        EN_MAP.put("gui.theme_btn", "🎨 UI Theme Style");
+        EN_MAP.put("gui.lang_btn", "Language & UI Style");
+        EN_MAP.put("gui.theme_btn", "UI Theme Style");
         EN_MAP.put("theme.dialog_title", "Language & UI Style");
         EN_MAP.put("theme.prompt", "<html><center><b>Interface Preferences</b><br>Choose interface language and visual style:</center></html>");
         EN_MAP.put("theme.section_lang", "Interface Language:");
         EN_MAP.put("theme.section_style", "Visual Theme & Typography:");
-        EN_MAP.put("theme.comic_sans", "💎 Tiffany Mint + Comic Sans MS (Signature)");
-        EN_MAP.put("theme.corporate", "🏢 Corporate Slate Gray + Standard UI");
-        EN_MAP.put("theme.apply_btn", "✅ Apply");
+        EN_MAP.put("theme.comic_sans", "Tiffany Mint + Comic Sans MS (Signature)");
+        EN_MAP.put("theme.corporate", "Corporate Slate Gray + Standard UI");
+        EN_MAP.put("theme.apply_btn", "Apply");
         EN_MAP.put("gui.back_btn", "Back");
         EN_MAP.put("gui.save_btn", "Save");
         EN_MAP.put("gui.bot_name_lbl", "Bot Name:");
@@ -205,8 +205,8 @@ public class I18n {
         EN_MAP.put("cat.edit_btn", "Edit");
         EN_MAP.put("cat.remove_btn", "Delete");
         EN_MAP.put("cat.close_btn", "Close");
-        EN_MAP.put("cat.badge_on", " 🟢 ON ");
-        EN_MAP.put("cat.badge_pause", " ⏸ PAUSE ");
+        EN_MAP.put("cat.badge_on", " ON ");
+        EN_MAP.put("cat.badge_pause", " PAUSE ");
         EN_MAP.put("cat.badge_owner", " Owner ");
         EN_MAP.put("cat.total", "Total");
         EN_MAP.put("cat.active", "active");
@@ -246,7 +246,7 @@ public class I18n {
         EN_MAP.put("ins.tab_botfather", "BotFather (Menu Commands)");
         EN_MAP.put("ins.tab_quickstart", "Quick Start & Bot");
         EN_MAP.put("ins.tab_filters", "Filters & Architecture");
-        EN_MAP.put("ins.copy_btn", "📋 Copy Commands for BotFather");
+        EN_MAP.put("ins.copy_btn", "Copy Commands for BotFather");
         EN_MAP.put("ins.copied_notice", "Commands copied to clipboard successfully!\n\nNow send them to @BotFather after the /setcommands command.");
         EN_MAP.put("ins.copied_title", "Copied Successfully");
         EN_MAP.put("ins.close_btn", "Close");
@@ -255,8 +255,8 @@ public class I18n {
         EN_MAP.put("ins.botfather_commands", "start - Main menu and instant start\nsearch - Start listing monitoring\ntargets - Manage active categories\ncurrency - Price currency (USD/UAH)\nstop - Pause monitoring\nhelp - Guide and documentation");
         EN_MAP.put("ins.copied_button_text", "Copied to clipboard!");
 
-        EN_MAP.put("status.active", "🟢 ACTIVE");
-        EN_MAP.put("status.paused", "⏸ PAUSED");
+        EN_MAP.put("status.active", "ACTIVE");
+        EN_MAP.put("status.paused", "PAUSED");
         EN_MAP.put("status.monitoring", "Monitoring");
         EN_MAP.put("status.total_categories", "Total categories");
         EN_MAP.put("status.active_categories", "active");
@@ -264,8 +264,8 @@ public class I18n {
         EN_MAP.put("status.safe_rps", "Connection safety");
         EN_MAP.put("status.currency_mode", "Price currency");
         EN_MAP.put("status.night_mode", "Notification mode");
-        EN_MAP.put("status.night_silent", "🌙 Night (silent)");
-        EN_MAP.put("status.day_sound", "☀️ Day (with sound)");
+        EN_MAP.put("status.night_silent", "Night (silent)");
+        EN_MAP.put("status.day_sound", "Day (with sound)");
 
         EN_MAP.put("tg.welcome", "👋 <b>Welcome to Property Searcher 3!</b>\n\nInstant high-velocity monitoring for <b>organic real estate listings</b> (OLX & DOM.RIA), bypassing sponsored ads and promoted top-slots.\n\nSelect an action on the keyboard below:");
         EN_MAP.put("tg.menu.search", "🔍 Search Now");
