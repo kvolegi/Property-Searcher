@@ -170,7 +170,9 @@ public class PropertyController {
 
         Map<String, Long> byPlatform = new HashMap<>();
         byPlatform.put("OLX", discoveredPropertyRepository.countByPlatform("OLX"));
-        byPlatform.put("DOM.RIA", discoveredPropertyRepository.countByPlatform("DOM.RIA"));
+        long domRiaCount = discoveredPropertyRepository.countByPlatform("DOM.RIA")
+                + discoveredPropertyRepository.countByPlatform("DOM_RIA");
+        byPlatform.put("DOM.RIA", domRiaCount);
 
         AnalyticsSummaryDto summary = new AnalyticsSummaryDto(
                 activeTargets,

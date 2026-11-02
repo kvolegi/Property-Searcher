@@ -11,9 +11,9 @@ public record CreateTargetRequest(
         @NotBlank(message = "Target title must not be blank")
         String title,
 
-        @Schema(description = "Source marketplace platform", example = "OLX", allowableValues = {"OLX", "DOM.RIA", "MOCK"})
+        @Schema(description = "Source marketplace platform", example = "OLX", allowableValues = {"OLX", "DOM.RIA", "DOM_RIA", "MOCK"})
         @NotBlank(message = "Platform is required")
-        @Pattern(regexp = "^(?i)(OLX|DOM\\.RIA|MOCK)$", message = "Platform must be OLX, DOM.RIA, or MOCK")
+        @Pattern(regexp = "^(?i)(OLX|DOM\\.RIA|DOM_RIA|MOCK)$", message = "Platform must be OLX, DOM.RIA, DOM_RIA, or MOCK")
         String platform,
 
         @Schema(description = "Target search URL with applied filters", example = "https://www.olx.ua/uk/nedvizhimost/kvartiry/od/?currency=UAH&search[order]=created_at:desc&view=list")

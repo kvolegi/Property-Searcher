@@ -5,10 +5,9 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -17,16 +16,25 @@ public class ScraperService {
     private final Map<String, ScraperStrategy> strategies;
 
     public ScraperService(List<ScraperStrategy> strategyList) {
-        this.strategies = strategyList.stream()
-                .collect(Collectors.toMap(
-                        s -> s.getSupportedPlatform().toUpperCase(),
-                        Function.identity()
-                ));
+        this.strategies = new HashMap<>();
+        for (ScraperStrategy s : strategyList) {
+            String key = s.getSupportedPlatform().toUpperCase();
+            this.strategies.put(key, s);
+            this.strategies.put(key.replace("_", "."), s);
+            this.strategies.put(key.replace(".", "_"), s);
+        }
     }
 
     @CircuitBreaker(name = "scraperEngine", fallbackMethod = "scrapeFallback")
     public List<PropertyDto> executeScrape(String platform, String url, String category) {
-        ScraperStrategy strategy = strategies.get(platform.toUpperCase());
+        String key = platform != null ? platform.toUpperCase() : "OLX";
+        ScraperStrategy strategy = strategies.get(key);
+        if (strategy == null) {
+            strategy = strategies.get(key.replace(".", "_"));
+        }
+        if (strategy == null) {
+            strategy = strategies.get(key.replace("_", "."));
+        }
         if (strategy == null) {
             strategy = strategies.get("OLX");
         }

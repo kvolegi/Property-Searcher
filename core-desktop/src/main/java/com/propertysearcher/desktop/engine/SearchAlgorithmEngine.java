@@ -117,7 +117,7 @@ public class SearchAlgorithmEngine implements Runnable {
         try {
             ParserOLX ps = new ParserOLX(categoryUrl);
             List<ParserOLX.PropertyResult> initialAds = ps.getTopProperties(30);
-            for (int i = 1; i < initialAds.size(); i++) {
+            for (int i = 0; i < initialAds.size(); i++) {
                 ParserOLX.PropertyResult res = initialAds.get(i);
                 if (res != null && res.link != null && !res.link.isBlank()) {
                     String clean = res.link.split("\\?")[0];

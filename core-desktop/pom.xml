@@ -43,6 +43,7 @@
   </dependencies>
 
   <build>
+    <finalName>PS-3.0</finalName>
     <plugins>
       <!-- Compiler plugin -->
       <plugin>

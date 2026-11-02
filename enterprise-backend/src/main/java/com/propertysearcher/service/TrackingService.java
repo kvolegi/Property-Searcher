@@ -1,15 +1,10 @@
 package com.propertysearcher.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.propertysearcher.analytics.PriceAnalyticsService;
 import com.propertysearcher.cache.DeduplicationCacheStrategy;
-import com.propertysearcher.domain.entity.DiscoveredProperty;
-import com.propertysearcher.domain.entity.PriceHistory;
 import com.propertysearcher.domain.entity.SearchTarget;
-import com.propertysearcher.domain.repository.DiscoveredPropertyRepository;
 import com.propertysearcher.domain.repository.PriceHistoryRepository;
 import com.propertysearcher.domain.repository.SearchTargetRepository;
-import com.propertysearcher.event.PriceChangedEvent;
 import com.propertysearcher.event.PropertyDiscoveredEvent;
 import com.propertysearcher.event.TriggerScanEvent;
 import com.propertysearcher.scraper.PropertyDto;
@@ -22,7 +17,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -38,13 +32,11 @@ public class TrackingService {
     }
 
     private final SearchTargetRepository searchTargetRepository;
-    private final DiscoveredPropertyRepository discoveredPropertyRepository;
     private final PriceHistoryRepository priceHistoryRepository;
     private final PriceAnalyticsService priceAnalyticsService;
     private final ScraperService scraperService;
     private final DeduplicationCacheStrategy deduplicationCacheStrategy;
     private final ApplicationEventPublisher eventPublisher;
-    private final ObjectMapper objectMapper;
     private final TrackingPersistenceService trackingPersistenceService;
 
     private final java.util.concurrent.atomic.AtomicBoolean isScanInProgress = new java.util.concurrent.atomic.AtomicBoolean(false);
@@ -125,85 +117,6 @@ public class TrackingService {
                 eventPublisher.publishEvent(new PropertyDiscoveredEvent(dto, valuation));
             }
         }
-    }
-
-    /**
-     * Database Analytics Mode (Full historical tracking, price drop calculation & Bargain Detection).
-     * Protected by @Transactional strictly over the database persistence operations.
-     */
-    @Transactional
-    public void persistDatabaseAnalytics(SearchTarget target, List<PropertyDto> scraped) {
-        for (PropertyDto dto : scraped) {
-            Optional<DiscoveredProperty> existingOpt = discoveredPropertyRepository
-                    .findByExternalIdAndPlatform(dto.externalId(), dto.platform());
-
-            BigDecimal numericPrice = priceAnalyticsService.parseNumericPrice(dto.price());
-            String currency = priceAnalyticsService.detectCurrency(dto.price());
-            PriceAnalyticsService.DealValuation valuation = evaluateDynamicBargain(target, dto, scraped);
-
-            if (existingOpt.isEmpty()) {
-                log.info("[DB_ANALYTICS] New property detected: [{}] {}", dto.category(), dto.title());
-
-                String rawJson;
-                try {
-                    rawJson = objectMapper.writeValueAsString(Map.of(
-                            "externalId", dto.externalId(),
-                            "platform", dto.platform(),
-                            "title", dto.title(),
-                            "price", dto.price(),
-                            "url", dto.url(),
-                            "category", dto.category() != null ? dto.category() : ""
-                    ));
-                } catch (Exception e) {
-                    rawJson = "{}";
-                }
-
-                DiscoveredProperty entity = DiscoveredProperty.builder()
-                        .externalId(dto.externalId())
-                        .platform(dto.platform())
-                        .title(dto.title())
-                        .price(dto.price())
-                        .url(dto.url())
-                        .category(dto.category())
-                        .rawPayload(rawJson)
-                        .build();
-
-                DiscoveredProperty saved = discoveredPropertyRepository.save(entity);
-                recordPrice(saved, dto.price());
-                eventPublisher.publishEvent(new PropertyDiscoveredEvent(dto, valuation));
-            } else {
-                DiscoveredProperty existing = existingOpt.get();
-                if (!dto.price().equalsIgnoreCase(existing.getPrice())) {
-                    BigDecimal oldNumeric = priceAnalyticsService.parseNumericPrice(existing.getPrice());
-                    BigDecimal newNumeric = priceAnalyticsService.parseNumericPrice(dto.price());
-
-                    String changeSummary = priceAnalyticsService.calculatePriceChangeSummary(oldNumeric, newNumeric, currency);
-
-                    log.info("Price changed for [{}]: was {} -> now {}", dto.title(), existing.getPrice(), dto.price());
-                    existing.setPrice(dto.price());
-                    discoveredPropertyRepository.save(existing);
-                    recordPrice(existing, dto.price());
-
-                    if (!changeSummary.isBlank()) {
-                        eventPublisher.publishEvent(new PriceChangedEvent(dto, changeSummary, oldNumeric, newNumeric));
-                    }
-                }
-            }
-        }
-    }
-
-    private void recordPrice(DiscoveredProperty property, String rawPrice) {
-        BigDecimal numeric = priceAnalyticsService.parseNumericPrice(rawPrice);
-        String currency = priceAnalyticsService.detectCurrency(rawPrice);
-
-        PriceHistory history = PriceHistory.builder()
-                .property(property)
-                .rawPrice(rawPrice)
-                .numericPrice(numeric)
-                .currency(currency)
-                .build();
-
-        priceHistoryRepository.save(history);
     }
 
     private PriceAnalyticsService.DealValuation evaluateDynamicBargain(SearchTarget target, PropertyDto dto, List<PropertyDto> batch) {
