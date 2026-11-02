@@ -34,6 +34,13 @@ jobs:
         working-directory: core-desktop
         run: mvn package -DskipTests --batch-mode
 
+      - name: Upload Core Desktop JAR Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PropertySeacher-Universal-jar
+          path: core-desktop/target/PS-3.0.jar
+          if-no-files-found: error
+
   enterprise-backend:
     name: Enterprise Backend (Spring Boot 3)
     runs-on: ubuntu-latest
@@ -55,6 +62,13 @@ jobs:
       - name: Build Enterprise Backend
         working-directory: enterprise-backend
         run: mvn package -DskipTests --batch-mode
+
+      - name: Upload Enterprise Backend JAR Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: property-seacher-backend-jar
+          path: enterprise-backend/target/property-seacher-backend-3.0.0.jar
+          if-no-files-found: error
 
   docker-build:
     name: Docker Image Verification

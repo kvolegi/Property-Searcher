@@ -45,10 +45,13 @@ public class TrackingService {
     private final DeduplicationCacheStrategy deduplicationCacheStrategy;
     private final ApplicationEventPublisher eventPublisher;
     private final ObjectMapper objectMapper;
+    private final TrackingPersistenceService trackingPersistenceService;
+
+    private final java.util.concurrent.atomic.AtomicBoolean isScanInProgress = new java.util.concurrent.atomic.AtomicBoolean(false);
 
     @Getter
     @Setter
-    private TrackingMode trackingMode = TrackingMode.LIVE_SNIPE;
+    private volatile TrackingMode trackingMode = TrackingMode.LIVE_SNIPE;
 
     public String getCurrentMode() {
         return trackingMode.name();
@@ -62,22 +65,30 @@ public class TrackingService {
 
     @Scheduled(fixedDelayString = "${app.tracker.delay-ms:10000}", initialDelay = 5000)
     public void trackAllTargets() {
-        log.info("Starting property tracking cycle (Mode: {})...", trackingMode);
-        List<SearchTarget> targets = searchTargetRepository.findAllByActiveTrue();
-
-        for (SearchTarget target : targets) {
-            try {
-                processTarget(target);
-            } catch (Exception e) {
-                log.error("Error processing target [{}]: {}", target.getTitle(), e.getMessage());
-            }
+        if (!isScanInProgress.compareAndSet(false, true)) {
+            log.warn("[CONCURRENCY_GUARD] Tracking cycle already in progress, skipping overlapping execution.");
+            return;
         }
-        log.info("Completed tracking cycle.");
+        try {
+            log.info("Starting property tracking cycle (Mode: {})...", trackingMode);
+            List<SearchTarget> targets = searchTargetRepository.findAllByActiveTrue();
+
+            for (SearchTarget target : targets) {
+                try {
+                    processTarget(target);
+                } catch (Exception e) {
+                    log.error("Error processing target [{}]: {}", target.getTitle(), e.getMessage());
+                }
+            }
+            log.info("Completed tracking cycle.");
+        } finally {
+            isScanInProgress.set(false);
+        }
     }
 
     /**
      * Executes external scraping OUTSIDE any database transaction to prevent HikariCP connection starvation.
-     * Transactional boundaries are strictly reserved for persistence in persistDatabaseAnalytics().
+     * Transactional boundaries are strictly delegated to TrackingPersistenceService.
      */
     public void processTarget(SearchTarget target) {
         List<PropertyDto> scraped = scraperService.executeScrape(
@@ -93,7 +104,7 @@ public class TrackingService {
         if (trackingMode == TrackingMode.LIVE_SNIPE) {
             processLiveSnipe(target, scraped);
         } else {
-            persistDatabaseAnalytics(target, scraped);
+            trackingPersistenceService.persistDatabaseAnalytics(target, scraped, dto -> evaluateDynamicBargain(target, dto, scraped));
         }
     }
 

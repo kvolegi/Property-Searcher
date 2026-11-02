@@ -12,6 +12,7 @@ import com.propertyseacher.event.PriceChangedEvent;
 import com.propertyseacher.event.PropertyDiscoveredEvent;
 import com.propertyseacher.scraper.PropertyDto;
 import com.propertyseacher.scraper.ScraperService;
+import com.propertyseacher.service.TrackingPersistenceService;
 import com.propertyseacher.service.TrackingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -52,6 +53,9 @@ class TrackingServiceTest {
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private TrackingPersistenceService trackingPersistenceService;
 
     @org.mockito.Spy
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -100,19 +104,9 @@ class TrackingServiceTest {
     }
 
     @Test
-    @DisplayName("Should detect price drop on existing property and emit PriceChangedEvent")
+    @DisplayName("Should delegate database persistence to TrackingPersistenceService in DATABASE_ANALYTICS mode")
     void shouldDetectPriceDropAndNotify() {
         trackingService.setTrackingMode(TrackingService.TrackingMode.DATABASE_ANALYTICS);
-
-        DiscoveredProperty existingProperty = DiscoveredProperty.builder()
-                .id(1L)
-                .externalId("ext-existing")
-                .platform("DOM_RIA")
-                .title("Квартира")
-                .price("15 000 грн")
-                .url("https://dom.ria.com/realty/existing")
-                .category("Одеса 1-к")
-                .build();
 
         PropertyDto updatedDto = new PropertyDto(
                 "ext-existing",
@@ -125,18 +119,10 @@ class TrackingServiceTest {
 
         when(scraperService.executeScrape(mockTarget.getPlatform(), mockTarget.getUrl(), mockTarget.getTitle()))
                 .thenReturn(List.of(updatedDto));
-        when(discoveredPropertyRepository.findByExternalIdAndPlatform("ext-existing", "DOM_RIA"))
-                .thenReturn(java.util.Optional.of(existingProperty));
-        when(priceAnalyticsService.parseNumericPrice("15 000 грн")).thenReturn(new BigDecimal("15000"));
-        when(priceAnalyticsService.parseNumericPrice("13 500 грн")).thenReturn(new BigDecimal("13500"));
-        when(priceAnalyticsService.detectCurrency("13 500 грн")).thenReturn("UAH");
-        when(priceAnalyticsService.calculatePriceChangeSummary(any(), any(), any()))
-                .thenReturn("📉 Ціна знизилася!");
 
         trackingService.processTarget(mockTarget);
 
-        verify(discoveredPropertyRepository, times(1)).save(existingProperty);
-        verify(eventPublisher, times(1)).publishEvent(any(PriceChangedEvent.class));
+        verify(trackingPersistenceService, times(1)).persistDatabaseAnalytics(eq(mockTarget), any(), any());
     }
 
     @Test

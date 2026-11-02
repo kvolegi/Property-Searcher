@@ -1,6 +1,7 @@
 package com.propertyseacher.cache;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Thread-safe 50-slot in-memory circular buffer strategy with O(1) containment checks.
  */
 @Component
+@ConditionalOnProperty(name = "app.cache.type", havingValue = "in-memory", matchIfMissing = true)
 public class InMemoryRingBufferCacheStrategy implements DeduplicationCacheStrategy {
 
     private final int capacity;

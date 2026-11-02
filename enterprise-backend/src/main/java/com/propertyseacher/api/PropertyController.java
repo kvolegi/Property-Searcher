@@ -3,6 +3,7 @@ package com.propertyseacher.api;
 import com.propertyseacher.api.dto.AnalyticsSummaryDto;
 import com.propertyseacher.api.dto.CreateTargetRequest;
 import com.propertyseacher.api.dto.ErrorResponse;
+import com.propertyseacher.api.dto.PriceHistoryDto;
 import com.propertyseacher.domain.entity.DiscoveredProperty;
 import com.propertyseacher.domain.entity.PriceHistory;
 import com.propertyseacher.domain.entity.SearchTarget;
@@ -82,12 +83,22 @@ public class PropertyController {
             @ApiResponse(responseCode = "404", description = "Property ID not found", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/properties/{id}/history")
-    public ResponseEntity<List<PriceHistory>> getPriceHistory(
+    public ResponseEntity<List<PriceHistoryDto>> getPriceHistory(
             @Parameter(description = "Internal database property ID") @PathVariable Long id) {
         if (!discoveredPropertyRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Property with ID " + id + " does not exist");
         }
-        return ResponseEntity.ok(priceHistoryRepository.findByPropertyIdOrderByRecordedAtAsc(id));
+        List<PriceHistoryDto> dtoList = priceHistoryRepository.findByPropertyIdOrderByRecordedAtAsc(id).stream()
+                .map(ph -> new PriceHistoryDto(
+                        ph.getId(),
+                        ph.getProperty() != null ? ph.getProperty().getId() : null,
+                        ph.getRawPrice(),
+                        ph.getNumericPrice(),
+                        ph.getCurrency(),
+                        ph.getRecordedAt()
+                ))
+                .toList();
+        return ResponseEntity.ok(dtoList);
     }
 
     @Operation(summary = "List all search targets", description = "Returns all configured monitoring targets across platforms.")
