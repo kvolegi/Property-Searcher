@@ -32,11 +32,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/v1")
-@RequiredArgsConstructor
 @Tag(name = "Real Estate Intelligence API", description = "Endpoints for managing targets, querying indexed listings, tracking price history, and inspecting telemetry")
 public class PropertyController {
 
@@ -44,6 +45,20 @@ public class PropertyController {
     private final SearchTargetRepository searchTargetRepository;
     private final PriceHistoryRepository priceHistoryRepository;
     private final TrackingService trackingService;
+    private final ExecutorService virtualThreadExecutor;
+
+    public PropertyController(
+            DiscoveredPropertyRepository discoveredPropertyRepository,
+            SearchTargetRepository searchTargetRepository,
+            PriceHistoryRepository priceHistoryRepository,
+            TrackingService trackingService,
+            @Qualifier("virtualThreadExecutor") ExecutorService virtualThreadExecutor) {
+        this.discoveredPropertyRepository = discoveredPropertyRepository;
+        this.searchTargetRepository = searchTargetRepository;
+        this.priceHistoryRepository = priceHistoryRepository;
+        this.trackingService = trackingService;
+        this.virtualThreadExecutor = virtualThreadExecutor;
+    }
 
     @Operation(summary = "Get paginated property listings", description = "Retrieves discovered real estate listings sorted by discovery timestamp in descending order.")
     @ApiResponses({
@@ -160,7 +175,7 @@ public class PropertyController {
     @ApiResponse(responseCode = "202", description = "Scan cycle accepted and processing in background")
     @PostMapping("/track/trigger")
     public ResponseEntity<Map<String, String>> triggerManualScan() {
-        CompletableFuture.runAsync(trackingService::trackAllTargets);
+        CompletableFuture.runAsync(trackingService::trackAllTargets, virtualThreadExecutor);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(Map.of(
                 "status", "ACCEPTED",
                 "message", "Tracking cycle offloaded to background executor.",

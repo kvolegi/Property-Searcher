@@ -1,5 +1,6 @@
 package com.propertyseacher;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.propertyseacher.analytics.PriceAnalyticsService;
 import com.propertyseacher.cache.DeduplicationCacheStrategy;
 import com.propertyseacher.domain.entity.DiscoveredProperty;
@@ -51,6 +52,9 @@ class TrackingServiceTest {
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
+    @org.mockito.Spy
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @InjectMocks
     private TrackingService trackingService;

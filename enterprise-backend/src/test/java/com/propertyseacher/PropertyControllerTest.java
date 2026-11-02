@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -43,6 +44,9 @@ class PropertyControllerTest {
 
     @MockBean
     private TrackingService trackingService;
+
+    @MockBean(name = "virtualThreadExecutor")
+    private ExecutorService virtualThreadExecutor;
 
     @Test
     @DisplayName("GET /api/v1/targets returns 200 with list of targets")

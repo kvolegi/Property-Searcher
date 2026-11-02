@@ -30,8 +30,9 @@ public class ParserOLX {
             Matcher m = Pattern.compile("(\\d{1,2}:\\d{2})").matcher(timeHhMm);
             if (m.find()) {
                 LocalTime parsed = LocalTime.parse(m.group(1), TIME_FMT);
-                int offsetHours = KYIV_ZONE.getRules().getOffset(java.time.Instant.now()).getTotalSeconds() / 3600;
-                return parsed.plusHours(offsetHours).format(TIME_FMT);
+                // OLX listings in Ukraine already publish timestamps in local Kyiv time.
+                // Normalize formatting cleanly without adding redundant zone offsets.
+                return parsed.format(TIME_FMT);
             }
         } catch (Exception ignored) {}
         return timeHhMm;

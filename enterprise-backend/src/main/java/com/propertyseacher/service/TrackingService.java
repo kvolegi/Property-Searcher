@@ -1,5 +1,6 @@
 package com.propertyseacher.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.propertyseacher.analytics.PriceAnalyticsService;
 import com.propertyseacher.cache.DeduplicationCacheStrategy;
 import com.propertyseacher.domain.entity.DiscoveredProperty;
@@ -43,6 +44,7 @@ public class TrackingService {
     private final ScraperService scraperService;
     private final DeduplicationCacheStrategy deduplicationCacheStrategy;
     private final ApplicationEventPublisher eventPublisher;
+    private final ObjectMapper objectMapper;
 
     @Getter
     @Setter
@@ -73,7 +75,10 @@ public class TrackingService {
         log.info("Completed tracking cycle.");
     }
 
-    @Transactional
+    /**
+     * Executes external scraping OUTSIDE any database transaction to prevent HikariCP connection starvation.
+     * Transactional boundaries are strictly reserved for persistence in persistDatabaseAnalytics().
+     */
     public void processTarget(SearchTarget target) {
         List<PropertyDto> scraped = scraperService.executeScrape(
                 target.getPlatform(),
@@ -88,7 +93,7 @@ public class TrackingService {
         if (trackingMode == TrackingMode.LIVE_SNIPE) {
             processLiveSnipe(target, scraped);
         } else {
-            processDatabaseAnalytics(target, scraped);
+            persistDatabaseAnalytics(target, scraped);
         }
     }
 
@@ -116,23 +121,36 @@ public class TrackingService {
     }
 
     /**
-     * Database Analytics Mode (Full historical tracking, price drop calculation & Bargain Detection)
+     * Database Analytics Mode (Full historical tracking, price drop calculation & Bargain Detection).
+     * Protected by @Transactional strictly over the database persistence operations.
      */
-    private void processDatabaseAnalytics(SearchTarget target, List<PropertyDto> scraped) {
+    @Transactional
+    public void persistDatabaseAnalytics(SearchTarget target, List<PropertyDto> scraped) {
         for (PropertyDto dto : scraped) {
             Optional<DiscoveredProperty> existingOpt = discoveredPropertyRepository
                     .findByExternalIdAndPlatform(dto.externalId(), dto.platform());
 
+            BigDecimal numericPrice = priceAnalyticsService.parseNumericPrice(dto.price());
+            String currency = priceAnalyticsService.detectCurrency(dto.price());
+            BigDecimal benchmark = target.getUrl().toLowerCase().contains("dom.ria") ? BigDecimal.valueOf(60000) : BigDecimal.valueOf(45000);
+            PriceAnalyticsService.DealValuation valuation = priceAnalyticsService.evaluateBargain(numericPrice, benchmark, currency);
+
             if (existingOpt.isEmpty()) {
                 log.info("[DB_ANALYTICS] New property detected: [{}] {}", dto.category(), dto.title());
 
-                BigDecimal numericPrice = priceAnalyticsService.parseNumericPrice(dto.price());
-                String currency = priceAnalyticsService.detectCurrency(dto.price());
-                BigDecimal benchmark = target.getUrl().toLowerCase().contains("dom.ria") ? BigDecimal.valueOf(60000) : BigDecimal.valueOf(45000);
-                PriceAnalyticsService.DealValuation valuation = priceAnalyticsService.evaluateBargain(numericPrice, benchmark, currency);
-
-                String rawJson = String.format("{\"externalId\":\"%s\",\"platform\":\"%s\",\"title\":\"%s\",\"price\":\"%s\",\"url\":\"%s\"}",
-                        dto.externalId(), dto.platform(), dto.title().replace("\"", "\\\""), dto.price(), dto.url());
+                String rawJson;
+                try {
+                    rawJson = objectMapper.writeValueAsString(Map.of(
+                            "externalId", dto.externalId(),
+                            "platform", dto.platform(),
+                            "title", dto.title(),
+                            "price", dto.price(),
+                            "url", dto.url(),
+                            "category", dto.category() != null ? dto.category() : ""
+                    ));
+                } catch (Exception e) {
+                    rawJson = "{}";
+                }
 
                 DiscoveredProperty entity = DiscoveredProperty.builder()
                         .externalId(dto.externalId())
@@ -152,7 +170,6 @@ public class TrackingService {
                 if (!dto.price().equalsIgnoreCase(existing.getPrice())) {
                     BigDecimal oldNumeric = priceAnalyticsService.parseNumericPrice(existing.getPrice());
                     BigDecimal newNumeric = priceAnalyticsService.parseNumericPrice(dto.price());
-                    String currency = priceAnalyticsService.detectCurrency(dto.price());
 
                     String changeSummary = priceAnalyticsService.calculatePriceChangeSummary(oldNumeric, newNumeric, currency);
 
