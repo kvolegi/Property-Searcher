@@ -80,7 +80,7 @@ public class BotGUI extends JFrame {
         mainPanel.setBorder(new EmptyBorder(20, 30, 20, 30));
 
         JLabel prompt = new JLabel("<html><center><b>Welcome to Property Searcher 3!</b><br>Please choose your language / Оберіть мову інтерфейсу:</center></html>", SwingConstants.CENTER);
-        prompt.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
+        prompt.setFont(new Font("Comic Sans MS", Font.PLAIN, 13));
         prompt.setForeground(new Color(27, 101, 99));
 
         JPanel buttonsPanel = new JPanel();
@@ -193,11 +193,11 @@ public class BotGUI extends JFrame {
         titleBlock.setBackground(COLOR_BG);
 
         JLabel titleLabel = new JLabel("Property Searcher");
-        titleLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 26));
+        titleLabel.setFont(new Font("Comic Sans MS", Font.PLAIN, 26));
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel OlxLabel = new JLabel("olx / domria");
-        OlxLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
+        OlxLabel.setFont(new Font("Comic Sans MS", Font.PLAIN, 12));
         OlxLabel.setForeground(new Color(27, 101, 99));
         OlxLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -231,7 +231,7 @@ public class BotGUI extends JFrame {
         settingButton.addActionListener(e -> openSettingsDialog());
 
         JLabel kvolegiLabel = new JLabel("@kvolegi");
-        kvolegiLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
+        kvolegiLabel.setFont(new Font("Comic Sans MS", Font.PLAIN, 12));
         kvolegiLabel.setForeground(new Color(27, 101, 99));
 
         bottomPanel.add(settingButton, BorderLayout.WEST);
@@ -249,7 +249,7 @@ public class BotGUI extends JFrame {
     public static JButton createButton(String text, int x, int y, int width, int height) {
         JButton button = new JButton(text);
         button.setBackground(COLOR_BTN);
-        button.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 15));
+        button.setFont(new Font("Comic Sans MS", Font.PLAIN, 15));
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
@@ -373,7 +373,7 @@ public class BotGUI extends JFrame {
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        Font font = new Font(Font.SANS_SERIF, Font.PLAIN, 15);
+        Font font = new Font("Comic Sans MS", Font.PLAIN, 15);
 
         JLabel nameLabel = new JLabel(I18n.get("gui.bot_name_lbl"));
         nameLabel.setFont(font);
@@ -437,9 +437,9 @@ public class BotGUI extends JFrame {
             setLayout(new BorderLayout(4, 2));
             setOpaque(true);
 
-            Font fontTitle = new Font(Font.SANS_SERIF, Font.BOLD, 14);
-            Font fontBadge = new Font(Font.SANS_SERIF, Font.BOLD, 11);
-            Font fontUrl = new Font(Font.SANS_SERIF, Font.PLAIN, 11);
+            Font fontTitle = new Font("Comic Sans MS", Font.BOLD, 14);
+            Font fontBadge = new Font("Comic Sans MS", Font.BOLD, 11);
+            Font fontUrl = new Font("Comic Sans MS", Font.PLAIN, 11);
 
             titleLabel.setFont(fontTitle);
             badgeStatus.setFont(fontBadge);
@@ -533,11 +533,11 @@ public class BotGUI extends JFrame {
         headerPanel.setBorder(new EmptyBorder(12, 16, 6, 16));
 
         JLabel headerTitle = new JLabel(I18n.get("cat.header_title"));
-        headerTitle.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+        headerTitle.setFont(new Font("Comic Sans MS", Font.BOLD, 16));
         headerTitle.setForeground(new Color(27, 101, 99));
 
         JLabel countBadge = new JLabel(getCountText());
-        countBadge.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        countBadge.setFont(new Font("Comic Sans MS", Font.BOLD, 12));
         countBadge.setForeground(new Color(27, 101, 99));
 
         headerPanel.add(headerTitle, BorderLayout.WEST);
@@ -562,10 +562,10 @@ public class BotGUI extends JFrame {
         topActionBar.setBackground(COLOR_BG);
 
         JButton smartAddBtn = createButton(I18n.get("cat.smart_builder_btn"), 0, 0, 230, 40);
-        smartAddBtn.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
+        smartAddBtn.setFont(new Font("Comic Sans MS", Font.BOLD, 13));
 
         JButton manualAddBtn = createButton(I18n.get("cat.manual_add_btn"), 0, 0, 210, 40);
-        manualAddBtn.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
+        manualAddBtn.setFont(new Font("Comic Sans MS", Font.BOLD, 13));
 
         topActionBar.add(smartAddBtn);
         topActionBar.add(manualAddBtn);
@@ -684,8 +684,8 @@ public class BotGUI extends JFrame {
         p.setBackground(COLOR_BG);
         p.setBorder(new EmptyBorder(15, 20, 15, 20));
 
-        Font fontHead = new Font(Font.SANS_SERIF, Font.BOLD, 14);
-        Font fontInput = new Font(Font.SANS_SERIF, Font.PLAIN, 13);
+        Font fontHead = new Font("Comic Sans MS", Font.BOLD, 14);
+        Font fontInput = new Font("Comic Sans MS", Font.PLAIN, 13);
 
         JLabel titleLbl = new JLabel(I18n.get("manual.name_lbl"));
         titleLbl.setFont(fontHead);
@@ -704,7 +704,7 @@ public class BotGUI extends JFrame {
         boolean isEn = (I18n.getLanguage() == I18n.Language.EN);
         String helpHtml = isEn
             ? "<html><head><style>" +
-              "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; background-color: #B6EAE9; padding: 5px; margin: 0; }" +
+              "body { font-family: 'Comic Sans MS'; font-size: 11px; background-color: #B6EAE9; padding: 5px; margin: 0; }" +
               "b { color: #1B6563; }" +
               "code { background-color: #D2F5F4; border: 1px solid #1B6563; padding: 1px 4px; font-size: 10px; }" +
               "</style></head><body>" +
@@ -718,7 +718,7 @@ public class BotGUI extends JFrame {
               "• <i>Example:</i> <code>https://dom.ria.com/uk/prodazha-kvartir/odessa/?without_agent=1</code>" +
               "</body></html>"
             : "<html><head><style>" +
-              "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; background-color: #B6EAE9; padding: 5px; margin: 0; }" +
+              "body { font-family: 'Comic Sans MS'; font-size: 11px; background-color: #B6EAE9; padding: 5px; margin: 0; }" +
               "b { color: #1B6563; }" +
               "code { background-color: #D2F5F4; border: 1px solid #1B6563; padding: 1px 4px; font-size: 10px; }" +
               "</style></head><body>" +
@@ -793,12 +793,12 @@ public class BotGUI extends JFrame {
         }
 
         JLabel titleLabel = new JLabel("Property Searcher — " + I18n.get("ins.dialog_title"));
-        titleLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
+        titleLabel.setFont(new Font("Comic Sans MS", Font.BOLD, 18));
         titleLabel.setForeground(new Color(27, 101, 99));
         headerPanel.add(titleLabel);
 
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
+        tabbedPane.setFont(new Font("Comic Sans MS", Font.BOLD, 13));
         tabbedPane.setBackground(COLOR_BG);
 
         JPanel botFatherTab = new JPanel(new BorderLayout(10, 10));
@@ -810,10 +810,10 @@ public class BotGUI extends JFrame {
         guideBox.setBackground(COLOR_BG);
 
         JLabel stepTitle = new JLabel(I18n.get("ins.botfather_step_title"));
-        stepTitle.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+        stepTitle.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
         stepTitle.setForeground(new Color(27, 101, 99));
 
-        JLabel stepDesc = new JLabel("<html><body style='width: 580px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px;'>" +
+        JLabel stepDesc = new JLabel("<html><body style='width: 580px; font-family: 'Comic Sans MS'; font-size: 11px;'>" +
                 I18n.get("ins.botfather_step_desc") + "</body></html>");
 
         guideBox.add(stepTitle);
@@ -821,7 +821,7 @@ public class BotGUI extends JFrame {
         guideBox.add(stepDesc);
 
         JTextArea codeArea = new JTextArea(I18n.get("ins.botfather_commands"));
-        codeArea.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+        codeArea.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
         codeArea.setBackground(new Color(230, 248, 247));
         codeArea.setForeground(new Color(27, 101, 99));
         codeArea.setEditable(false);
@@ -834,7 +834,7 @@ public class BotGUI extends JFrame {
         codeScroll.setBorder(null);
 
         JButton copyCommandsButton = createButton(I18n.get("ins.copy_btn"), 0, 0, 380, 42);
-        copyCommandsButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+        copyCommandsButton.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
         copyCommandsButton.addActionListener(e -> {
             String botFatherCommands = I18n.get("ins.botfather_commands");
 
@@ -896,7 +896,7 @@ public class BotGUI extends JFrame {
     private String getQuickStartHtml(I18n.Language lang) {
         if (lang == I18n.Language.EN) {
             return "<html><head><style>" +
-                    "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; background-color: #B6EAE9; padding: 15px; }" +
+                    "body { font-family: 'Comic Sans MS'; font-size: 12px; background-color: #B6EAE9; padding: 15px; }" +
                     "h2 { font-size: 18px; font-weight: bold; color: #1B6563; }" +
                     "h3 { font-size: 14px; font-weight: bold; color: #1B6563; margin-top: 14px; }" +
                     "p, li { font-size: 12px; line-height: 1.4; }" +
@@ -918,7 +918,7 @@ public class BotGUI extends JFrame {
         }
 
         return "<html><head><style>" +
-                "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; background-color: #B6EAE9; padding: 15px; }" +
+                "body { font-family: 'Comic Sans MS'; font-size: 12px; background-color: #B6EAE9; padding: 15px; }" +
                 "h2 { font-size: 18px; font-weight: bold; color: #1B6563; }" +
                 "h3 { font-size: 14px; font-weight: bold; color: #1B6563; margin-top: 14px; }" +
                 "p, li { font-size: 12px; line-height: 1.4; }" +
@@ -942,7 +942,7 @@ public class BotGUI extends JFrame {
     private String getFiltersAndArchitectureHtml(I18n.Language lang) {
         if (lang == I18n.Language.EN) {
             return "<html><head><style>" +
-                    "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; background-color: #B6EAE9; padding: 15px; }" +
+                    "body { font-family: 'Comic Sans MS'; font-size: 12px; background-color: #B6EAE9; padding: 15px; }" +
                     "h2 { font-size: 18px; font-weight: bold; color: #1B6563; }" +
                     "h3 { font-size: 14px; font-weight: bold; color: #1B6563; margin-top: 14px; }" +
                     "p, li { font-size: 12px; line-height: 1.4; }" +
@@ -963,7 +963,7 @@ public class BotGUI extends JFrame {
         }
 
         return "<html><head><style>" +
-                "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; background-color: #B6EAE9; padding: 15px; }" +
+                "body { font-family: 'Comic Sans MS'; font-size: 12px; background-color: #B6EAE9; padding: 15px; }" +
                 "h2 { font-size: 18px; font-weight: bold; color: #1B6563; }" +
                 "h3 { font-size: 14px; font-weight: bold; color: #1B6563; margin-top: 14px; }" +
                 "p, li { font-size: 12px; line-height: 1.4; }" +

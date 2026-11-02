@@ -29,8 +29,8 @@ public class SmartCategoryBuilderDialog extends JDialog {
         setLocationRelativeTo(owner);
         setResizable(false);
 
-        Font fontLabel = new Font(Font.SANS_SERIF, Font.BOLD, 13);
-        Font fontInput = new Font(Font.SANS_SERIF, Font.PLAIN, 13);
+        Font fontLabel = new Font("Comic Sans MS", Font.BOLD, 13);
+        Font fontInput = new Font("Comic Sans MS", Font.PLAIN, 13);
 
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new GridLayout(8, 2, 10, 10));
@@ -128,13 +128,13 @@ public class SmartCategoryBuilderDialog extends JDialog {
         bottomBar.setBackground(COLOR_BG);
 
         JButton createBtn = new JButton(I18n.get("builder.add_btn"));
-        createBtn.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 15));
+        createBtn.setFont(new Font("Comic Sans MS", Font.BOLD, 15));
         createBtn.setBackground(COLOR_BTN);
         createBtn.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
         createBtn.setPreferredSize(new Dimension(200, 42));
 
         JButton cancelBtn = new JButton(I18n.get("builder.cancel_btn"));
-        cancelBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+        cancelBtn.setFont(new Font("Comic Sans MS", Font.PLAIN, 14));
         cancelBtn.setBackground(COLOR_BTN);
         cancelBtn.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
         cancelBtn.setPreferredSize(new Dimension(120, 42));
