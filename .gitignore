@@ -37,6 +37,9 @@ buildNumber.properties
 # Operating System files
 .DS_Store
 Thumbs.db
+Icon*
+Icon?
+Icon\r
 
 # Documentation source documents
 *.docx

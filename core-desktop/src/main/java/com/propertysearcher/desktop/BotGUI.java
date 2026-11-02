@@ -62,13 +62,13 @@ public class BotGUI extends JFrame {
 
     public static void syncThemeColors() {
         if (currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO) {
-            // Midpoint between #e6e9ed (230, 233, 237) and #1b1b1b (27, 27, 27) = RGB(128, 130, 132) (#808284)
-            COLOR_BG = new Color(128, 130, 132);
-            COLOR_BTN = new Color(230, 233, 237);
-            COLOR_ACCENT = new Color(245, 247, 250);
+            // Elegant light corporate slate gray
+            COLOR_BG = new Color(222, 226, 232);
+            COLOR_BTN = new Color(248, 250, 252);
+            COLOR_ACCENT = new Color(205, 212, 222);
             COLOR_FIELD_BG = new Color(255, 255, 255);
-            COLOR_CARD_BG = new Color(245, 246, 248);
-            COLOR_TEXT = new Color(27, 27, 27);
+            COLOR_CARD_BG = new Color(245, 247, 250);
+            COLOR_TEXT = new Color(30, 35, 42);
         } else {
             COLOR_BG = new Color(182, 234, 233);
             COLOR_BTN = new Color(133, 221, 218);
@@ -210,8 +210,8 @@ public class BotGUI extends JFrame {
         // Dynamic theme preview inside dialog
         Runnable updateThemePreview = () -> {
             boolean isCorp = corporateRadio.isSelected();
-            Color bg = isCorp ? new Color(128, 130, 132) : new Color(182, 234, 233);
-            Color text = isCorp ? Color.WHITE : new Color(27, 101, 99);
+            Color bg = isCorp ? new Color(222, 226, 232) : new Color(182, 234, 233);
+            Color text = isCorp ? new Color(30, 35, 42) : new Color(27, 101, 99);
             dlg.getContentPane().setBackground(bg);
             mainPanel.setBackground(bg);
             langBox.setBackground(bg);
@@ -271,19 +271,22 @@ public class BotGUI extends JFrame {
 
     private Image loadLogoImage() {
         try {
-            URL res = getClass().getResource("/logo_64.png");
-            if (res != null) {
-                return new ImageIcon(res).getImage();
+            for (String resName : new String[]{"/logo_512.png", "/logo_256.png", "/logo_128.png", "/logo_64.png", "/logo.png"}) {
+                URL res = getClass().getResource(resName);
+                if (res != null) {
+                    return new ImageIcon(res).getImage();
+                }
             }
         } catch (Exception ignored) {}
 
-        File f = new File("dist/assets/logo_64.png");
-        if (f.exists()) {
-            return new ImageIcon(f.getAbsolutePath()).getImage();
-        }
-        File f2 = new File("assets/logo_64.png");
-        if (f2.exists()) {
-            return new ImageIcon(f2.getAbsolutePath()).getImage();
+        for (String path : new String[]{
+                "dist/assets/logo_512.png", "dist/assets/logo_256.png", "dist/assets/logo_64.png",
+                "assets/logo_512.png", "assets/logo_256.png", "assets/logo_64.png"
+        }) {
+            File f = new File(path);
+            if (f.exists()) {
+                return new ImageIcon(f.getAbsolutePath()).getImage();
+            }
         }
         return null;
     }
@@ -314,6 +317,14 @@ public class BotGUI extends JFrame {
         Image logoImg = loadLogoImage();
         if (logoImg != null) {
             setIconImage(logoImg);
+            try {
+                if (Taskbar.isTaskbarSupported()) {
+                    Taskbar tb = Taskbar.getTaskbar();
+                    if (tb.isSupported(Taskbar.Feature.ICON_IMAGE)) {
+                        tb.setIconImage(logoImg);
+                    }
+                }
+            } catch (Throwable ignored) {}
         }
 
         contentPane = new JPanel(new BorderLayout(10, 10));
@@ -335,11 +346,11 @@ public class BotGUI extends JFrame {
 
         mainTitleLabel = new JLabel("Property Searcher");
         mainTitleLabel.setFont(getAppFont(Font.PLAIN, 26));
-        mainTitleLabel.setForeground((currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO) ? Color.WHITE : COLOR_TEXT);
+        mainTitleLabel.setForeground(COLOR_TEXT);
 
         mainSubtitleLabel = new JLabel("olx / domria");
         mainSubtitleLabel.setFont(getAppFont(Font.PLAIN, 12));
-        mainSubtitleLabel.setForeground((currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO) ? Color.WHITE : COLOR_TEXT);
+        mainSubtitleLabel.setForeground(COLOR_TEXT);
         mainSubtitleLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         mainSubtitleLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
 
@@ -374,7 +385,7 @@ public class BotGUI extends JFrame {
 
         authorLabel = new JLabel("@kvolegi");
         authorLabel.setFont(getAppFont(Font.PLAIN, 12));
-        authorLabel.setForeground((currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO) ? Color.WHITE : COLOR_TEXT);
+        authorLabel.setForeground(COLOR_TEXT);
 
         bottomPanel.add(settingButton, BorderLayout.WEST);
         bottomPanel.add(authorLabel, BorderLayout.EAST);
@@ -513,7 +524,7 @@ public class BotGUI extends JFrame {
         if (centerPanel != null) centerPanel.setBackground(COLOR_BG);
         if (bottomPanel != null) bottomPanel.setBackground(COLOR_BG);
 
-        Color labelColor = (currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO) ? Color.WHITE : COLOR_TEXT;
+        Color labelColor = COLOR_TEXT;
         if (mainTitleLabel != null) {
             mainTitleLabel.setFont(getAppFont(Font.PLAIN, 26));
             mainTitleLabel.setForeground(labelColor);
@@ -721,11 +732,11 @@ public class BotGUI extends JFrame {
 
         JLabel headerTitle = new JLabel(I18n.get("cat.header_title"));
         headerTitle.setFont(getAppFont(Font.BOLD, 16));
-        headerTitle.setForeground(new Color(27, 101, 99));
+        headerTitle.setForeground(COLOR_TEXT);
 
         JLabel countBadge = new JLabel(getCountText());
         countBadge.setFont(getAppFont(Font.BOLD, 12));
-        countBadge.setForeground(new Color(27, 101, 99));
+        countBadge.setForeground(COLOR_TEXT);
 
         headerPanel.add(headerTitle, BorderLayout.WEST);
         headerPanel.add(countBadge, BorderLayout.EAST);
@@ -981,7 +992,7 @@ public class BotGUI extends JFrame {
 
         JLabel titleLabel = new JLabel("Property Searcher — " + I18n.get("ins.dialog_title"));
         titleLabel.setFont(getAppFont(Font.BOLD, 18));
-        titleLabel.setForeground(new Color(27, 101, 99));
+        titleLabel.setForeground(COLOR_TEXT);
         headerPanel.add(titleLabel);
 
         JTabbedPane tabbedPane = new JTabbedPane();
@@ -998,7 +1009,7 @@ public class BotGUI extends JFrame {
 
         JLabel stepTitle = new JLabel(I18n.get("ins.botfather_step_title"));
         stepTitle.setFont(getAppFont(Font.BOLD, 14));
-        stepTitle.setForeground(new Color(27, 101, 99));
+        stepTitle.setForeground(COLOR_TEXT);
 
         JLabel stepDesc = new JLabel("<html><body style='width: 580px; font-family: " + getAppFontFamily() + "; font-size: 11px;'>" +
                 I18n.get("ins.botfather_step_desc") + "</body></html>");
@@ -1009,8 +1020,8 @@ public class BotGUI extends JFrame {
 
         JTextArea codeArea = new JTextArea(I18n.get("ins.botfather_commands"));
         codeArea.setFont(getAppFont(Font.BOLD, 14));
-        codeArea.setBackground(new Color(230, 248, 247));
-        codeArea.setForeground(new Color(27, 101, 99));
+        codeArea.setBackground(COLOR_FIELD_BG);
+        codeArea.setForeground(COLOR_TEXT);
         codeArea.setEditable(false);
         codeArea.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(COLOR_BTN, 1),
