@@ -43,9 +43,9 @@ public class CurrencyService {
     public static synchronized void initRates() {
         loadCacheFromFile();
         long now = System.currentTimeMillis();
-        // If cache is older than 24 hours or missing, refresh in background thread:
+        // If cache is older than 24 hours or missing, refresh in background via CompletableFuture:
         if (now - lastUpdateTime > CACHE_TTL_MS) {
-            new Thread(CurrencyService::fetchFromNbuSync, "CurrencyService-NBU-Worker").start();
+            java.util.concurrent.CompletableFuture.runAsync(CurrencyService::fetchFromNbuSync);
         }
     }
 

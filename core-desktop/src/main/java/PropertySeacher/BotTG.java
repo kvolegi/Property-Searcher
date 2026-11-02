@@ -22,9 +22,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 
 public class BotTG extends TelegramLongPollingBot {
     private String IDC;
@@ -1146,7 +1144,9 @@ public class BotTG extends TelegramLongPollingBot {
         return markup;
     }
 
-    public class Algoritm extends Thread {
+    public class Algoritm implements Runnable {
+        private final ScheduledExecutorService scheduler;
+        private ScheduledFuture<?> scheduledFuture;
         private volatile boolean shouldRun = true;
         private final String categoryUrl;
         private final String chatId;
@@ -1162,57 +1162,44 @@ public class BotTG extends TelegramLongPollingBot {
             this.categoryName = categoryName;
             this.baseDelayMs = baseDelayMs;
             this.initialStaggerMs = initialStaggerMs;
+            this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+                Thread t = new Thread(r, "Algoritm-Scheduler-" + categoryName);
+                t.setDaemon(true);
+                return t;
+            });
         }
 
         public Algoritm(String categoryUrl, String chatId, String categoryName) {
             this(categoryUrl, chatId, categoryName, 1800, 0);
         }
 
+        public synchronized void start() {
+            if (!shouldRun) return;
+            initBaseline();
+            scheduledFuture = scheduler.scheduleWithFixedDelay(this, initialStaggerMs, baseDelayMs, TimeUnit.MILLISECONDS);
+        }
+
         @Override
         public void run() {
-            // Initial phase stagger offset so threads don't fire simultaneously:
-            if (initialStaggerMs > 0) {
-                try {
-                    Thread.sleep(initialStaggerMs);
-                } catch (InterruptedException e) {
-                    return;
-                }
+            if (!shouldRun || Thread.currentThread().isInterrupted()) {
+                return;
             }
-
-            // 1. Silent baseline initialization:
-            // Buffer up to 30 existing organic ads on the page so NONE of them ever bubble up as "new"!
-            initBaseline();
-
-            // 2. Continuous adaptive real-time monitoring loop:
-            while (shouldRun) {
-                // Apply subtle phase jitter (+/- 150ms) to evade anti-bot metronome detection
-                int jitter = ThreadLocalRandom.current().nextInt(-150, 151);
-                int sleepTime = Math.max(800, baseDelayMs + jitter);
-                try {
-                    Thread.sleep(sleepTime);
-                } catch (InterruptedException e) {
-                    break;
-                }
-                if (!shouldRun) break;
-
+            try {
                 boolean foundNew = search();
-
-                // Adaptive Burst Check: if a fresh drop was just detected, trigger an instant follow-up
-                // micro-check after 500ms to immediately grab simultaneous multi-drops before resuming normal pacing!
                 if (foundNew && shouldRun) {
-                    try {
-                        Thread.sleep(500);
-                        search();
-                    } catch (InterruptedException e) {
-                        break;
-                    }
+                    search();
                 }
+            } catch (Exception e) {
+                log.error("Error during monitoring pass for [{}]: {}", categoryName, e.getMessage());
             }
         }
 
-        public void stopAlgoritm() {
+        public synchronized void stopAlgoritm() {
             shouldRun = false;
-            this.interrupt();
+            if (scheduledFuture != null) {
+                scheduledFuture.cancel(true);
+            }
+            scheduler.shutdownNow();
         }
 
         private void initBaseline() {

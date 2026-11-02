@@ -152,4 +152,27 @@ class TrackingServiceTest {
         assertEquals(25.0, valuation.discountPercentage(), 0.1);
         assertTrue(valuation.badge().contains("HOT DEAL"));
     }
+
+    @Test
+    @DisplayName("Should detect statistical anomaly hot deal via authentic Z-Score evaluation")
+    void shouldDetectStatisticalAnomalyZScore() {
+        PriceAnalyticsService realService = new PriceAnalyticsService();
+        List<BigDecimal> historical = List.of(
+                new BigDecimal("60000"),
+                new BigDecimal("65000"),
+                new BigDecimal("55000"),
+                new BigDecimal("62000"),
+                new BigDecimal("58000")
+        );
+        BigDecimal askingPrice = new BigDecimal("48000");
+
+        PriceAnalyticsService.DealValuation valuation = realService.evaluateStatisticalBargain(
+                askingPrice, historical, "USD", "DOM_RIA"
+        );
+
+        assertTrue(valuation.isHotDeal());
+        assertTrue(valuation.zScore() >= 2.0, "Expected Z-Score >= 2.0 but was " + valuation.zScore());
+        assertTrue(valuation.badge().contains("HOT DEAL"));
+        assertTrue(valuation.analysisText().contains("standard deviations below"));
+    }
 }

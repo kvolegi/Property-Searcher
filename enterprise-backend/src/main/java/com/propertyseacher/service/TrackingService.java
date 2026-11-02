@@ -110,11 +110,7 @@ public class TrackingService {
                 log.info("[LIVE_SNIPE] Fresh organic property detected: [{}] {}", dto.category(), dto.title());
                 deduplicationCacheStrategy.add(target.getUrl(), dto.url());
 
-                BigDecimal numericPrice = priceAnalyticsService.parseNumericPrice(dto.price());
-                String currency = priceAnalyticsService.detectCurrency(dto.price());
-                BigDecimal benchmark = target.getUrl().toLowerCase().contains("dom.ria") ? BigDecimal.valueOf(60000) : BigDecimal.valueOf(45000);
-                PriceAnalyticsService.DealValuation valuation = priceAnalyticsService.evaluateBargain(numericPrice, benchmark, currency);
-
+                PriceAnalyticsService.DealValuation valuation = evaluateDynamicBargain(target, dto, scraped);
                 eventPublisher.publishEvent(new PropertyDiscoveredEvent(dto, valuation));
             }
         }
@@ -132,8 +128,7 @@ public class TrackingService {
 
             BigDecimal numericPrice = priceAnalyticsService.parseNumericPrice(dto.price());
             String currency = priceAnalyticsService.detectCurrency(dto.price());
-            BigDecimal benchmark = target.getUrl().toLowerCase().contains("dom.ria") ? BigDecimal.valueOf(60000) : BigDecimal.valueOf(45000);
-            PriceAnalyticsService.DealValuation valuation = priceAnalyticsService.evaluateBargain(numericPrice, benchmark, currency);
+            PriceAnalyticsService.DealValuation valuation = evaluateDynamicBargain(target, dto, scraped);
 
             if (existingOpt.isEmpty()) {
                 log.info("[DB_ANALYTICS] New property detected: [{}] {}", dto.category(), dto.title());
@@ -198,5 +193,35 @@ public class TrackingService {
                 .build();
 
         priceHistoryRepository.save(history);
+    }
+
+    private PriceAnalyticsService.DealValuation evaluateDynamicBargain(SearchTarget target, PropertyDto dto, List<PropertyDto> batch) {
+        BigDecimal numericPrice = priceAnalyticsService.parseNumericPrice(dto.price());
+        String currency = priceAnalyticsService.detectCurrency(dto.price());
+        if (numericPrice == null) {
+            return new PriceAnalyticsService.DealValuation(false, 0.0, 0.0, "📊 Market Standard", "Awaiting numeric price.");
+        }
+
+        List<BigDecimal> sample = new ArrayList<>();
+        try {
+            List<BigDecimal> history = priceHistoryRepository
+                    .findRecentPricesByPlatformAndCurrency(target.getPlatform(), currency, org.springframework.data.domain.PageRequest.of(0, 50));
+            if (history != null) {
+                sample.addAll(history);
+            }
+        } catch (Exception e) {
+            log.debug("No historical repository prices available: {}", e.getMessage());
+        }
+
+        if (batch != null) {
+            for (PropertyDto item : batch) {
+                BigDecimal p = priceAnalyticsService.parseNumericPrice(item.price());
+                if (p != null && currency.equalsIgnoreCase(priceAnalyticsService.detectCurrency(item.price()))) {
+                    sample.add(p);
+                }
+            }
+        }
+
+        return priceAnalyticsService.evaluateStatisticalBargain(numericPrice, sample, currency, target.getPlatform());
     }
 }

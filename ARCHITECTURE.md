@@ -182,7 +182,7 @@ sequenceDiagram
 | **Strategy** | `ScraperStrategy`, `OlxScraperStrategy` | Ізоляція алгоритмів парсингу для різних порталів |
 | **Strategy (Cache)**| `DeduplicationCacheStrategy`, `InMemoryRingBufferCacheStrategy` | Плугабельна стратегія дедуплікації (In-Memory Circular Buffer / Redis-Ready) |
 | **Domain Events (EDA)**| `PropertyDiscoveredEvent`, `PriceChangedEvent`, `PropertyEventListener` | Event-Driven Архітектура для повної ізоляції скрапінгу від диспетчеризації |
-| **Statistical Anomaly**| `PriceAnalyticsService.evaluateBargain()` | Статистичне виявлення гарячих пропозицій (Hot Deals) на базі z-score відхилень |
+| **Statistical Anomaly (Z-Score)**| `PriceAnalyticsService.evaluateStatisticalBargain()` | Розрахунок емпіричного z-score ($z = \frac{\mu - \text{price}}{\sigma}$) за історією цін для об'єктивного виявлення Hot Deals |
 | **Token-Bucket Rate Limiter** | `BotTG.calculateAdaptiveDelay()` | Запобігання блокуванням за IP та WAF CloudFront |
 | **Circuit Breaker / Fallback** | `CurrencyService` | 3-рівневий шлюз валют (NBU API $\to$ Local Cache $\to$ Built-in Constants) |
 | **Circular Buffer (FIFO)** | Внутрішній масив 50 слотів у `BotTG` | Робота зі стабільною пам'яттю $O(1)$ без витоків |

@@ -33,7 +33,6 @@ CREATE TABLE IF NOT EXISTS discovered_properties (
     price VARCHAR(64) NOT NULL,
     url TEXT NOT NULL,
     category VARCHAR(255),
-    raw_payload TEXT,
     discovered_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uq_external_platform UNIQUE (external_id, platform)
 );
