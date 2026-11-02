@@ -33,6 +33,12 @@ public class BotGUI extends JFrame {
     private JLabel mainSubtitleLabel;
     private JLabel authorLabel;
 
+    private JPanel contentPane;
+    private JPanel topPanel;
+    private JPanel titleBlock;
+    private JPanel centerPanel;
+    private JPanel bottomPanel;
+
     private static SettingsManager.UiThemeMode currentTheme = SettingsManager.getUiThemePreference();
 
     public static Font getAppFont(int style, int size) {
@@ -46,15 +52,36 @@ public class BotGUI extends JFrame {
         return currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO ? "Segoe UI, sans-serif" : "Comic Sans MS, cursive";
     }
 
-    // Palette
-    private static final Color COLOR_BG = new Color(182, 234, 233);
-    private static final Color COLOR_BTN = new Color(133, 221, 218);
-    private static final Color COLOR_ACCENT = new Color(100, 207, 203);
-    private static final Color COLOR_FIELD_BG = new Color(210, 245, 244);
-    private static final Color COLOR_CARD_BG = new Color(248, 253, 253);
+    // Palette - dynamic based on active theme
+    public static Color COLOR_BG = new Color(182, 234, 233);
+    public static Color COLOR_BTN = new Color(133, 221, 218);
+    public static Color COLOR_ACCENT = new Color(100, 207, 203);
+    public static Color COLOR_FIELD_BG = new Color(210, 245, 244);
+    public static Color COLOR_CARD_BG = new Color(248, 253, 253);
+    public static Color COLOR_TEXT = new Color(27, 101, 99);
+
+    public static void syncThemeColors() {
+        if (currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO) {
+            COLOR_BG = new Color(230, 233, 237);
+            COLOR_BTN = new Color(212, 217, 224);
+            COLOR_ACCENT = new Color(190, 196, 206);
+            COLOR_FIELD_BG = new Color(255, 255, 255);
+            COLOR_CARD_BG = new Color(245, 246, 248);
+            COLOR_TEXT = new Color(40, 44, 52);
+        } else {
+            COLOR_BG = new Color(182, 234, 233);
+            COLOR_BTN = new Color(133, 221, 218);
+            COLOR_ACCENT = new Color(100, 207, 203);
+            COLOR_FIELD_BG = new Color(210, 245, 244);
+            COLOR_CARD_BG = new Color(248, 253, 253);
+            COLOR_TEXT = new Color(27, 101, 99);
+        }
+    }
 
     public BotGUI() {
-        checkInitialLanguage();
+        currentTheme = SettingsManager.getUiThemePreference();
+        syncThemeColors();
+        checkInitialLanguageAndTheme();
         loadSettings();
         initComponents();
         updateLocalizedTexts();
@@ -81,41 +108,140 @@ public class BotGUI extends JFrame {
         if (settingButton != null) settingButton.setText(I18n.get("btn.settings"));
     }
 
-    private void checkInitialLanguage() {
+    private void checkInitialLanguageAndTheme() {
         if (!SettingsManager.isLanguageConfigured()) {
-            showLanguageSelectionDialog(true, null);
+            showLanguageAndThemeDialog(true, null);
         } else {
             I18n.setLanguage(SettingsManager.getLanguage());
+            currentTheme = SettingsManager.getUiThemePreference();
+            syncThemeColors();
         }
     }
 
-    private void showLanguageSelectionDialog(boolean isFirstLaunch, JDialog parentSettingsDialog) {
-        JDialog dlg = new JDialog(this, isFirstLaunch ? "Select Language / Оберіть мову" : "Language / Мова", true);
+    private void showLanguageAndThemeDialog(boolean isFirstLaunch, JDialog parentSettingsDialog) {
+        JDialog dlg = new JDialog(this, isFirstLaunch ? "Select Language & UI Style / Налаштування" : I18n.get("theme.dialog_title"), true);
         dlg.getContentPane().setBackground(COLOR_BG);
         dlg.setResizable(false);
 
-        JPanel mainPanel = new JPanel(new BorderLayout(15, 15));
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.setBackground(COLOR_BG);
-        mainPanel.setBorder(new EmptyBorder(20, 30, 20, 30));
+        mainPanel.setBorder(new EmptyBorder(20, 28, 20, 28));
 
-        JLabel prompt = new JLabel("<html><center><b>Welcome to Property Searcher 3!</b><br>Please choose your language / Оберіть мову інтерфейсу:</center></html>", SwingConstants.CENTER);
-        prompt.setFont(getAppFont(Font.PLAIN, 13));
-        prompt.setForeground(new Color(27, 101, 99));
+        JLabel titleLbl = new JLabel(I18n.get("theme.prompt"), SwingConstants.CENTER);
+        titleLbl.setFont(getAppFont(Font.BOLD, 13));
+        titleLbl.setForeground(COLOR_TEXT);
+        titleLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JPanel buttonsPanel = new JPanel();
-        buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
-        buttonsPanel.setBackground(COLOR_BG);
+        // Language Section
+        JLabel langSectionLbl = new JLabel(I18n.get("theme.section_lang"));
+        langSectionLbl.setFont(getAppFont(Font.BOLD, 13));
+        langSectionLbl.setForeground(COLOR_TEXT);
+        langSectionLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JButton uaBtn = createButton("🇺🇦 Українська", 0, 0, 300, 48);
-        uaBtn.setMaximumSize(new Dimension(320, 48));
-        uaBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JRadioButton uaRadio = new JRadioButton("🇺🇦 Українська", I18n.getLanguage() == I18n.Language.UA);
+        JRadioButton enRadio = new JRadioButton("🇬🇧 English", I18n.getLanguage() == I18n.Language.EN);
+        uaRadio.setFont(getAppFont(Font.PLAIN, 13));
+        enRadio.setFont(getAppFont(Font.PLAIN, 13));
+        uaRadio.setBackground(COLOR_BG);
+        enRadio.setBackground(COLOR_BG);
+        uaRadio.setForeground(COLOR_TEXT);
+        enRadio.setForeground(COLOR_TEXT);
+        uaRadio.setFocusPainted(false);
+        enRadio.setFocusPainted(false);
 
-        JButton enBtn = createButton("🇬🇧 English", 0, 0, 300, 48);
-        enBtn.setMaximumSize(new Dimension(320, 48));
-        enBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        ButtonGroup langGroup = new ButtonGroup();
+        langGroup.add(uaRadio);
+        langGroup.add(enRadio);
 
-        uaBtn.addActionListener(e -> {
-            setLanguage(I18n.Language.UA);
+        JPanel langBox = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
+        langBox.setBackground(COLOR_BG);
+        langBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        langBox.add(uaRadio);
+        langBox.add(enRadio);
+
+        // Theme Section
+        JLabel themeSectionLbl = new JLabel(I18n.get("theme.section_style"));
+        themeSectionLbl.setFont(getAppFont(Font.BOLD, 13));
+        themeSectionLbl.setForeground(COLOR_TEXT);
+        themeSectionLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JRadioButton tiffanyRadio = new JRadioButton(I18n.get("theme.comic_sans"), currentTheme == SettingsManager.UiThemeMode.COMIC_SANS);
+        JRadioButton corporateRadio = new JRadioButton(I18n.get("theme.corporate"), currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO);
+        tiffanyRadio.setFont(getAppFont(Font.PLAIN, 13));
+        corporateRadio.setFont(getAppFont(Font.PLAIN, 13));
+        tiffanyRadio.setBackground(COLOR_BG);
+        corporateRadio.setBackground(COLOR_BG);
+        tiffanyRadio.setForeground(COLOR_TEXT);
+        corporateRadio.setForeground(COLOR_TEXT);
+        tiffanyRadio.setFocusPainted(false);
+        corporateRadio.setFocusPainted(false);
+
+        ButtonGroup themeGroup = new ButtonGroup();
+        themeGroup.add(tiffanyRadio);
+        themeGroup.add(corporateRadio);
+
+        JPanel themeBox = new JPanel();
+        themeBox.setLayout(new BoxLayout(themeBox, BoxLayout.Y_AXIS));
+        themeBox.setBackground(COLOR_BG);
+        themeBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        themeBox.add(tiffanyRadio);
+        themeBox.add(Box.createVerticalStrut(6));
+        themeBox.add(corporateRadio);
+
+        // Dynamic language text switcher inside dialog
+        Runnable updateDialogTexts = () -> {
+            boolean isEn = enRadio.isSelected();
+            I18n.Language l = isEn ? I18n.Language.EN : I18n.Language.UA;
+            dlg.setTitle(l == I18n.Language.UA ? "Мова та стиль оформлення" : "Language & UI Style");
+            titleLbl.setText(l == I18n.Language.UA ?
+                    "<html><center><b>Налаштування інтерфейсу</b><br>Оберіть мову та стиль оформлення програми:</center></html>" :
+                    "<html><center><b>Interface Preferences</b><br>Choose interface language and visual style:</center></html>");
+            langSectionLbl.setText(l == I18n.Language.UA ? "Мова інтерфейсу:" : "Interface Language:");
+            themeSectionLbl.setText(l == I18n.Language.UA ? "Стиль оформлення та шрифт:" : "Visual Theme & Typography:");
+            tiffanyRadio.setText(l == I18n.Language.UA ? "💎 Тіфані + Comic Sans MS (Фірмова)" : "💎 Tiffany Mint + Comic Sans MS (Signature)");
+            corporateRadio.setText(l == I18n.Language.UA ? "🏢 Корпоративна сіра + Строгий шрифт" : "🏢 Corporate Slate Gray + Standard UI");
+        };
+
+        uaRadio.addActionListener(e -> updateDialogTexts.run());
+        enRadio.addActionListener(e -> updateDialogTexts.run());
+
+        // Dynamic theme preview inside dialog
+        Runnable updateThemePreview = () -> {
+            boolean isCorp = corporateRadio.isSelected();
+            Color bg = isCorp ? new Color(230, 233, 237) : new Color(182, 234, 233);
+            Color text = isCorp ? new Color(40, 44, 52) : new Color(27, 101, 99);
+            dlg.getContentPane().setBackground(bg);
+            mainPanel.setBackground(bg);
+            langBox.setBackground(bg);
+            themeBox.setBackground(bg);
+            titleLbl.setForeground(text);
+            langSectionLbl.setForeground(text);
+            themeSectionLbl.setForeground(text);
+            uaRadio.setBackground(bg);
+            uaRadio.setForeground(text);
+            enRadio.setBackground(bg);
+            enRadio.setForeground(text);
+            tiffanyRadio.setBackground(bg);
+            tiffanyRadio.setForeground(text);
+            corporateRadio.setBackground(bg);
+            corporateRadio.setForeground(text);
+            dlg.repaint();
+        };
+
+        tiffanyRadio.addActionListener(e -> updateThemePreview.run());
+        corporateRadio.addActionListener(e -> updateThemePreview.run());
+
+        // Action button
+        JButton applyBtn = createButton(I18n.get("theme.apply_btn"), 0, 0, 260, 44);
+        applyBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        applyBtn.addActionListener(e -> {
+            I18n.Language chosenLang = enRadio.isSelected() ? I18n.Language.EN : I18n.Language.UA;
+            SettingsManager.UiThemeMode chosenTheme = corporateRadio.isSelected() ? SettingsManager.UiThemeMode.CORPORATE_PRO : SettingsManager.UiThemeMode.COMIC_SANS;
+
+            setLanguage(chosenLang);
+            applyTheme(chosenTheme);
+
             dlg.dispose();
             if (parentSettingsDialog != null) {
                 parentSettingsDialog.dispose();
@@ -123,26 +249,22 @@ public class BotGUI extends JFrame {
             }
         });
 
-        enBtn.addActionListener(e -> {
-            setLanguage(I18n.Language.EN);
-            dlg.dispose();
-            if (parentSettingsDialog != null) {
-                parentSettingsDialog.dispose();
-                openSettingsDialog();
-            }
-        });
-
-        buttonsPanel.add(uaBtn);
-        buttonsPanel.add(Box.createVerticalStrut(12));
-        buttonsPanel.add(enBtn);
-
-        mainPanel.add(prompt, BorderLayout.NORTH);
-        mainPanel.add(buttonsPanel, BorderLayout.CENTER);
+        mainPanel.add(titleLbl);
+        mainPanel.add(Box.createVerticalStrut(16));
+        mainPanel.add(langSectionLbl);
+        mainPanel.add(Box.createVerticalStrut(6));
+        mainPanel.add(langBox);
+        mainPanel.add(Box.createVerticalStrut(16));
+        mainPanel.add(themeSectionLbl);
+        mainPanel.add(Box.createVerticalStrut(6));
+        mainPanel.add(themeBox);
+        mainPanel.add(Box.createVerticalStrut(20));
+        mainPanel.add(applyBtn);
 
         dlg.setContentPane(mainPanel);
         dlg.pack();
-        dlg.setMinimumSize(new Dimension(420, 230));
-        dlg.setLocationRelativeTo(this);
+        dlg.setMinimumSize(new Dimension(460, 310));
+        dlg.setLocationRelativeTo(this.isVisible() ? this : null);
         dlg.setVisible(true);
     }
 
@@ -193,12 +315,12 @@ public class BotGUI extends JFrame {
             setIconImage(logoImg);
         }
 
-        JPanel contentPane = new JPanel(new BorderLayout(10, 10));
+        contentPane = new JPanel(new BorderLayout(10, 10));
         contentPane.setBackground(COLOR_BG);
         contentPane.setBorder(new EmptyBorder(15, 20, 15, 20));
 
         // Top Header
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 5));
+        topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 5));
         topPanel.setBackground(COLOR_BG);
 
         if (logoImg != null) {
@@ -207,15 +329,16 @@ public class BotGUI extends JFrame {
             topPanel.add(logoLabel);
         }
 
-        JPanel titleBlock = new JPanel(new BorderLayout());
+        titleBlock = new JPanel(new BorderLayout());
         titleBlock.setBackground(COLOR_BG);
 
         mainTitleLabel = new JLabel("Property Searcher");
         mainTitleLabel.setFont(getAppFont(Font.PLAIN, 26));
+        mainTitleLabel.setForeground(COLOR_TEXT);
 
         mainSubtitleLabel = new JLabel("olx / domria");
         mainSubtitleLabel.setFont(getAppFont(Font.PLAIN, 12));
-        mainSubtitleLabel.setForeground(new Color(27, 101, 99));
+        mainSubtitleLabel.setForeground(COLOR_TEXT);
         mainSubtitleLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         mainSubtitleLabel.setBorder(new EmptyBorder(0, 0, 0, 4));
 
@@ -224,7 +347,7 @@ public class BotGUI extends JFrame {
         topPanel.add(titleBlock);
 
         // Center Buttons
-        JPanel centerPanel = new JPanel(new GridBagLayout());
+        centerPanel = new JPanel(new GridBagLayout());
         centerPanel.setBackground(COLOR_BG);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -242,7 +365,7 @@ public class BotGUI extends JFrame {
         centerPanel.add(stopButton, gbc);
 
         // Bottom Bar
-        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.setBackground(COLOR_BG);
 
         settingButton = createButton(I18n.get("btn.settings"), 0, 0, 135, 35);
@@ -250,7 +373,7 @@ public class BotGUI extends JFrame {
 
         authorLabel = new JLabel("@kvolegi");
         authorLabel.setFont(getAppFont(Font.PLAIN, 12));
-        authorLabel.setForeground(new Color(27, 101, 99));
+        authorLabel.setForeground(COLOR_TEXT);
 
         bottomPanel.add(settingButton, BorderLayout.WEST);
         bottomPanel.add(authorLabel, BorderLayout.EAST);
@@ -267,6 +390,7 @@ public class BotGUI extends JFrame {
     public static JButton createButton(String text, int x, int y, int width, int height) {
         JButton button = new JButton(text);
         button.setBackground(COLOR_BTN);
+        button.setForeground(COLOR_TEXT);
         button.setFont(getAppFont(Font.PLAIN, 15));
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -278,7 +402,7 @@ public class BotGUI extends JFrame {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 button.setBackground(COLOR_ACCENT);
-                button.setBorder(BorderFactory.createLineBorder(new Color(27, 101, 99), 2));
+                button.setBorder(BorderFactory.createLineBorder(COLOR_TEXT, 2));
             }
 
             @Override
@@ -289,7 +413,7 @@ public class BotGUI extends JFrame {
 
             @Override
             public void mousePressed(java.awt.event.MouseEvent evt) {
-                button.setBackground(new Color(80, 190, 186));
+                button.setBackground(COLOR_ACCENT);
             }
 
             @Override
@@ -347,10 +471,9 @@ public class BotGUI extends JFrame {
         JButton categoryButton = createButton(I18n.get("gui.category_btn"), 0, 0, 300, 48);
         JButton instructionButton = createButton(I18n.get("gui.instruction_btn"), 0, 0, 300, 48);
         JButton langButton = createButton(I18n.get("gui.lang_btn"), 0, 0, 300, 48);
-        JButton themeButton = createButton(I18n.get("gui.theme_btn"), 0, 0, 300, 48);
         JButton backButton = createButton(I18n.get("gui.back_btn"), 0, 0, 300, 45);
 
-        for (JButton btn : List.of(tokenButton, categoryButton, instructionButton, langButton, themeButton, backButton)) {
+        for (JButton btn : List.of(tokenButton, categoryButton, instructionButton, langButton, backButton)) {
             btn.setMaximumSize(new Dimension(320, 48));
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
         }
@@ -358,96 +481,64 @@ public class BotGUI extends JFrame {
         tokenButton.addActionListener(e -> openTokenNameDialog(settingsDialog));
         categoryButton.addActionListener(e -> openCategoryDialog(settingsDialog));
         instructionButton.addActionListener(e -> openInstructionDialog(settingsDialog));
-        langButton.addActionListener(e -> showLanguageSelectionDialog(false, settingsDialog));
-        themeButton.addActionListener(e -> showThemeSelectionDialog(settingsDialog));
+        langButton.addActionListener(e -> showLanguageAndThemeDialog(false, settingsDialog));
         backButton.addActionListener(e -> settingsDialog.dispose());
 
         content.add(tokenButton);
-        content.add(Box.createVerticalStrut(10));
+        content.add(Box.createVerticalStrut(12));
         content.add(categoryButton);
-        content.add(Box.createVerticalStrut(10));
+        content.add(Box.createVerticalStrut(12));
         content.add(instructionButton);
-        content.add(Box.createVerticalStrut(10));
+        content.add(Box.createVerticalStrut(12));
         content.add(langButton);
-        content.add(Box.createVerticalStrut(10));
-        content.add(themeButton);
         content.add(Box.createVerticalStrut(16));
         content.add(backButton);
 
         settingsDialog.setContentPane(content);
         settingsDialog.pack();
-        settingsDialog.setMinimumSize(new Dimension(380, 420));
+        settingsDialog.setMinimumSize(new Dimension(380, 370));
         settingsDialog.setLocationRelativeTo(this);
         settingsDialog.setVisible(true);
-    }
-
-    private void showThemeSelectionDialog(JDialog parentSettingsDialog) {
-        JDialog dlg = new JDialog(this, I18n.get("theme.dialog_title"), true);
-        dlg.getContentPane().setBackground(COLOR_BG);
-        dlg.setResizable(false);
-
-        JPanel mainPanel = new JPanel(new BorderLayout(15, 15));
-        mainPanel.setBackground(COLOR_BG);
-        mainPanel.setBorder(new EmptyBorder(20, 30, 20, 30));
-
-        JLabel prompt = new JLabel(I18n.get("theme.prompt"), SwingConstants.CENTER);
-        prompt.setFont(getAppFont(Font.PLAIN, 13));
-        prompt.setForeground(new Color(27, 101, 99));
-
-        JPanel buttonsPanel = new JPanel();
-        buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
-        buttonsPanel.setBackground(COLOR_BG);
-
-        JButton comicBtn = createButton(I18n.get("theme.comic_sans"), 0, 0, 320, 48);
-        comicBtn.setMaximumSize(new Dimension(340, 48));
-        comicBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JButton corporateBtn = createButton(I18n.get("theme.corporate"), 0, 0, 320, 48);
-        corporateBtn.setMaximumSize(new Dimension(340, 48));
-        corporateBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        comicBtn.addActionListener(e -> {
-            applyTheme(SettingsManager.UiThemeMode.COMIC_SANS);
-            dlg.dispose();
-            if (parentSettingsDialog != null) {
-                parentSettingsDialog.dispose();
-                openSettingsDialog();
-            }
-        });
-
-        corporateBtn.addActionListener(e -> {
-            applyTheme(SettingsManager.UiThemeMode.CORPORATE_PRO);
-            dlg.dispose();
-            if (parentSettingsDialog != null) {
-                parentSettingsDialog.dispose();
-                openSettingsDialog();
-            }
-        });
-
-        buttonsPanel.add(comicBtn);
-        buttonsPanel.add(Box.createVerticalStrut(12));
-        buttonsPanel.add(corporateBtn);
-
-        mainPanel.add(prompt, BorderLayout.NORTH);
-        mainPanel.add(buttonsPanel, BorderLayout.CENTER);
-
-        dlg.setContentPane(mainPanel);
-        dlg.pack();
-        dlg.setMinimumSize(new Dimension(460, 240));
-        dlg.setLocationRelativeTo(this);
-        dlg.setVisible(true);
     }
 
     public void applyTheme(SettingsManager.UiThemeMode mode) {
         currentTheme = mode != null ? mode : SettingsManager.UiThemeMode.COMIC_SANS;
         SettingsManager.setUiThemePreference(currentTheme);
+        syncThemeColors();
 
-        if (mainTitleLabel != null) mainTitleLabel.setFont(getAppFont(Font.PLAIN, 26));
-        if (mainSubtitleLabel != null) mainSubtitleLabel.setFont(getAppFont(Font.PLAIN, 12));
-        if (authorLabel != null) authorLabel.setFont(getAppFont(Font.PLAIN, 12));
-        if (startButton != null) startButton.setFont(getAppFont(Font.PLAIN, 15));
-        if (stopButton != null) stopButton.setFont(getAppFont(Font.PLAIN, 15));
-        if (settingButton != null) settingButton.setFont(getAppFont(Font.PLAIN, 15));
+        if (contentPane != null) contentPane.setBackground(COLOR_BG);
+        if (topPanel != null) topPanel.setBackground(COLOR_BG);
+        if (titleBlock != null) titleBlock.setBackground(COLOR_BG);
+        if (centerPanel != null) centerPanel.setBackground(COLOR_BG);
+        if (bottomPanel != null) bottomPanel.setBackground(COLOR_BG);
+
+        if (mainTitleLabel != null) {
+            mainTitleLabel.setFont(getAppFont(Font.PLAIN, 26));
+            mainTitleLabel.setForeground(COLOR_TEXT);
+        }
+        if (mainSubtitleLabel != null) {
+            mainSubtitleLabel.setFont(getAppFont(Font.PLAIN, 12));
+            mainSubtitleLabel.setForeground(COLOR_TEXT);
+        }
+        if (authorLabel != null) {
+            authorLabel.setFont(getAppFont(Font.PLAIN, 12));
+            authorLabel.setForeground(COLOR_TEXT);
+        }
+        if (startButton != null) {
+            startButton.setFont(getAppFont(Font.PLAIN, 15));
+            startButton.setBackground(COLOR_BTN);
+            startButton.setForeground(COLOR_TEXT);
+        }
+        if (stopButton != null) {
+            stopButton.setFont(getAppFont(Font.PLAIN, 15));
+            stopButton.setBackground(COLOR_BTN);
+            stopButton.setForeground(COLOR_TEXT);
+        }
+        if (settingButton != null) {
+            settingButton.setFont(getAppFont(Font.PLAIN, 15));
+            settingButton.setBackground(COLOR_BTN);
+            settingButton.setForeground(COLOR_TEXT);
+        }
 
         SwingUtilities.updateComponentTreeUI(this);
         repaint();
