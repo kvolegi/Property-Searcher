@@ -1,4 +1,4 @@
-.PHONY: help test build run-desktop docker-up docker-down clean
+.PHONY: help test build run-desktop docker-up docker-down monitor monitor-down clean
 
 help: ## Show this help message
 	@echo "=================================================================="
@@ -6,10 +6,10 @@ help: ## Show this help message
 	@echo "=================================================================="
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
-test: ## Execute the full automated test suite across all modules (48 tests)
+test: ## Execute the full automated test suite across all modules (51 tests)
 	@echo "==> Running automated tests in core-desktop (40 tests)..."
 	cd core-desktop && mvn clean test
-	@echo "==> Running automated tests in enterprise-backend (8 tests)..."
+	@echo "==> Running automated tests in enterprise-backend (11 tests)..."
 	cd enterprise-backend && mvn clean test
 
 build: ## Compile and package both Core Desktop and Enterprise Backend
@@ -17,6 +17,16 @@ build: ## Compile and package both Core Desktop and Enterprise Backend
 	cd core-desktop && mvn clean package -DskipTests
 	@echo "==> Building Enterprise Backend..."
 	cd enterprise-backend && mvn clean compile
+
+monitor: ## Launch Prometheus & Grafana production monitoring stack
+	@echo "==> Starting Prometheus and Grafana..."
+	docker compose -f docker-compose.monitoring.yml up -d
+	@echo "==> Prometheus UI: http://localhost:9090"
+	@echo "==> Grafana UI:    http://localhost:3000 (admin / admin)"
+
+monitor-down: ## Stop Prometheus & Grafana monitoring stack
+	@echo "==> Stopping monitoring stack..."
+	docker compose -f docker-compose.monitoring.yml down
 
 run-desktop: ## Launch the desktop client daemon
 	@if [ -f dist/PropertySeacher-Universal.jar ]; then \

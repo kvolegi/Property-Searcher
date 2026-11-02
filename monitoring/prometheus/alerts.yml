@@ -1,0 +1,42 @@
+groups:
+  - name: property-searcher-alerts
+    rules:
+      - alert: BackendInstanceDown
+        expr: up{job="property-searcher-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Property-Searcher backend instance is down"
+          description: "Target {{ $labels.instance }} has been unreachable for more than 1 minute."
+
+      - alert: NbuCircuitBreakerOpen
+        expr: resilience4j_circuitbreaker_state{name="nbuCurrency", state="open"} == 1
+        for: 2m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "NBU Currency Gateway Circuit Breaker is OPEN"
+          description: "Circuit breaker has tripped due to remote NBU API failure. Serving degraded fallback rates."
+
+      - alert: JvmHeapMemoryHigh
+        expr: (jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}) > 0.85
+        for: 3m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High JVM Heap Memory Usage (> 85%)"
+          description: "JVM heap memory usage on {{ $labels.instance }} has exceeded 85% for more than 3 minutes."
+
+      - alert: FrequentCurrencyFallbacks
+        expr: rate(currency_nbu_fallback_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: info
+          team: platform
+        annotations:
+          summary: "Elevated Currency Fallback Rate"
+          description: "Currency conversions are actively relying on statutory fallback values."
