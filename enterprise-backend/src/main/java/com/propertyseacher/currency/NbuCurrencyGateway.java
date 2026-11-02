@@ -23,7 +23,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class NbuCurrencyGateway {
 
-    private static final String NBU_API_URL = "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?valcode={valcode}&json";
+    private static final String DEFAULT_NBU_API_URL = "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?valcode={valcode}&json";
+    private String apiUrl = DEFAULT_NBU_API_URL;
+
+    public void setApiUrl(String apiUrl) {
+        this.apiUrl = apiUrl;
+    }
     private static final Map<String, BigDecimal> STATIC_DEFAULTS = Map.of(
             "USD", new BigDecimal("41.50"),
             "EUR", new BigDecimal("45.20"),
@@ -60,7 +65,7 @@ public class NbuCurrencyGateway {
         String code = currencyCode.toUpperCase();
         log.debug("Fetching live exchange rate from NBU for currency: {}", code);
 
-        NbuRateResponse[] response = restTemplate.getForObject(NBU_API_URL, NbuRateResponse[].class, code);
+        NbuRateResponse[] response = restTemplate.getForObject(apiUrl, NbuRateResponse[].class, code);
         if (response != null && response.length > 0 && response[0].getRate() != null) {
             BigDecimal rate = BigDecimal.valueOf(response[0].getRate()).setScale(4, RoundingMode.HALF_UP);
             cachedRates.put(code, rate);
