@@ -62,13 +62,13 @@ public class BotGUI extends JFrame {
 
     public static void syncThemeColors() {
         if (currentTheme == SettingsManager.UiThemeMode.CORPORATE_PRO) {
-            // Elegant light corporate slate gray
-            COLOR_BG = new Color(222, 226, 232);
-            COLOR_BTN = new Color(248, 250, 252);
-            COLOR_ACCENT = new Color(205, 212, 222);
+            // Clean, elegant modern light gray where ALL text is solid black
+            COLOR_BG = new Color(234, 237, 242);
+            COLOR_BTN = new Color(255, 255, 255);
+            COLOR_ACCENT = new Color(220, 224, 232);
             COLOR_FIELD_BG = new Color(255, 255, 255);
-            COLOR_CARD_BG = new Color(245, 247, 250);
-            COLOR_TEXT = new Color(30, 35, 42);
+            COLOR_CARD_BG = new Color(255, 255, 255);
+            COLOR_TEXT = Color.BLACK;
         } else {
             COLOR_BG = new Color(182, 234, 233);
             COLOR_BTN = new Color(133, 221, 218);
@@ -210,8 +210,8 @@ public class BotGUI extends JFrame {
         // Dynamic theme preview inside dialog
         Runnable updateThemePreview = () -> {
             boolean isCorp = corporateRadio.isSelected();
-            Color bg = isCorp ? new Color(222, 226, 232) : new Color(182, 234, 233);
-            Color text = isCorp ? new Color(30, 35, 42) : new Color(27, 101, 99);
+            Color bg = isCorp ? new Color(234, 237, 242) : new Color(182, 234, 233);
+            Color text = isCorp ? Color.BLACK : new Color(27, 101, 99);
             dlg.getContentPane().setBackground(bg);
             mainPanel.setBackground(bg);
             langBox.setBackground(bg);
@@ -401,6 +401,8 @@ public class BotGUI extends JFrame {
 
     public static JButton createButton(String text, int x, int y, int width, int height) {
         JButton button = new JButton(text);
+        button.setOpaque(true);
+        button.setContentAreaFilled(true);
         button.setBackground(COLOR_BTN);
         button.setForeground(COLOR_TEXT);
         button.setFont(getAppFont(Font.PLAIN, 15));
@@ -539,16 +541,22 @@ public class BotGUI extends JFrame {
         }
         if (startButton != null) {
             startButton.setFont(getAppFont(Font.PLAIN, 15));
+            startButton.setOpaque(true);
+            startButton.setContentAreaFilled(true);
             startButton.setBackground(COLOR_BTN);
             startButton.setForeground(COLOR_TEXT);
         }
         if (stopButton != null) {
             stopButton.setFont(getAppFont(Font.PLAIN, 15));
+            stopButton.setOpaque(true);
+            stopButton.setContentAreaFilled(true);
             stopButton.setBackground(COLOR_BTN);
             stopButton.setForeground(COLOR_TEXT);
         }
         if (settingButton != null) {
             settingButton.setFont(getAppFont(Font.PLAIN, 15));
+            settingButton.setOpaque(true);
+            settingButton.setContentAreaFilled(true);
             settingButton.setBackground(COLOR_BTN);
             settingButton.setForeground(COLOR_TEXT);
         }
