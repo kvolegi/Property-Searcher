@@ -1,5 +1,7 @@
 package com.propertysearcher.desktop;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.swing.*;
@@ -16,6 +18,7 @@ import java.util.List;
 
 public class BotGUI extends JFrame {
 
+    private static final Logger log = LoggerFactory.getLogger(BotGUI.class);
     private boolean isBotRunning = false;
     private static volatile BotGUI instance;
     private CreateBot bot;
@@ -169,7 +172,7 @@ public class BotGUI extends JFrame {
                 botName = reader.readLine();
                 botToken = reader.readLine();
             } catch (IOException e) {
-                System.out.println("Неможливо завантажити налаштування: " + e.getMessage());
+                log.warn("Неможливо завантажити налаштування: {}", e.getMessage());
             }
         }
         categories = SettingsManager.loadCategories();

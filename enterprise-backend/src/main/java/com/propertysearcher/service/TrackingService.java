@@ -14,6 +14,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -22,10 +24,11 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class TrackingService {
 
     private static final String TRACKING_CYCLE_LOCK_KEY = "lock:tracking:cycle";
@@ -44,10 +47,33 @@ public class TrackingService {
     private final ApplicationEventPublisher eventPublisher;
     private final TrackingPersistenceService trackingPersistenceService;
     private final DistributedLockService distributedLockService;
+    private final ExecutorService virtualThreadExecutor;
 
     @Getter
     @Setter
     private volatile TrackingMode trackingMode = TrackingMode.LIVE_SNIPE;
+
+    public TrackingService(
+            SearchTargetRepository searchTargetRepository,
+            PriceHistoryRepository priceHistoryRepository,
+            PriceAnalyticsService priceAnalyticsService,
+            ScraperService scraperService,
+            DeduplicationCacheStrategy deduplicationCacheStrategy,
+            ApplicationEventPublisher eventPublisher,
+            TrackingPersistenceService trackingPersistenceService,
+            DistributedLockService distributedLockService,
+            @Autowired(required = false) @Qualifier("virtualThreadExecutor") ExecutorService virtualThreadExecutor
+    ) {
+        this.searchTargetRepository = searchTargetRepository;
+        this.priceHistoryRepository = priceHistoryRepository;
+        this.priceAnalyticsService = priceAnalyticsService;
+        this.scraperService = scraperService;
+        this.deduplicationCacheStrategy = deduplicationCacheStrategy;
+        this.eventPublisher = eventPublisher;
+        this.trackingPersistenceService = trackingPersistenceService;
+        this.distributedLockService = distributedLockService;
+        this.virtualThreadExecutor = virtualThreadExecutor;
+    }
 
     public String getCurrentMode() {
         return trackingMode.name();
@@ -66,14 +92,27 @@ public class TrackingService {
             return;
         }
         try {
-            log.info("Starting property tracking cycle (Mode: {})...", trackingMode);
+            log.info("Starting property tracking cycle (Mode: {}, Loom Fan-Out: {})...", trackingMode, virtualThreadExecutor != null);
             List<SearchTarget> targets = searchTargetRepository.findAllByActiveTrue();
 
-            for (SearchTarget target : targets) {
-                try {
-                    processTarget(target);
-                } catch (Exception e) {
-                    log.error("Error processing target [{}]: {}", target.getTitle(), e.getMessage());
+            if (virtualThreadExecutor != null && !targets.isEmpty()) {
+                List<CompletableFuture<Void>> futures = targets.stream()
+                        .map(target -> CompletableFuture.runAsync(() -> {
+                            try {
+                                processTarget(target);
+                            } catch (Exception e) {
+                                log.error("Error processing target [{}] on Loom virtual thread: {}", target.getTitle(), e.getMessage());
+                            }
+                        }, virtualThreadExecutor))
+                        .toList();
+                CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+            } else {
+                for (SearchTarget target : targets) {
+                    try {
+                        processTarget(target);
+                    } catch (Exception e) {
+                        log.error("Error processing target [{}]: {}", target.getTitle(), e.getMessage());
+                    }
                 }
             }
             log.info("Completed tracking cycle.");

@@ -4,6 +4,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -11,12 +13,14 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ParserOLX {
 
+    private static final Logger log = LoggerFactory.getLogger(ParserOLX.class);
     private String url;
     private static final String USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36";
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
@@ -43,19 +47,19 @@ public class ParserOLX {
     }
 
     public static class PropertyResult {
-        public String title;
-        public String price;
-        public String link;
-        public String photoUrl;
-        public List<String> photoUrls;
-        public String platform;
-        public String timePublished;
+        public final String title;
+        public final String price;
+        public final String link;
+        public final String photoUrl;
+        public final List<String> photoUrls;
+        public final String platform;
+        public final String timePublished;
 
         public PropertyResult(String title, String price, String link, List<String> photoUrls, String platform, String timePublished) {
             this.title = title;
             this.price = price;
             this.link = (link != null) ? link.split("\\?")[0] : null;
-            this.photoUrls = (photoUrls != null) ? photoUrls : new ArrayList<>();
+            this.photoUrls = (photoUrls != null) ? Collections.unmodifiableList(new ArrayList<>(photoUrls)) : Collections.emptyList();
             this.photoUrl = (!this.photoUrls.isEmpty()) ? this.photoUrls.get(0) : null;
             this.platform = platform;
             this.timePublished = (timePublished != null && !timePublished.isBlank()) 
@@ -68,10 +72,7 @@ public class ParserOLX {
             this.price = price;
             this.link = (link != null) ? link.split("\\?")[0] : null;
             this.photoUrl = photoUrl;
-            this.photoUrls = new ArrayList<>();
-            if (photoUrl != null && !photoUrl.isBlank()) {
-                this.photoUrls.add(photoUrl);
-            }
+            this.photoUrls = (photoUrl != null && !photoUrl.isBlank()) ? List.of(photoUrl) : Collections.emptyList();
             this.platform = platform;
             this.timePublished = (timePublished != null && !timePublished.isBlank()) 
                     ? timePublished 
@@ -162,7 +163,7 @@ public class ParserOLX {
                 if (results.size() >= maxCount) break;
             }
         } catch (IOException e) {
-            System.out.println("Помилка підключення до DOM.RIA: " + e.getMessage());
+            log.error("Помилка підключення до DOM.RIA: {}", e.getMessage());
         }
         return results;
     }
@@ -241,7 +242,7 @@ public class ParserOLX {
                 }
             }
         } catch (IOException e) {
-            System.out.println("Помилка підключення до OLX: " + e.getMessage());
+            log.error("Помилка підключення до OLX: {}", e.getMessage());
         }
         return results;
     }

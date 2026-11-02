@@ -2,6 +2,8 @@ package com.propertysearcher.desktop;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -14,6 +16,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CurrencyService {
+
+    private static final Logger log = LoggerFactory.getLogger(CurrencyService.class);
 
     public enum CurrencyMode {
         DUAL,     // Original + Equivalent: e.g. "$65 000 (≈ 2 938 000 грн)"
@@ -135,12 +139,12 @@ public class CurrencyService {
                     if (foundUsd || foundEur) {
                         lastUpdateTime = System.currentTimeMillis();
                         saveCacheToFile();
-                        System.out.println("💱 [NBU Currency Rates Updated]: 1 USD = " + usdRate + " UAH | 1 EUR = " + eurRate + " UAH");
+                        log.info("NBU Currency Rates Updated: 1 USD = {} UAH | 1 EUR = {} UAH", usdRate, eurRate);
                     }
                 }
             }
         } catch (Exception e) {
-            System.err.println("ℹ️ NBU Currency API unreachable (using cached/fallback rates: USD=" + usdRate + ", EUR=" + eurRate + "): " + e.getMessage());
+            log.warn("NBU Currency API unreachable (using cached/fallback rates: USD={}, EUR={}): {}", usdRate, eurRate, e.getMessage());
         }
     }
 
