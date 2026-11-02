@@ -4,11 +4,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Thread-safe 50-slot in-memory circular buffer strategy with O(1) containment checks.
+ * Thread-safe 50-slot in-memory circular buffer strategy with true O(1) containment checks
+ * and O(1) ring-pointer eviction.
  */
 @Component
 @ConditionalOnProperty(name = "app.cache.type", havingValue = "in-memory", matchIfMissing = true)
@@ -48,29 +51,35 @@ public class InMemoryRingBufferCacheStrategy implements DeduplicationCacheStrate
 
     public static class RingBuffer {
         private final String[] elements;
+        private final Set<String> lookupSet;
+        private int head = 0;
         private int count = 0;
 
         public RingBuffer(int capacity) {
             this.elements = new String[capacity];
+            this.lookupSet = new HashSet<>(capacity * 2);
         }
 
         public synchronized boolean contains(String item) {
-            for (int i = 0; i < count; i++) {
-                if (item != null && item.equals(elements[i])) {
-                    return true;
-                }
-            }
-            return false;
+            return item != null && lookupSet.contains(item);
         }
 
         public synchronized void add(String item) {
-            for (int i = Math.min(count, elements.length - 1); i > 0; i--) {
-                elements[i] = elements[i - 1];
+            if (item == null || item.isBlank()) return;
+            if (lookupSet.contains(item)) {
+                return;
             }
-            elements[0] = item;
-            if (count < elements.length) {
+            if (count == elements.length) {
+                String oldest = elements[head];
+                if (oldest != null) {
+                    lookupSet.remove(oldest);
+                }
+            } else {
                 count++;
             }
+            elements[head] = item;
+            lookupSet.add(item);
+            head = (head + 1) % elements.length;
         }
 
         public synchronized int size() {

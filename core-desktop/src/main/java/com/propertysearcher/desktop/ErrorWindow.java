@@ -14,7 +14,7 @@ public class ErrorWindow extends JDialog {
 
         // Set the background color and font
         getContentPane().setBackground(new Color(182, 234, 233));
-        Font font = new Font("Comic Sans MS", Font.PLAIN, 12);
+        Font font = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
 
         // Create a label to display the error message
         JLabel messageLabel = new JLabel(message, SwingConstants.CENTER);
