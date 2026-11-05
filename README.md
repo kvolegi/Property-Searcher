@@ -139,6 +139,17 @@ Thread timings are staggered by $\Delta t = \frac{\tau}{N}$ with a small random 
 * Complete localization dictionary for **Ukrainian 🇺🇦** and **English 🇬🇧**.
 * Auto-detects system locale on first launch with manual toggle in settings and in Telegram (`/language`).
 
+### 7. Subsystem Architecture & Performance Matrix
+
+| Subsystem / Layer | Core Pattern & Architecture | Time Complexity | Space Complexity | Guarantees & Fault Tolerance |
+| :--- | :--- | :---: | :---: | :--- |
+| **Token-Bucket Limiter** | Adaptive Staggered Delay | $O(1)$ computation | $O(1)$ state | $R \le 2.20\text{ req/s}$; jitter $\pm 150\text{ ms}$; zero burst collisions. |
+| **Deduplication Buffer** | Bounded FIFO Ring Buffer + HashSet | $O(1)$ lookup / insert | $O(K)$ per category ($K=50$) | Memory bounded; zero memory leaks over long-running daemon execution. |
+| **Currency Ingestion** | 3-Tier Cache (REST $\to$ JSON $\to$ Fallback) | $O(1)$ cached fetch | $O(1)$ disk/RAM footprint | 24-hour TTL; Resilience4j Circuit Breaker; zero-latency GUI startup. |
+| **MediaGroup Dispatch** | Virtual Thread / Async Pool Fan-Out | $O(M)$ photo items | $O(1)$ disk I/O | Direct CDN URL forwarding; zero local disk caching; silent night mode. |
+| **Atomic Configuration** | Atomic Temp-File Swap (`.tmp` $\to$ `.atomic`) | $O(S)$ file write | $O(1)$ overhead | Crash-safe write barrier; automatic recovery on unexpected OS shutdown. |
+| **Headless Test Suite** | Sandboxed JUnit 5 + MockMvc + WireMock | $O(1)$ per unit test | $O(1)$ RAM | 77 tests; runs on headless Linux CI runners without display server. |
+
 ---
 
 ## 🚀 How to Run
