@@ -1,6 +1,7 @@
 package com.propertysearcher.desktop;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -165,7 +166,7 @@ public class SettingsManager {
     public static String getLastChatId() {
         File f = getLastChatIdFile();
         if (f.exists()) {
-            try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8))) {
                 String line = br.readLine();
                 if (line != null && !line.trim().isEmpty()) {
                     return line.trim();
@@ -174,7 +175,7 @@ public class SettingsManager {
         }
         File fallback = new File("last_chat_id.txt");
         if (fallback.exists()) {
-            try (BufferedReader br = new BufferedReader(new FileReader(fallback))) {
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fallback), StandardCharsets.UTF_8))) {
                 String line = br.readLine();
                 if (line != null && !line.trim().isEmpty()) {
                     return line.trim();
@@ -187,13 +188,13 @@ public class SettingsManager {
     public static void saveLastChatId(String chatId) {
         if (chatId == null || chatId.trim().isEmpty()) return;
         File f = getLastChatIdFile();
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(f, false))) {
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), StandardCharsets.UTF_8))) {
             bw.write(chatId.trim());
         } catch (Exception ignored) {}
 
         File f2 = new File("last_chat_id.txt");
         if (!f2.getAbsolutePath().equals(f.getAbsolutePath())) {
-            try (BufferedWriter bw = new BufferedWriter(new FileWriter(f2, false))) {
+            try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f2, false), StandardCharsets.UTF_8))) {
                 bw.write(chatId.trim());
             } catch (Exception ignored) {}
         }
@@ -228,7 +229,7 @@ public class SettingsManager {
         if (file == null || !file.exists()) return s;
 
         List<String> rawLines = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 rawLines.add(line);
@@ -313,7 +314,7 @@ public class SettingsManager {
             if (file.getParentFile() != null) {
                 file.getParentFile().mkdirs();
             }
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, false))) {
+            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, false), StandardCharsets.UTF_8))) {
                 writer.write(sanitizeCredential(s.botName) + "\n");
                 writer.write(sanitizeCredential(s.botToken) + "\n");
                 writer.write("LANGUAGE=" + (s.language != null ? s.language.name() : "UA") + "\n");

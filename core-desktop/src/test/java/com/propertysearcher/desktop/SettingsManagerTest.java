@@ -33,7 +33,7 @@ class SettingsManagerTest {
         assertTrue(settingsFile.exists(), "Settings file must be created on disk");
 
         // Verify raw contents include header directives and #OFF# tag
-        String rawContent = new String(Files.readAllBytes(settingsFile.toPath()));
+        String rawContent = new String(Files.readAllBytes(settingsFile.toPath()), java.nio.charset.StandardCharsets.UTF_8);
         assertTrue(rawContent.contains("TestPropertyBot"));
         assertTrue(rawContent.contains("1234567890:AAH_test_token_sample"));
         assertTrue(rawContent.contains("LANGUAGE="));
