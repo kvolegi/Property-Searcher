@@ -2,6 +2,7 @@ package com.propertysearcher.desktop;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.util.function.Consumer;
 
@@ -17,67 +18,87 @@ public class SmartCategoryBuilderDialog extends JDialog {
     private final JTextField customTitleField;
     private final JTextField previewUrlField;
 
-    private static final Color COLOR_BG = new Color(182, 234, 233);
-    private static final Color COLOR_FIELD_BG = new Color(248, 253, 253);
-    private static final Color COLOR_BTN = new Color(133, 221, 218);
-
     public SmartCategoryBuilderDialog(Dialog owner, Consumer<String> onCategoryCreated) {
         super(owner, I18n.get("builder.dialog_title"), true);
         setSize(560, 520);
         setLayout(new BorderLayout(10, 10));
-        getContentPane().setBackground(COLOR_BG);
+        getContentPane().setBackground(BotGUI.COLOR_BG);
         setLocationRelativeTo(owner);
         setResizable(false);
 
-        Font fontLabel = new Font("Comic Sans MS", Font.BOLD, 13);
-        Font fontInput = new Font("Comic Sans MS", Font.PLAIN, 13);
+        Font fontLabel = BotGUI.getAppFont(Font.BOLD, 13);
+        Font fontInput = BotGUI.getAppFont(Font.PLAIN, 13);
 
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new GridLayout(8, 2, 10, 10));
-        mainPanel.setBackground(COLOR_BG);
+        mainPanel.setBackground(BotGUI.COLOR_BG);
         mainPanel.setBorder(new EmptyBorder(15, 20, 15, 20));
 
         // 1. Platform
         mainPanel.add(createLabel(I18n.get("builder.platform_lbl"), fontLabel));
         platformCombo = new JComboBox<>(new String[]{"DOM.RIA", "OLX"});
         platformCombo.setFont(fontInput);
-        platformCombo.setBackground(COLOR_FIELD_BG);
+        platformCombo.setBackground(BotGUI.COLOR_FIELD_BG);
+        platformCombo.setForeground(BotGUI.COLOR_TEXT);
         mainPanel.add(platformCombo);
 
         // 2. City
         mainPanel.add(createLabel(I18n.get("builder.city_lbl"), fontLabel));
         cityCombo = new JComboBox<>(CategoryCatalog.getCities().toArray(new CategoryCatalog.City[0]));
         cityCombo.setFont(fontInput);
-        cityCombo.setBackground(COLOR_FIELD_BG);
+        cityCombo.setBackground(BotGUI.COLOR_FIELD_BG);
+        cityCombo.setForeground(BotGUI.COLOR_TEXT);
         mainPanel.add(cityCombo);
 
         // 3. Property Type
         mainPanel.add(createLabel(I18n.get("builder.type_lbl"), fontLabel));
         propertyTypeCombo = new JComboBox<>(CategoryCatalog.getPropertyTypes().toArray(new CategoryCatalog.PropertyType[0]));
         propertyTypeCombo.setFont(fontInput);
-        propertyTypeCombo.setBackground(COLOR_FIELD_BG);
+        propertyTypeCombo.setBackground(BotGUI.COLOR_FIELD_BG);
+        propertyTypeCombo.setForeground(BotGUI.COLOR_TEXT);
         mainPanel.add(propertyTypeCombo);
 
         // 4. Deal Type
         mainPanel.add(createLabel(I18n.get("builder.deal_lbl"), fontLabel));
         dealTypeCombo = new JComboBox<>(CategoryCatalog.getDealTypes().toArray(new CategoryCatalog.DealType[0]));
         dealTypeCombo.setFont(fontInput);
-        dealTypeCombo.setBackground(COLOR_FIELD_BG);
+        dealTypeCombo.setBackground(BotGUI.COLOR_FIELD_BG);
+        dealTypeCombo.setForeground(BotGUI.COLOR_TEXT);
         mainPanel.add(dealTypeCombo);
 
         // 5. Price Filter
         mainPanel.add(createLabel(I18n.get("builder.price_min_lbl"), fontLabel));
         JPanel pricePanel = new JPanel(new GridLayout(1, 2, 5, 0));
-        pricePanel.setBackground(COLOR_BG);
+        pricePanel.setBackground(BotGUI.COLOR_BG);
+
+        TitledBorder fromBorder = BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(BotGUI.COLOR_ACCENT, 1),
+                I18n.get("builder.price_from"),
+                TitledBorder.DEFAULT_JUSTIFICATION,
+                TitledBorder.DEFAULT_POSITION,
+                BotGUI.getAppFont(Font.PLAIN, 11),
+                BotGUI.COLOR_TEXT
+        );
+        TitledBorder toBorder = BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(BotGUI.COLOR_ACCENT, 1),
+                I18n.get("builder.price_to"),
+                TitledBorder.DEFAULT_JUSTIFICATION,
+                TitledBorder.DEFAULT_POSITION,
+                BotGUI.getAppFont(Font.PLAIN, 11),
+                BotGUI.COLOR_TEXT
+        );
+
         minPriceField = new JTextField();
         minPriceField.setFont(fontInput);
-        minPriceField.setBackground(COLOR_FIELD_BG);
-        minPriceField.setBorder(BorderFactory.createTitledBorder(I18n.get("builder.price_from")));
+        minPriceField.setBackground(BotGUI.COLOR_FIELD_BG);
+        minPriceField.setForeground(BotGUI.COLOR_TEXT);
+        minPriceField.setBorder(fromBorder);
 
         maxPriceField = new JTextField();
         maxPriceField.setFont(fontInput);
-        maxPriceField.setBackground(COLOR_FIELD_BG);
-        maxPriceField.setBorder(BorderFactory.createTitledBorder(I18n.get("builder.price_to")));
+        maxPriceField.setBackground(BotGUI.COLOR_FIELD_BG);
+        maxPriceField.setForeground(BotGUI.COLOR_TEXT);
+        maxPriceField.setBorder(toBorder);
 
         pricePanel.add(minPriceField);
         pricePanel.add(maxPriceField);
@@ -87,7 +108,8 @@ public class SmartCategoryBuilderDialog extends JDialog {
         mainPanel.add(createLabel(I18n.get("builder.owner_chk"), fontLabel));
         ownerCheckBox = new JCheckBox(I18n.get("builder.direct_owner"));
         ownerCheckBox.setFont(fontInput);
-        ownerCheckBox.setBackground(COLOR_BG);
+        ownerCheckBox.setBackground(BotGUI.COLOR_BG);
+        ownerCheckBox.setForeground(BotGUI.COLOR_TEXT);
         ownerCheckBox.setFocusPainted(false);
         mainPanel.add(ownerCheckBox);
 
@@ -95,7 +117,8 @@ public class SmartCategoryBuilderDialog extends JDialog {
         mainPanel.add(createLabel(I18n.get("builder.custom_title_lbl"), fontLabel));
         customTitleField = new JTextField();
         customTitleField.setFont(fontInput);
-        customTitleField.setBackground(COLOR_FIELD_BG);
+        customTitleField.setBackground(BotGUI.COLOR_FIELD_BG);
+        customTitleField.setForeground(BotGUI.COLOR_TEXT);
         mainPanel.add(customTitleField);
 
         // 8. Auto-generated URL Preview
@@ -103,7 +126,8 @@ public class SmartCategoryBuilderDialog extends JDialog {
         previewUrlField = new JTextField();
         previewUrlField.setFont(new Font("Monospaced", Font.PLAIN, 11));
         previewUrlField.setEditable(false);
-        previewUrlField.setBackground(new Color(230, 245, 245));
+        previewUrlField.setBackground(BotGUI.COLOR_FIELD_BG);
+        previewUrlField.setForeground(BotGUI.COLOR_TEXT);
         mainPanel.add(previewUrlField);
 
         add(mainPanel, BorderLayout.CENTER);
@@ -125,19 +149,13 @@ public class SmartCategoryBuilderDialog extends JDialog {
 
         // Bottom Button Bar
         JPanel bottomBar = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        bottomBar.setBackground(COLOR_BG);
+        bottomBar.setBackground(BotGUI.COLOR_BG);
 
-        JButton createBtn = new JButton(I18n.get("builder.add_btn"));
-        createBtn.setFont(new Font("Comic Sans MS", Font.BOLD, 15));
-        createBtn.setBackground(COLOR_BTN);
-        createBtn.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
-        createBtn.setPreferredSize(new Dimension(200, 42));
+        JButton createBtn = BotGUI.createButton(I18n.get("builder.add_btn"), 0, 0, 200, 42);
+        createBtn.setFont(BotGUI.getAppFont(Font.BOLD, 15));
 
-        JButton cancelBtn = new JButton(I18n.get("builder.cancel_btn"));
-        cancelBtn.setFont(new Font("Comic Sans MS", Font.PLAIN, 14));
-        cancelBtn.setBackground(COLOR_BTN);
-        cancelBtn.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
-        cancelBtn.setPreferredSize(new Dimension(120, 42));
+        JButton cancelBtn = BotGUI.createButton(I18n.get("builder.cancel_btn"), 0, 0, 120, 42);
+        cancelBtn.setFont(BotGUI.getAppFont(Font.PLAIN, 14));
 
         createBtn.addActionListener(e -> {
             String title = customTitleField.getText().trim();
@@ -162,7 +180,7 @@ public class SmartCategoryBuilderDialog extends JDialog {
     private JLabel createLabel(String text, Font font) {
         JLabel l = new JLabel(text);
         l.setFont(font);
-        l.setForeground(Color.BLACK);
+        l.setForeground(BotGUI.COLOR_TEXT);
         return l;
     }
 

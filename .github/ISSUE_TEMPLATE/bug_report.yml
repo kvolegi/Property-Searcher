@@ -1,0 +1,33 @@
+name: "🐛 Bug Report"
+description: "File an issue to help improve software reliability"
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: "Bug Description"
+      description: "A clear and concise description of what the bug is."
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: "Steps to Reproduce"
+      description: "Step-by-step instructions to reproduce the issue."
+      placeholder: |
+        1. Open '...'
+        2. Click on '...'
+        3. See error
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: "Operating System"
+      options:
+        - "macOS (Apple Silicon / Intel)"
+        - "Windows 10 / 11"
+        - "Linux (Ubuntu / Fedora / Arch)"
+    validations:
+      required: true

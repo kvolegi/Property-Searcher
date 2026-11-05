@@ -63,6 +63,76 @@ class SettingsManagerTest {
     }
 
     @Test
+    @DisplayName("Should ensure first launch directives never pollute bot credentials as empty")
+    void testFirstLaunchDirectivesDoNotPolluteCredentials() {
+        File file = tempDir.resolve("first_launch_settings.txt").toFile();
+
+        // Simulate first launch: user selects Language=EN, Theme=GRAY, Font=SYSTEM before entering any token
+        SettingsManager.AppSettings appSettings = new SettingsManager.AppSettings();
+        appSettings.language = I18n.Language.EN;
+        appSettings.uiColor = SettingsManager.UiColorTheme.GRAY;
+        appSettings.uiFont = SettingsManager.UiFontMode.SYSTEM;
+        appSettings.languageConfigured = true;
+
+        SettingsManager.saveToFile(file, appSettings);
+
+        // Reload
+        SettingsManager.AppSettings reloaded = SettingsManager.loadSettingsFromFile(file);
+        assertEquals("", reloaded.botName, "Bot name must be empty string on first launch");
+        assertEquals("", reloaded.botToken, "Bot token must be empty string on first launch");
+        assertEquals(I18n.Language.EN, reloaded.language);
+        assertEquals(SettingsManager.UiColorTheme.GRAY, reloaded.uiColor);
+        assertEquals(SettingsManager.UiFontMode.SYSTEM, reloaded.uiFont);
+        assertTrue(reloaded.languageConfigured);
+    }
+
+    @Test
+    @DisplayName("Should sanitize legacy corrupted files having directives on lines 1 and 2")
+    void testCorruptedDirectivesOnCredentialsLinesAreSanitized() throws IOException {
+        File file = tempDir.resolve("corrupted_settings.txt").toFile();
+        String badContent = "LANGUAGE=EN\nUI_COLOR=GRAY\nLANGUAGE=EN\nCURRENCY=DUAL\nUI_THEME=CORPORATE_PRO\n\n";
+        Files.write(file.toPath(), badContent.getBytes());
+
+        SettingsManager.AppSettings s = SettingsManager.loadSettingsFromFile(file);
+        assertEquals("", s.botName, "Directives on line 1 must not be interpreted as botName");
+        assertEquals("", s.botToken, "Directives on line 2 must not be interpreted as botToken");
+        assertEquals(I18n.Language.EN, s.language);
+        assertEquals(SettingsManager.UiColorTheme.GRAY, s.uiColor);
+    }
+
+    @Test
+    @DisplayName("Should persist bot credentials and categories simultaneously without data loss")
+    void testBotCredentialsAndCategoriesPersistence() {
+        File file = tempDir.resolve("complete_settings.txt").toFile();
+
+        SettingsManager.AppSettings s = new SettingsManager.AppSettings();
+        s.botName = "Property Seacher";
+        s.botToken = "8937208825:AAHKwl9aNpWLAeVRXB3fhgxbquQhP8MsVKQ";
+        s.language = I18n.Language.UA;
+        s.uiColor = SettingsManager.UiColorTheme.GRAY;
+        s.uiFont = SettingsManager.UiFontMode.SYSTEM;
+        s.currency = CurrencyService.CurrencyMode.USD;
+        s.categories.add(new SettingsManager.CategoryEntry("Київ Оренда", "https://www.olx.ua/uk/nedvizhimost/kvartiry/dolgosrochnaya-arenda-kvartir/kiev/", true));
+        s.categories.add(new SettingsManager.CategoryEntry("Львів Продаж", "https://dom.ria.com/uk/prodazha-kvartir/lvov/", false));
+
+        SettingsManager.saveToFile(file, s);
+
+        SettingsManager.AppSettings reloaded = SettingsManager.loadSettingsFromFile(file);
+        assertEquals("Property Seacher", reloaded.botName);
+        assertEquals("8937208825:AAHKwl9aNpWLAeVRXB3fhgxbquQhP8MsVKQ", reloaded.botToken);
+        assertEquals(I18n.Language.UA, reloaded.language);
+        assertEquals(SettingsManager.UiColorTheme.GRAY, reloaded.uiColor);
+        assertEquals(SettingsManager.UiFontMode.SYSTEM, reloaded.uiFont);
+        assertEquals(CurrencyService.CurrencyMode.USD, reloaded.currency);
+
+        assertEquals(2, reloaded.categories.size());
+        assertEquals("Київ Оренда", reloaded.categories.get(0).name);
+        assertTrue(reloaded.categories.get(0).active);
+        assertEquals("Львів Продаж", reloaded.categories.get(1).name);
+        assertFalse(reloaded.categories.get(1).active);
+    }
+
+    @Test
     @DisplayName("Should safely handle empty or corrupt files")
     void testLoadFromEmptyFile() throws IOException {
         File emptyFile = tempDir.resolve("empty.txt").toFile();

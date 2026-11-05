@@ -299,9 +299,12 @@ public class BotGUI extends JFrame {
             grayRadio.setBackground(bg);
             grayRadio.setForeground(text);
 
+            Color btnAccent = isGray ? new Color(185, 190, 198) : new Color(160, 226, 225);
             applyBtn.setFont(new Font(fontFam, Font.PLAIN, 15));
             applyBtn.setBackground(btnBg);
             applyBtn.setForeground(text);
+            applyBtn.putClientProperty("baseBg", btnBg);
+            applyBtn.putClientProperty("accentBg", btnAccent);
 
             dlg.repaint();
         };
@@ -312,6 +315,8 @@ public class BotGUI extends JFrame {
         systemRadio.addActionListener(e -> updateDialog.run());
         mintRadio.addActionListener(e -> updateDialog.run());
         grayRadio.addActionListener(e -> updateDialog.run());
+
+        updateDialog.run();
 
         applyBtn.addActionListener(e -> {
             I18n.Language chosenLang = enRadio.isSelected() ? I18n.Language.EN : I18n.Language.UA;
@@ -374,16 +379,14 @@ public class BotGUI extends JFrame {
     }
 
     private void loadSettings() {
-        File file = SettingsManager.getSettingsFile();
-        if (file.exists()) {
-            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                botName = reader.readLine();
-                botToken = reader.readLine();
-            } catch (IOException e) {
-                log.warn("Неможливо завантажити налаштування: {}", e.getMessage());
-            }
-        }
-        categories = SettingsManager.loadCategories();
+        SettingsManager.AppSettings s = SettingsManager.loadSettings();
+        botName = s.botName;
+        botToken = s.botToken;
+        categories = s.categories;
+        currentColorTheme = s.uiColor;
+        currentFontMode = s.uiFont;
+        currentTheme = (currentColorTheme == SettingsManager.UiColorTheme.GRAY) ? SettingsManager.UiThemeMode.CORPORATE_PRO : SettingsManager.UiThemeMode.COMIC_SANS;
+        syncThemeColors();
     }
 
     private void saveAllSettings() {
@@ -494,27 +497,34 @@ public class BotGUI extends JFrame {
         button.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         button.setPreferredSize(new Dimension(width, height));
 
+        button.putClientProperty("baseBg", COLOR_BTN);
+        button.putClientProperty("accentBg", COLOR_ACCENT);
+
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
-                button.setBackground(COLOR_ACCENT);
+                Color accent = (Color) button.getClientProperty("accentBg");
+                button.setBackground(accent != null ? accent : COLOR_ACCENT);
                 button.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
-                button.setBackground(COLOR_BTN);
+                Color base = (Color) button.getClientProperty("baseBg");
+                button.setBackground(base != null ? base : COLOR_BTN);
                 button.setBorder(BorderFactory.createLineBorder(Color.BLACK));
             }
 
             @Override
             public void mousePressed(java.awt.event.MouseEvent evt) {
-                button.setBackground(COLOR_ACCENT);
+                Color accent = (Color) button.getClientProperty("accentBg");
+                button.setBackground(accent != null ? accent : COLOR_ACCENT);
             }
 
             @Override
             public void mouseReleased(java.awt.event.MouseEvent evt) {
-                button.setBackground(COLOR_BTN);
+                Color base = (Color) button.getClientProperty("baseBg");
+                button.setBackground(base != null ? base : COLOR_BTN);
                 button.setBorder(BorderFactory.createLineBorder(Color.BLACK));
             }
         });
@@ -632,6 +642,8 @@ public class BotGUI extends JFrame {
             startButton.setContentAreaFilled(true);
             startButton.setBackground(COLOR_BTN);
             startButton.setForeground(Color.BLACK);
+            startButton.putClientProperty("baseBg", COLOR_BTN);
+            startButton.putClientProperty("accentBg", COLOR_ACCENT);
             startButton.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         }
         if (stopButton != null) {
@@ -640,6 +652,8 @@ public class BotGUI extends JFrame {
             stopButton.setContentAreaFilled(true);
             stopButton.setBackground(COLOR_BTN);
             stopButton.setForeground(Color.BLACK);
+            stopButton.putClientProperty("baseBg", COLOR_BTN);
+            stopButton.putClientProperty("accentBg", COLOR_ACCENT);
             stopButton.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         }
         if (settingButton != null) {
@@ -648,6 +662,8 @@ public class BotGUI extends JFrame {
             settingButton.setContentAreaFilled(true);
             settingButton.setBackground(COLOR_BTN);
             settingButton.setForeground(Color.BLACK);
+            settingButton.putClientProperty("baseBg", COLOR_BTN);
+            settingButton.putClientProperty("accentBg", COLOR_ACCENT);
             settingButton.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         }
 
@@ -679,13 +695,13 @@ public class BotGUI extends JFrame {
 
         JLabel nameLabel = new JLabel(I18n.get("gui.bot_name_lbl"));
         nameLabel.setFont(font);
-        JTextField nameField = new JTextField(botName, 18);
+        JTextField nameField = new JTextField(botName != null ? SettingsManager.sanitizeCredential(botName) : "", 18);
         nameField.setFont(font);
         nameField.setBackground(COLOR_FIELD_BG);
 
         JLabel tokenLabel = new JLabel(I18n.get("gui.token_lbl"));
         tokenLabel.setFont(font);
-        JTextField tokenField = new JTextField(botToken, 18);
+        JTextField tokenField = new JTextField(botToken != null ? SettingsManager.sanitizeCredential(botToken) : "", 18);
         tokenField.setFont(font);
         tokenField.setBackground(COLOR_FIELD_BG);
 
@@ -806,15 +822,16 @@ public class BotGUI extends JFrame {
             urlLabel.setText(displayUrl);
 
             if (isSelected) {
-                setBackground(new Color(150, 222, 220));
+                setBackground(COLOR_ACCENT);
                 setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(new Color(27, 101, 99), 1, true),
+                        BorderFactory.createLineBorder(COLOR_TEXT, 1, true),
                         BorderFactory.createEmptyBorder(4, 8, 4, 8)
                 ));
             } else {
                 setBackground(COLOR_BG);
+                Color sepColor = (currentColorTheme == SettingsManager.UiColorTheme.GRAY) ? new Color(180, 185, 192) : new Color(150, 215, 214);
                 setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(150, 215, 214)),
+                        BorderFactory.createMatteBorder(0, 0, 1, 0, sepColor),
                         BorderFactory.createEmptyBorder(4, 8, 4, 8)
                 ));
             }
@@ -857,7 +874,8 @@ public class BotGUI extends JFrame {
         categoryList.setBackground(COLOR_BG);
 
         JScrollPane scrollPane = new JScrollPane(categoryList);
-        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(150, 215, 214), 1));
+        Color scrollBorder = (currentColorTheme == SettingsManager.UiColorTheme.GRAY) ? new Color(180, 185, 192) : new Color(150, 215, 214);
+        scrollPane.setBorder(BorderFactory.createLineBorder(scrollBorder, 1));
         scrollPane.getViewport().setBackground(COLOR_BG);
 
         JPanel topActionBar = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 6));

@@ -20,7 +20,7 @@
   <a href="https://www.postgresql.org/"><img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 16" /></a>
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker&logoColor=white" alt="Docker" /></a>
   <a href="https://github.com/kvolegi/Property-Searcher/actions/workflows/ci.yml"><img src="https://github.com/kvolegi/Property-Searcher/actions/workflows/ci.yml/badge.svg" alt="CI / Build & Test" /></a>
-  <a href="#testing--quality-assurance"><img src="https://img.shields.io/badge/Tests-74%20Passed-brightgreen?logo=junit5&logoColor=white" alt="Tests: 74 Passed" /></a>
+  <a href="#testing--quality-assurance"><img src="https://img.shields.io/badge/Tests-77%20Passed-brightgreen?logo=junit5&logoColor=white" alt="Tests: 77 Passed" /></a>
   <a href="ARCHITECTURE.md"><img src="https://img.shields.io/badge/Architecture-Event--Driven-64CFCB" alt="Architecture" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Proprietary%20%2F%20View--Only-red.svg" alt="License: Proprietary / View-Only" /></a>
   <a href="https://github.com/kvolegi/Property-Searcher/releases"><img src="https://img.shields.io/badge/Release-v3.1.0-blue.svg" alt="Latest Release" /></a>
@@ -92,6 +92,19 @@ docker compose -f docker-compose.monitoring.yml up -d
 | :---: | :---: |
 | <img src="docs/screenshots/08_telegram_currency_language.png" alt="Currency & Language Settings" width="300" /> | <img src="docs/screenshots/09_telegram_mobile_gallery.png" alt="Photo Gallery Alert" width="300" /> |
 | **Exchange Rate & Language Settings**<br/>NBU rates with customizable display modes (`DUAL`, `USD`, `UAH`, `EUR`, `As Listed`). | **Sub-2s Real-Time Alerts**<br/>Photo group albums with portal deep-links, exact timestamps, and price details. |
+
+<br/>
+
+### 💼 Corporate Slate Gray — Серйозна корпоративна тема
+
+Окрім фірмового вінтажного м'ятного оформлення (**Signature Mint**), у додатку реалізовано окрему строгу тему — **Corporate Slate Gray** із перемиканням на системну типографіку (*Segoe UI / San Francisco*). Вона створена для робочого середовища та користувачів, які віддають перевагу монохромній стриманій естетиці.
+
+Вибір теми, шрифту та мови здійснюється як під час першого запуску, так і в будь-який момент через пункт *Language & UI Style*. Усі елементи управління та інформаційні вікна ідеально синхронізовані з обраною колірною гамою.
+
+| Налаштування мови, шрифту та колірної теми | Головний екран та вікно параметрів у стилі Corporate Slate Gray |
+| :---: | :---: |
+| <img src="docs/screenshots/10_theme_language_dialog_slate_gray.jpg" alt="Language & Theme Selection" width="450" /> | <img src="docs/screenshots/11_corporate_slate_gray_theme.jpg" alt="Corporate Slate Gray Interface" width="450" /> |
+| **Панель персоналізації**<br/>Незалежне перемикання мови інтерфейсу, фірмового/системного шрифту та палітри кольорів. | **Corporate Slate Gray**<br/>Чистий мінімалістичний сірий інтерфейс із високою читабельністю та чіткими межами кнопок. |
 
 ---
 
@@ -240,17 +253,17 @@ To adhere to enterprise packaging standards:
 The test suite uses **JUnit 5 Jupiter**, **Mockito**, **WireMock**, and **Testcontainers** to verify business logic, rate limits, parsing, Redis distributed state, and resilience:
 
 ```bash
-# Run desktop tests (46 tests)
+# Run desktop tests (49 tests)
 cd core-desktop && mvn clean test
 
 # Run backend tests (28 tests)
 cd enterprise-backend && mvn clean test
 
-# Or run all tests across entire reactor (74 tests)
+# Or run all tests across entire reactor (77 tests)
 make test
 ```
 
-### Test Suite Structure (74 Tests, 100% Pass Rate)
+### Test Suite Structure (77 Tests, 100% Pass Rate)
 
 | Test Class | Focus | What It Verifies |
 | :--- | :--- | :--- |
@@ -259,7 +272,7 @@ make test
 | **`DeduplicationAndSnipingTest`** (6 tests) | Rate Limiting & Deduplication | Confirms `calculateAdaptiveDelay()` keeps overall request frequency below $2.3\text{ req/s}$ for any target count $N \in [1, 50]$; verifies thread-safe $O(1)$ ring buffer eviction and duplicate discarding. |
 | **`SearchAlgorithmEngineTest`** (6 tests) | Bounded Deduplication Buffer | Verifies bounded $O(1)$ FIFO capacity (50 items) using `ArrayDeque` and `HashSet`, ensuring zero duplicate alerts upon rapid stream ingest. |
 | **`I18nTest`** (13 tests) | Bilingual Localization | Checks 100% key parity between Ukrainian (`uk`) and English (`en`) dictionaries (no missing keys), thread-safe runtime switches, and locale fallbacks. |
-| **`SettingsManagerTest`** (3 tests) | Config Persistence | Uses `@TempDir` sandboxes to test round-trip file serialization, active/paused target states (`#OFF#`), and backwards compatibility. |
+| **`SettingsManagerTest`** (6 tests) | Config Persistence & Atomic I/O | Uses `@TempDir` sandboxes to test atomic file writes (`.tmp` $\to$ `.atomic`), corrupted config auto-recovery, round-trip serialization, active/paused target states (`#OFF#`), and backwards compatibility. |
 | **`PropertyControllerTest`** (5 tests) | REST API & MockMvc | Tests Spring Boot 3 WebMvc endpoints: paginated listings (`200 OK`), target creation (`201 Created`), RFC 7807 global error handling (`400 Bad Request`), and metrics endpoints. |
 | **`TrackingServiceTest`** (4 tests) | Event Dispatch & Analytics | Tests Spring Boot 3 service layer with Mockito: virtual thread fan-out, event publishing, price change tracking, and deal score calculations. |
 | **`TrackingPersistenceServiceTest`** (2 tests) | Transactional Persistence | Validates transaction boundaries, atomic saving of discovered properties, and event emission. |

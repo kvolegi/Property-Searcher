@@ -1,9 +1,11 @@
 package com.propertysearcher.desktop.engine;
 
 import com.propertysearcher.desktop.ParserOLX;
+import com.propertysearcher.desktop.SettingsManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.*;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -38,7 +40,7 @@ public class SearchAlgorithmEngine implements Runnable {
     private final int initialStaggerMs;
     private final BiConsumer<ParserOLX.PropertyResult, String> onNewPropertyFound;
 
-    private static final int MAX_BUFFER_CAPACITY = 50;
+    private static final int MAX_BUFFER_CAPACITY = 1000;
     private final Deque<String> recentAdQueue = new ArrayDeque<>(MAX_BUFFER_CAPACITY);
     private final Set<String> recentAdSet = new HashSet<>(MAX_BUFFER_CAPACITY);
     private String lastSentAdLink = "";
@@ -113,7 +115,43 @@ public class SearchAlgorithmEngine implements Runnable {
         stop();
     }
 
+    private synchronized void loadSeenAdsFromFile() {
+        File file = SettingsManager.getSeenAdsFile();
+        if (file == null || !file.exists()) return;
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                if (!line.isEmpty() && !recentAdSet.contains(line)) {
+                    if (recentAdQueue.size() >= MAX_BUFFER_CAPACITY) {
+                        String oldest = recentAdQueue.removeLast();
+                        recentAdSet.remove(oldest);
+                    }
+                    recentAdQueue.addFirst(line);
+                    recentAdSet.add(line);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Could not read seen ads from file: {}", e.getMessage());
+        }
+    }
+
+    private synchronized void appendSeenAdToFile(String adLink) {
+        if (adLink == null || adLink.isBlank()) return;
+        File file = SettingsManager.getSeenAdsFile();
+        try {
+            if (file.getParentFile() != null) file.getParentFile().mkdirs();
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(file, true))) {
+                bw.write(adLink);
+                bw.newLine();
+            }
+        } catch (Exception e) {
+            log.warn("Could not append seen ad to file: {}", e.getMessage());
+        }
+    }
+
     private void initBaseline() {
+        loadSeenAdsFromFile();
         try {
             ParserOLX ps = new ParserOLX(categoryUrl);
             List<ParserOLX.PropertyResult> initialAds = ps.getTopProperties(30);
@@ -124,8 +162,8 @@ public class SearchAlgorithmEngine implements Runnable {
                     updateLastAdLinks(clean);
                 }
             }
-            log.info("Baseline initialized for [{}]: {} active listings buffered",
-                    categoryName, initialAds.size());
+            log.info("Baseline initialized for [{}]: {} active listings buffered (total seen: {})",
+                    categoryName, initialAds.size(), recentAdSet.size());
         } catch (Exception e) {
             log.warn("Could not init baseline for [{}]: {}", categoryName, e.getMessage());
         }
@@ -172,6 +210,7 @@ public class SearchAlgorithmEngine implements Runnable {
 
     private synchronized void updateLastAdLinks(String adLink) {
         if (adLink == null || adLink.isBlank()) return;
+        boolean isNew = !recentAdSet.contains(adLink);
         if (recentAdSet.contains(adLink)) {
             recentAdQueue.remove(adLink);
         } else if (recentAdQueue.size() >= MAX_BUFFER_CAPACITY) {
@@ -180,6 +219,10 @@ public class SearchAlgorithmEngine implements Runnable {
         }
         recentAdQueue.addFirst(adLink);
         recentAdSet.add(adLink);
+
+        if (isNew) {
+            appendSeenAdToFile(adLink);
+        }
     }
 
     public synchronized boolean isDuplicate(String adLink) {

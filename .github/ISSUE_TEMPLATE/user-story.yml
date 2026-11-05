@@ -1,0 +1,39 @@
+name: "📖 User Story"
+description: "Submit an Agile user story with user value and acceptance criteria"
+title: "[Story]: "
+labels: ["user-story", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Agile User Story Template
+        Please formulate the user story using standard Agile/Scrum syntax.
+  - type: textarea
+    id: story
+    attributes:
+      label: "User Story Statement"
+      description: "Format: As a [role], I want [action] so that [business value]."
+      placeholder: "As a real-estate investor, I want to monitor OLX listings in real time so that I can contact owners before agents."
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: "Acceptance Criteria (Gherkin format)"
+      description: "Given [context], When [event occurs], Then [expected outcome]."
+      placeholder: |
+        - [ ] Given valid Telegram Bot credentials, When the app launches, Then the background monitoring starts without GUI freezing.
+        - [ ] Given a duplicate ad link, When parsed a second time, Then the bot skips notification.
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "Priority & Story Points"
+      options:
+        - "High (5 SP)"
+        - "Medium (3 SP)"
+        - "Low (1-2 SP)"
+        - "Epic (8+ SP)"
+    validations:
+      required: true
