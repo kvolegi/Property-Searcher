@@ -42,6 +42,17 @@ The system is split into two complementary layers:
    - **Fault Boundaries**: **Resilience4j Circuit Breaker & Retry** with automatic fallback rates during NBU API outages.
    - **Cloud Orchestration**: Complete Kubernetes manifests (`k8s/`) and Helm 3 Chart (`helm/property-searcher/`) with HPA (2 to 10 pods), Ingress, probes, and PodAntiAffinity.
 
+### Core Architecture & Invariant Matrix
+
+| Subsystem Component | Architecture / Pattern | Invariants & Operational Guarantees |
+| :--- | :--- | :--- |
+| **Hexagonal Domain Core** | Clean Architecture / Ports & Adapters | Zero external dependencies; 100% headless testability |
+| **Desktop Presentation** | Java Swing + Theme Look-and-Feel | Native macOS/Win rendering with dynamic palette reload |
+| **Spring Boot Backend** | Spring Boot 3 WebMvc + PostgreSQL 16 | Distributed multi-tenant crawling with deal scoring |
+| **Deduplication Engine** | Bounded FIFO Ring Buffer + HashSet | Memory-bounded constant $O(1)$ duplicate prevention |
+| **Config Persistence** | Atomic File-Swap (`.tmp` $\to$ `.atomic`) | Crash-safe write barrier across unexpected OS reboots |
+| **Telegram Dispatch** | Asynchronous Thread Pool + CDN URLs | Non-blocking fan-out; zero local disk caching |
+
 ### Architectural Decision Records (ADRs)
 Key engineering trade-offs are documented under [docs/adr/](docs/adr/):
 - **[ADR 0001: Modular Monolith Architecture over Distributed Microservices](docs/adr/0001-modular-monolith-over-microservices.md)**
@@ -118,12 +129,27 @@ To prevent IP blocks and WAF challenges (`HTTP 429 Too Many Requests`), worker t
 $$\tau = \max\left(1800\text{ ms},\; \left\lceil \frac{N \times 1000}{R_{\max}} \right\rceil\right) \quad \text{where } R_{\max} = 2.20\text{ req/s}$$
 Thread timings are staggered by $\Delta t = \frac{\tau}{N}$ with a small random jitter ($\pm 150\text{ ms}$) to prevent burst collisions.
 
+| Parameter | Calibrated Threshold | Operational Guarantees |
+| :--- | :---: | :--- |
+| **Minimum Polling Interval ($\tau_{\min}$)** | $1800\text{ ms}$ | Prevents WAF triggers and HTTP 429 rate-limiting |
+| **Max Request Frequency ($R_{\max}$)** | $2.20\text{ req/s}$ | Aggregate ceiling across all concurrent categories |
+| **Pulse Jitter Spread ($\Delta j$)** | $\pm 150\text{ ms}$ | Random stagger eliminating burst collision spikes |
+| **Silent Warm-up Window** | $30\text{ listings}$ | Suppresses startup alert floods on target addition |
+| **Ring Buffer Capacity ($K$)** | $50\text{ items}$ | Bounded memory footprint with constant $O(1)$ lookup |
+| **Night Quiet Mode Window** | 23:00 – 07:00 | Silent delivery (`disable_notification=true`) |
+
 ### 3. 3-Tier Currency Engine
 * **Tier 1 (NBU REST API)**: Direct HTTPS fetch from the National Bank of Ukraine open API (`bank.gov.ua`) with 3000ms timeout.
 * **Tier 2 (Local JSON Cache)**: Persists rates in `currency_cache.json` with a 24-hour validity window. Restarts load instantly from cache while a background worker updates rates.
 * **Tier 3 (Embedded Fallback)**: Built-in safety rates (USD/UAH, EUR/UAH) keep the app functional during network outages.
 * **DUAL Mode**: Converts and displays dual currency strings side-by-side:  
   `$65 000 (≈ 2 704 000 UAH)` / `2 500 000 UAH (≈ $60 096)`.
+
+| Ingestion Tier | Primary Data Source | Validity (TTL) | Failure Recovery Policy |
+| :--- | :--- | :---: | :--- |
+| **Tier 1: Live REST** | NBU Official API (`bank.gov.ua`) | Real-time | 3000ms timeout $\to$ fallback to local cache |
+| **Tier 2: JSON Cache** | Local `currency_cache.json` | 24 Hours | Stale cache read during upstream outages |
+| **Tier 3: Safety Constant** | Embedded Hardcoded Fallback | Permanent | Air-gapped offline launch guarantee |
 
 ### 4. 50-Slot Circular Memory Buffer
 * **Silent Initialization**: When adding a target, the app indexes the first 30 listings without sending alerts, preventing startup spam.
@@ -138,6 +164,25 @@ Thread timings are staggered by $\Delta t = \frac{\tau}{N}$ with a small random 
 ### 6. Full Bilingual Support (i18n)
 * Complete localization dictionary for **Ukrainian 🇺🇦** and **English 🇬🇧**.
 * Auto-detects system locale on first launch with manual toggle in settings and in Telegram (`/language`).
+
+### 7. Boolean Query Parser & AST Evaluation Engine
+Property Searcher incorporates a recursive-descent query tokenizer and abstract syntax tree (AST) evaluator, supporting full boolean logic across search titles and descriptions:
+
+```ebnf
+Query   ::= OrExpr
+OrExpr  ::= AndExpr ( 'OR' AndExpr )*
+AndExpr ::= NotExpr ( 'AND' NotExpr )*
+NotExpr ::= [ 'NOT' ] Primary
+Primary ::= QuotedTerm | Word | '(' Query ')'
+```
+
+| Query Pattern | Example Expression | Evaluated AST Matching Logic |
+| :--- | :--- | :--- |
+| **Conjunction (AND)** | `печерськ AND балкон` | Listing must satisfy both token occurrences |
+| **Disjunction (OR)** | `новобудова OR новобуд` | Listing satisfies either synonym match |
+| **Negation (NOT)** | `хрещатик NOT комісія` | Excludes listings containing agent commission |
+| **Exact Phrase** | `"без посередників"` | Matches exact contiguous multi-token sequence |
+| **Nested Grouping** | `(центр OR поділ) AND ліфт` | Evaluates parenthesized precedence first |
 
 > [!TIP]
 > **Fault-Tolerant Daemon Architecture:** The scanner pipeline combines bounded FIFO memory buffers ($O(1)$ constant-time lookup and eviction), adaptive request throttling ($\le 2.20\text{ req/s}$ with $\pm 150\text{ms}$ anti-collision jitter), and atomic file-swap barriers (`.tmp` $\to$ `.atomic`) to ensure weeks of continuous uptime without memory leaks, rate-limit blocks, or race conditions.
