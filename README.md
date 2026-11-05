@@ -95,16 +95,16 @@ docker compose -f docker-compose.monitoring.yml up -d
 
 <br/>
 
-### 💼 Corporate Slate Gray — Серйозна корпоративна тема
+### 💼 Corporate Slate Gray — Enterprise UI Theme
 
-Окрім фірмового вінтажного м'ятного оформлення (**Signature Mint**), у додатку реалізовано окрему строгу тему — **Corporate Slate Gray** із перемиканням на системну типографіку (*Segoe UI / San Francisco*). Вона створена для робочого середовища та користувачів, які віддають перевагу монохромній стриманій естетиці.
+Alongside the vintage **Signature Mint** theme, Property Searcher includes **Corporate Slate Gray**, paired with crisp system typography (*Segoe UI* on Windows, *San Francisco* on macOS, or *Roboto/Ubuntu* on Linux). It caters to enterprise workspaces and analysts who prefer a restrained, high-contrast monochrome aesthetic.
 
-Вибір теми, шрифту та мови здійснюється як під час першого запуску, так і в будь-який момент через пункт *Language & UI Style*. Усі елементи управління та інформаційні вікна ідеально синхронізовані з обраною колірною гамою.
+Users can toggle themes, fonts, and language on first launch or anytime via the *Language & UI Style* dialog. All child windows, buttons, and status indicators instantly adapt their color palettes and hover borders in real time without restarting the JVM.
 
-| Налаштування мови, шрифту та колірної теми | Головний екран та вікно параметрів у стилі Corporate Slate Gray |
+| Onboarding Preferences (Language, Typography & Theme) | Main Dashboard & Control Center in Corporate Slate Gray |
 | :---: | :---: |
 | <img src="docs/screenshots/10_theme_language_dialog_slate_gray.jpg" alt="Language & Theme Selection" width="450" /> | <img src="docs/screenshots/11_corporate_slate_gray_theme.jpg" alt="Corporate Slate Gray Interface" width="450" /> |
-| **Панель персоналізації**<br/>Незалежне перемикання мови інтерфейсу, фірмового/системного шрифту та палітри кольорів. | **Corporate Slate Gray**<br/>Чистий мінімалістичний сірий інтерфейс із високою читабельністю та чіткими межами кнопок. |
+| **Customization Panel**<br/>Independent controls for interface language, font rendering, and background palette. | **Corporate Slate Gray Theme**<br/>Monochrome interface designed for high legibility, clean button borders, and zero desktop glare. |
 
 ---
 
@@ -172,8 +172,7 @@ From the project directory:
 ```bash
 java -jar dist/PropertySeacher-Universal.jar
 ```
-* **Windows shortcut**: Double-click `dist/Run_Windows.bat`.
-* **Linux shortcut**: Run `bash dist/Run_Linux.sh` or install `dist/PropertySeacher.desktop` into `~/.local/share/applications/`.
+Or launch the native macOS application `dist/PropertySeacher.app`.
 
 ---
 
@@ -181,7 +180,7 @@ java -jar dist/PropertySeacher-Universal.jar
 
 For macOS users, a standalone release is packaged with an embedded Java runtime.
 
-1. Download **`PropertySearcher-macOS.zip`** from [GitHub Releases v3.0.0](https://github.com/kvolegi/Property-Searcher/releases/tag/v3.0.0).
+1. Download **`PropertySearcher-macOS.zip`** from [GitHub Releases v3.1.0](https://github.com/kvolegi/Property-Searcher/releases/tag/v3.1.0).
 2. Unzip the file to obtain `PropertySeacher.app`.
 3. Drag `PropertySeacher.app` to your `/Applications` folder (or run directly).
 4. **If macOS Gatekeeper flags the app** (unidentified developer):
@@ -285,9 +284,9 @@ make test
 
 ---
 
-## ⚖️ License & Terms
+## ⚖️ License & Private Archive Terms
 
-Personal portfolio project. Provided for evaluation, code review, and educational demonstration.
+Strictly private personal portfolio archive. No permission is granted to copy, run, distribute, modify, or commercially exploit this software. Published solely for technical assessment, code review, and portfolio evaluation.
 
 Copyright (c) 2021–2026 **kvolegi**. All Rights Reserved.  
-For full terms, see [LICENSE](LICENSE).
+For full legal terms, see [LICENSE](LICENSE).
