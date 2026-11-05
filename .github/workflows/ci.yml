@@ -17,6 +17,9 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         java: [ '17' ]
 
+    env:
+      JAVA_TOOL_OPTIONS: "-Dfile.encoding=UTF-8"
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -29,10 +32,10 @@ jobs:
           cache: 'maven'
 
       - name: Run Maven Unit & Integration Tests
-        run: mvn test -Dfile.encoding=UTF-8 --file core-desktop/pom.xml
+        run: mvn test --file core-desktop/pom.xml
 
       - name: Package Universal Artifact
-        run: mvn package -DskipTests -Dfile.encoding=UTF-8 --file core-desktop/pom.xml
+        run: mvn package -DskipTests --file core-desktop/pom.xml
 
       - name: Upload Build Artifacts
         if: matrix.os == 'ubuntu-latest'
