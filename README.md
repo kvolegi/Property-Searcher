@@ -139,16 +139,8 @@ Thread timings are staggered by $\Delta t = \frac{\tau}{N}$ with a small random 
 * Complete localization dictionary for **Ukrainian 🇺🇦** and **English 🇬🇧**.
 * Auto-detects system locale on first launch with manual toggle in settings and in Telegram (`/language`).
 
-### 7. Performance & Engineering Metrics
-
-| Subsystem | Complexity (Time / Space) | Technical Invariant |
-| :--- | :---: | :--- |
-| **Token-Bucket Limiter** | $O(1)$ / $O(1)$ | Adaptive delay ($R \le 2.20\text{ req/s}$) with $\pm 150\text{ms}$ anti-collision jitter. |
-| **Deduplication Buffer** | $O(1)$ / $O(K)$ | Bounded 50-slot circular FIFO buffer; zero memory leaks. |
-| **Currency Ingestion** | $O(1)$ / $O(1)$ | 3-tier cache (REST $\to$ JSON $\to$ Fallback); Resilience4j circuit breaker. |
-| **MediaGroup Dispatch** | $O(M)$ / $O(1)$ | Async pool fan-out; direct CDN forwarding without local disk caching. |
-| **Atomic Configuration** | $O(S)$ / $O(1)$ | Crash-safe write barrier (`.tmp` $\to$ `.atomic`) with automatic recovery. |
-| **Headless Test Suite** | $O(1)$ / $O(1)$ | 77 JUnit 5 / MockMvc tests running headlessly on display-less CI runners. |
+> [!TIP]
+> **Fault-Tolerant Daemon Architecture:** The scanner pipeline combines bounded FIFO memory buffers ($O(1)$ constant-time lookup and eviction), adaptive request throttling ($\le 2.20\text{ req/s}$ with $\pm 150\text{ms}$ anti-collision jitter), and atomic file-swap barriers (`.tmp` $\to$ `.atomic`) to ensure weeks of continuous uptime without memory leaks, rate-limit blocks, or race conditions.
 
 ---
 
